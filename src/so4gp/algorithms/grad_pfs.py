@@ -280,7 +280,7 @@ class GradPFS:
         # out_file.append(["File", f"{f_path}"])
         out_file = np.array(out_file, dtype=object)
 
-        with (PdfPages(pdf_file)) as pdf:
+        with (PdfPages(pdf_file)) as pdf:  # type: ignore
             pdf.savefig(GradPFS.generate_table("Gradual Pattern-based Feature Selection (GradPFS) Report",
                                                out_info, [2/3,1/3], xscale=0.5))
             if fig_corr is not None:

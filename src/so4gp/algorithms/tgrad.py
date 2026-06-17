@@ -75,13 +75,13 @@ class TGrad(GRAANK):
         if 0 < value <= 1:
             self._min_rep = value
 
-    def discover_tgp(self, parallel: bool = False, num_cores: int = 1):
+    def discover_tgp(self, parallel: bool = False, num_cores: int = 1) -> str:
         """
         Applies fuzzy-logic, data transformation, and gradual pattern mining to mine for Fuzzy Temporal Gradual Patterns.
 
         :param parallel: Allow multiprocessing.
         :param num_cores: Number of CPU cores for the algorithm to use.
-        :return: List of FTGPs as JSON object
+        :return: List of FTGPs as JSON string object
         """
 
         start = time.time()
@@ -121,7 +121,7 @@ class TGrad(GRAANK):
         self.generate_output_files(out_dict, target_col=self.target_col)
 
         out_dict.update({"Patterns": self.display_patterns})
-        out: object = json.dumps(out_dict, indent=4)
+        out: str = json.dumps(out_dict, indent=4)
         return out
 
     def transform_and_mine(self, step: int, return_patterns: bool = True):
@@ -188,7 +188,7 @@ class TGrad(GRAANK):
             print(f"Error at step {step}: {e}")
             return None
 
-    def _mine_gps_at_step(self, time_delay_data: np.ndarray | dict, attr_data: np.ndarray = None,
+    def _mine_gps_at_step(self, time_delay_data: np.ndarray | dict, attr_data: np.ndarray|None = None,
                           clustering_method: bool = False) -> list[TGP] | tuple[list[TGP], dict]:
         """
         Uses apriori algorithm to find GP candidates based on the target-attribute. The candidates are validated if
@@ -273,7 +273,7 @@ class TGrad(GRAANK):
                 time_diffs[int(i)] = float(abs(time_diff))
         return True, time_diffs
 
-    def get_fuzzy_time_lag(self, bin_data: np.ndarray, time_data: np.ndarray | dict, gi_arr: set = None,
+    def get_fuzzy_time_lag(self, bin_data: np.ndarray, time_data: np.ndarray | dict, gi_arr: set|None = None,
                            tri_mf_data: np.ndarray | None = None) -> TimeDelay:
         """
         A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
@@ -365,7 +365,7 @@ class TGrad(GRAANK):
                                        (c - y_train) / (c - b))
 
                 # 2. Generate y_train based on the given criteria (x>minimum_membership)
-                y_hat = np.where(memberships >= min_membership, 1, 0)
+                y_hat: np.ndarray = np.where(memberships >= min_membership, 1, 0)  # type: ignore
 
                 # 3. Compute loss_val
                 hat_count = np.count_nonzero(y_hat)
