@@ -15,6 +15,7 @@
 A collection of classes for pre-processing data for mining gradual patterns.
 """
 
+import os
 import gc
 import csv
 import time
@@ -24,7 +25,7 @@ import pandas as pd
 from tabulate import tabulate
 from dateutil.parser import parse
 from .utils import write_file
-from .gradual_patterns import GP, TGP, PairwiseMatrix
+from .gradual_patterns import GI, GP, TGP, PairwiseMatrix
 
 
 class DataGP:
@@ -324,7 +325,40 @@ class DataGP:
             write_file(out_txt, str(f_name+'.txt'), wr=True)
 
     @classmethod
-    def analyze_gps(cls, data_src: pd.DataFrame | str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
+    def gen_pairwise_data(cls, data_src: pd.DataFrame | str, min_sup :float=0.5) -> bool:
+        """
+        Given a numeric dataset, this method generates all the pairwise matrices for the all the gradual items (GI)
+        which are obtained from the dataset's features/columns.
+
+        >>> import so4gp as sgp
+        >>> import pandas
+        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
+        >>> columns = ['Age', 'Salary', 'Cars', 'Expenses']
+        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
+        >>> sgp.gen_pairwise_data(dummy_df)
+
+        :param data_src: Pandas dataframe or CSV file name as a string
+        :param min_sup: Minimum support value for the pairwise matrices.
+
+        :return: True if data saved to CSV files, False otherwise.
+        """
+
+        d_set = cls(data_src, min_sup=min_sup)
+        d_set.fit_bitmap()
+
+        if d_set._valid_bins is None:
+            return False
+
+        out_dir = ""
+        for gi_str, gp_data in (d_set._valid_bins or {}).items():
+            gi: GI = GI.from_string(gi_str)
+            file_name = f"{gi.as_string(d_set.titles)}.csv"
+            file = os.path.join(out_dir, file_name)
+            np.savetxt(file, gp_data.bin_mat, delimiter=',', fmt='%d')
+        return True
+
+    @classmethod
+    def analyze_gps(cls, data_src: pd.DataFrame|str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
         """
         For each estimated GP, computes its true support using the GRAANK approach and returns the statistics (% error,
         and standard deviation).
