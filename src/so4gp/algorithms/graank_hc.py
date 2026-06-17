@@ -8,11 +8,10 @@
 import json
 import time
 import random
-from ..data_gp import DataGP
 from .numeric_ss import NumericSS
 
 
-class HillClimbingGRAANK(DataGP):
+class HillClimbingGRAANK(NumericSS):
 
     def __init__(self, *args, max_iter: int = 1, step_size: float = 0.5, **kwargs):
         """
@@ -48,25 +47,18 @@ class HillClimbingGRAANK(DataGP):
         self._max_iteration: int = max_iter
         self._n_var: int = 1
 
-    def discover(self):
+    def discover(self) -> str:
         """
         Uses hill-climbing algorithm to find GP candidates. The candidates are validated if their computed support is
         greater than or equal to the minimum support threshold specified by the user.
 
-        :return: JSON object
+        :return: JSON string object
         """
 
         start = time.time()
-        # Prepare data set
-        self.fit_bitmap()
-        self.clear_gradual_patterns()
-        if self.valid_bins is None:
-            return []
-
-        # Initialize search space
-        s_space = NumericSS.initialize_search_space(self.valid_bins, 1, self._max_iteration)
-        if s_space is None:
-            return []
+        s_space = self.init_search_space(1, self._max_iteration)
+        if isinstance(s_space, str):
+            return s_space
 
         # run the hill climb
         repeated = 0
@@ -76,8 +68,9 @@ class HillClimbingGRAANK(DataGP):
             # take a step
             candidate.position = None
             if candidate.position is None:
-                candidate.position = s_space.best_sol.position + (
-                            random.randrange(s_space.var_min, s_space.var_max) * self._step_size)
+                best_pos = s_space.best_sol.position
+                if best_pos is not None:
+                    candidate.position = best_pos + (random.randrange(s_space.var_min, s_space.var_max) * self._step_size)
 
             # Evaluate candidate
             NumericSS.evaluate_candidate(candidate, s_space, self.valid_bins)
@@ -93,10 +86,10 @@ class HillClimbingGRAANK(DataGP):
             "Algorithm": "LS-GRAANK",
             # "Memory Usage (MiB)": f{mem_use)}"
             "Step Size": f"{self._step_size}",
-            "Number of iterations": s_space.iter_count,
+            "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds"}
         self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
-        out: object = json.dumps(out_dict, indent=4)
+        out: str = json.dumps(out_dict, indent=4)
         return out

@@ -30,7 +30,6 @@ class GRAANK(DataGP):
 
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
 
-        >>> import so4gp as sgp
         >>> from so4gp.algorithms import GRAANK
         >>> import pandas
         >>>
@@ -38,7 +37,7 @@ class GRAANK(DataGP):
         >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
         >>>
         >>> mine_obj = GRAANK(data_source=dummy_df, min_sup=0.5, eq=False)
-        >>> result_json = mine_obj.discover()
+        >>> result_json = str(mine_obj.discover())
         >>> # print(result['Patterns'])
         >>> print(result_json) # doctest: +SKIP
         """
@@ -153,7 +152,7 @@ class GRAANK(DataGP):
         return res_dict, invalid_count
 
     def discover(self, ignore_support: bool = False, apriori_level: int | None = None,
-                 target_col: int | None = None, exclude_target: bool = False, compute_descriptors: bool = True):
+                 target_col: int | None = None, exclude_target: bool = False, compute_descriptors: bool = True) -> str:
         """
         Uses apriori algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
@@ -164,13 +163,16 @@ class GRAANK(DataGP):
         :param exclude_target: Only accept GP candidates that do not contain the target feature.
         :param compute_descriptors: [optional] compute descriptors for each GP candidate.
 
-        :return: JSON object
+        :return: JSON string
         """
 
         start = time.time()
         self.fit_bitmap()
         self.clear_gradual_patterns()
         valid_bins_dict: dict|None = copy.deepcopy(self.valid_bins)
+
+        if valid_bins_dict is None:
+            return "Pairwise matrices not available!"
 
         invalid_count = 0
         candidate_level = 1
@@ -203,5 +205,5 @@ class GRAANK(DataGP):
         self.generate_output_files(out_dict, target_col=target_col)
 
         out_dict.update({"Patterns": self.display_patterns, "Invalid Count": str(invalid_count)})
-        out: object = json.dumps(out_dict,indent=4)
+        out:str = json.dumps(out_dict,indent=4)
         return out

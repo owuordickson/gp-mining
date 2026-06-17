@@ -140,13 +140,13 @@ class AntGRAANK(DataGP):
                 p_matrix[j][i] += 1
         return p_matrix
 
-    def discover(self):
+    def discover(self) -> str:
         """
         Applies ant-colony optimization algorithm and uses pheromone levels to find GP candidates. The candidates are
         validated if their computed support is greater than or equal to the minimum support threshold specified by the
         user.
 
-        :return: JSON object
+        :return: JSON string object
         """
 
         start = time.time()
@@ -156,7 +156,7 @@ class AntGRAANK(DataGP):
         if d is None:
             out = json.dumps(
                 {"Algorithm": "ACO-GRAANK", "Best Patterns": self.display_patterns, "Invalid Count": 0, "Iterations": 0})
-            """:type out: object"""
+            """:type str: object"""
             return out
 
         a = self.attr_size
@@ -166,7 +166,7 @@ class AntGRAANK(DataGP):
         counter = 0
 
         if self.valid_bins is None:
-            return []
+            return "Pairwise matrices not available!"
 
         # 1. Remove d[i][j] < frequency-count of min_supp
         fr_count = ((self.thd_supp * a * (a - 1)) / 2)
@@ -224,5 +224,5 @@ class AntGRAANK(DataGP):
         self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": self.display_patterns, "Invalid Count": str(invalid_count)})
-        out: object = json.dumps(out_dict, indent=4)
+        out: str = json.dumps(out_dict, indent=4)
         return out

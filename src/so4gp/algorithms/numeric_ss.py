@@ -12,7 +12,7 @@ from ..data_gp import DataGP
 from ..gradual_patterns import GI, GP, PairwiseMatrix
 
 
-class NumericSS:
+class NumericSS(DataGP):
 
     @dataclass
     class Candidate:
@@ -33,8 +33,29 @@ class NumericSS:
         str_best_gps: list
         pop: list["NumericSS.Candidate"]
 
-    def __init__(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        # Initialize DataGP
+        super(NumericSS, self).__init__(*args, **kwargs)
+
+    def init_search_space(self, pop_size: int, max_iter: int) -> "NumericSS.SearchSpace|str":
+        """
+        Initialize the search space with pairwise matrices
+        :param pop_size: population size
+        :param max_iter: maximum number of iterations
+
+        :return: Search space or error message
+        """
+        # Prepare data set
+        self.fit_bitmap()
+        self.clear_gradual_patterns()
+        if self.valid_bins is None:
+            return "Pairwise matrices not available!"
+
+        # Initialize search space
+        s_space = NumericSS.initialize_search_space(self.valid_bins, pop_size, max_iter)
+        if s_space is None:
+            return "Search space is empty!"
+        return s_space
 
     @staticmethod
     def initialize_search_space(valid_bins_dict: dict | None, total_pop: int, max_iter: int):

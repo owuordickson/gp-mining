@@ -271,7 +271,7 @@ class DataGP:
             if (supp >= self._thd_supp) and self._warping_set is not None:
                 self._warping_set[gi_str] = lst_ij
 
-    def generate_output_files(self, alg_data: dict, target_col: int = None, save_to_file: bool = True):
+    def generate_output_files(self, alg_data: dict, target_col: int|None = None, save_to_file: bool = True):
         """
         Generates output of results (as files) for the GP mining algorithm.
 
@@ -302,7 +302,10 @@ class DataGP:
             else:
                 out_txt += f"{i}. {txt}\n"
 
-        out_txt += f"\nFile: {self._data_src if isinstance(self._data_src, str) else 'a dataframe'}\n"
+        file = 'a dataframe'
+        if isinstance(self._data_src, str):
+            file = self._data_src
+        out_txt += f"\nFile: {file}\n"
         out_txt += str("\nPattern : Support" + '\n')
 
         list_tgp = self.gradual_patterns
@@ -432,7 +435,7 @@ class DataGP:
                 data_src.sort_index(inplace=True)
 
                 # Rename column names
-                header_vals = ['col_' + str(k) for k in np.arange(data_src.shape[1])]
+                header_vals = ['col_' + str(k) for k in range(data_src.shape[1])]
                 data_src.columns = header_vals
             except ValueError:
                 pass
@@ -442,7 +445,7 @@ class DataGP:
             return DataGP.clean_data(data_src)
         else:
             # b. CSV file
-            file = str(data_src)
+            file = data_src if isinstance(data_src, str) else ""
             try:
                 with open(file, 'r') as f:
                     dialect = csv.Sniffer().sniff(f.readline(), delimiters=";,' '\t")
@@ -456,9 +459,9 @@ class DataGP:
                 else:
                     # print ("Data fetched from CSV file")
                     # 2. Get table headers
-                    keys = np.arange(len(raw_data[0]))
+                    keys = range(len(raw_data[0]))
                     if raw_data[0][0].replace('.', '', 1).isdigit() or raw_data[0][0].isdigit():
-                        header_vals = ['col_' + str(k) for k in keys]
+                        header_vals = [f'col_{k}' for k in keys]
                     else:
                         if raw_data[0][1].replace('.', '', 1).isdigit() or raw_data[0][1].isdigit():
                             header_vals = ['col_' + str(k) for k in keys]
@@ -514,8 +517,14 @@ class DataGP:
                 _ = df[col].astype(float)
             except ValueError:
                 # Keep time columns
+                first_valid_idx = df[col].first_valid_index()
+                if first_valid_idx is None:
+                    cols_to_remove.append(col)  # Entirely empty column
+                    continue
+                sample_val = str(df[col].loc[first_valid_idx])
+
                 try:
-                    ok, stamp = DataGP.test_time(str(df[col][0]))
+                    ok, stamp = DataGP.test_time(sample_val)
                     if not ok:
                         cols_to_remove.append(col)
                 except ValueError:

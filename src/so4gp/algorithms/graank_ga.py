@@ -7,12 +7,12 @@
 
 import json
 import time
+import random
 import numpy as np
-from ..data_gp import DataGP
 from .numeric_ss import NumericSS
 
 
-class GeneticGRAANK(DataGP):
+class GeneticGRAANK(NumericSS):
 
     def __init__(self, *args, max_iter=1, n_pop=5, pc=0.5, gamma=1.0, mu=0.9, sigma=0.9, **kwargs):
         """
@@ -78,7 +78,7 @@ class GeneticGRAANK(DataGP):
         """
         c1 = NumericSS.Candidate()
         c2 = NumericSS.Candidate()
-        alpha = np.random.uniform(0, self._gamma, 1)
+        alpha: float = random.uniform(0, self._gamma)
         c1.position = float(alpha * p1.position + (1 - alpha) * p2.position)
         c2.position = float(alpha * p2.position + (1 - alpha) * p1.position)
         return c1, c2
@@ -98,7 +98,7 @@ class GeneticGRAANK(DataGP):
         str_y = "0"
         for i in ind:
             val = float(str_x[i[0]])
-            val += self._sigma * np.random.uniform(0, 1, 1)
+            val += self._sigma * random.uniform(0, 1)
             if i[0] == 0:
                 str_y = "".join(("", "{}".format(int(val)), str_x[1:]))
             else:
@@ -107,25 +107,18 @@ class GeneticGRAANK(DataGP):
         y.position = int(str_y)
         return y
 
-    def discover(self):
+    def discover(self) -> str:
         """
         Uses genetic algorithm to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
 
-        :return: JSON object
+        :return: JSON string object
         """
 
-        # Prepare data set
         start = time.time()
-        self.fit_bitmap()
-        self.clear_gradual_patterns()
-        if self.valid_bins is None:
-            return []
-
-        # Initialize search space
-        s_space = NumericSS.initialize_search_space(self.valid_bins, self._parent_pop, self._max_iteration)
-        if s_space is None:
-            return []
+        s_space = self.init_search_space(self._parent_pop, self._max_iteration)
+        if isinstance(s_space, str):
+            return s_space
 
         num_children = int(np.round(self._children_pop * self._parent_pop / 2) * 2)  # Number of children np.round is used to get an even number
         repeated = 0
@@ -135,8 +128,8 @@ class GeneticGRAANK(DataGP):
             for _ in range(num_children // 2):
                 # Select Parents
                 q = np.random.permutation(self._parent_pop)
-                p1 = s_space.pop[q[0]]
-                p2 = s_space.pop[q[1]]
+                p1 = s_space.pop[int(q[0])]
+                p2 = s_space.pop[int(q[1])]
 
                 # a. Perform Crossover
                 c1, c2 = self._crossover(p1, p2)
@@ -173,10 +166,10 @@ class GeneticGRAANK(DataGP):
             "Crossover Gamma": f"{self._gamma}",
             "Mutation Mu": f"{self._mu}",
             "Mutation Sigma": f"{self._sigma}",
-            "Number of iterations": s_space.iter_count,
+            "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds"}
         self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
-        out: object = json.dumps(out_dict, indent=4)
+        out: str = json.dumps(out_dict, indent=4)
         return out

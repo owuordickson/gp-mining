@@ -8,11 +8,10 @@
 import json
 import time
 import random
-from ..data_gp import DataGP
 from .numeric_ss import NumericSS
 
 
-class RandomGRAANK(DataGP):
+class RandomGRAANK(NumericSS):
 
     def __init__(self, *args, max_iter: int = 1, **kwargs):
         """
@@ -47,23 +46,18 @@ class RandomGRAANK(DataGP):
         self._max_iteration: int = max_iter
         self._n_var: int = 1
 
-    def discover(self):
+    def discover(self) -> str:
         """
         Uses random search to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
 
-        :return: JSON object
+        :return: JSON str object
         """
 
         start = time.time()
-        self.fit_bitmap()
-        self.clear_gradual_patterns()
-        if self.valid_bins is None:
-            return []
-
-        s_space = NumericSS.initialize_search_space(self.valid_bins, 1, self._max_iteration)
-        if s_space is None:
-            return []
+        s_space = self.init_search_space(1, self._max_iteration)
+        if isinstance(s_space, str):
+            return s_space
 
         repeated, candidate = 0, NumericSS.Candidate()
         while s_space.counter < self._max_iteration:
@@ -83,10 +77,10 @@ class RandomGRAANK(DataGP):
         out_dict: dict[str, str | list] = {
             "Algorithm": "RS-GRAANK",
             # "Memory Usage (MiB)": f{mem_use)}"
-            "Number of iterations": s_space.iter_count,
+            "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds"}
         self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
-        out: object = json.dumps(out_dict, indent=4)
+        out: str = json.dumps(out_dict, indent=4)
         return out

@@ -401,7 +401,7 @@ class GP:
                     break
         return result
 
-    def is_duplicate(self, valid_gps: list["GP"] | None, invalid_gps: list["GP"] = None) -> bool:
+    def is_duplicate(self, valid_gps: list["GP"] | None, invalid_gps: list["GP"]|None = None) -> bool:
         """
         Checks if a pattern is in the list of winner GPs or loser GPs
 

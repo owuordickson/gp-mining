@@ -9,11 +9,10 @@ import json
 import time
 import random
 import numpy as np
-from ..data_gp import DataGP
 from .numeric_ss import NumericSS
 
 
-class ParticleGRAANK(DataGP):
+class ParticleGRAANK(NumericSS):
 
     def __init__(self, *args, max_iter: int = 1, n_particle: int = 5, vel: float = 0.9,
                  coeff_p: float = 0.01, coeff_g: float = 0.9, **kwargs):
@@ -55,26 +54,18 @@ class ParticleGRAANK(DataGP):
         self._coeff_p: float = coeff_p
         self._coeff_g: float = coeff_g
 
-    def discover(self):
+    def discover(self) -> str:
         """
         Searches through particle positions to find GP candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
 
-        :return: JSON object
+        :return: JSON string object
         """
 
         start = time.time()
-        if self.valid_bins is None:
-            return []
-
-        # Prepare data set
-        self.fit_bitmap()
-        self.clear_gradual_patterns()
-
-        # Initialize search space
-        s_space = NumericSS.initialize_search_space(self.valid_bins, self._n_particles, self._max_iteration)
-        if s_space is None:
-            return []
+        s_space = self.init_search_space(self._n_particles, self._max_iteration)
+        if isinstance(s_space, str):
+            return s_space
 
         pbest_pop = s_space.pop.copy()
         gbest_particle = pbest_pop[0]
@@ -84,31 +75,42 @@ class ParticleGRAANK(DataGP):
             # while eval_count < max_evaluations:
             # while repeated < 1:
             for i in range(self._n_particles):
-                if s_space.pop[i].position < s_space.var_min or s_space.pop[i].position > s_space.var_max:
+                part_pos = s_space.pop[i].position
+                if part_pos is None:
+                    s_space.pop[i].cost = NumericSS.cost_function(part_pos, self.valid_bins)
+                    if s_space.pop[i].cost == 1:
+                        s_space.invalid_count += 1
+                    s_space.eval_count += 1
+                elif part_pos < s_space.var_min or part_pos > s_space.var_max:
                     s_space.pop[i].cost = 1
                 else:
-                    s_space.pop[i].cost = NumericSS.cost_function(s_space.pop[i].position, self.valid_bins)
+                    s_space.pop[i].cost = NumericSS.cost_function(part_pos, self.valid_bins)
                     if s_space.pop[i].cost == 1:
                         s_space.invalid_count += 1
                     s_space.eval_count += 1
 
-                if pbest_pop[i].cost > s_space.pop[i].cost:
-                    pbest_pop[i].cost = s_space.pop[i].cost
-                    pbest_pop[i].position = s_space.pop[i].position
+                part_cost = s_space.pop[i].cost
+                if part_cost is not None and pbest_pop[i].cost is not None and gbest_particle.cost is not None:
+                    if pbest_pop[i].cost > part_cost:
+                        pbest_pop[i].cost = part_cost
+                        pbest_pop[i].position = part_pos
 
-                if gbest_particle.cost > s_space.pop[i].cost:
-                    gbest_particle.cost = s_space.pop[i].cost
-                    gbest_particle.position = s_space.pop[i].position
+                    if gbest_particle.cost > part_cost:
+                        gbest_particle.cost = part_cost
+                        gbest_particle.position = part_pos
             # if abs(gbest_fitness_value - self.target) < self.target_error:
             #    break
-            if s_space.best_sol.cost > gbest_particle.cost:
-                s_space.best_sol = NumericSS.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
+            if gbest_particle.cost is not None and s_space.best_sol.cost is not None:
+                if s_space.best_sol.cost > gbest_particle.cost:
+                    s_space.best_sol = NumericSS.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
 
             for i in range(self._n_particles):
-                new_velocity = (self._velocity * velocity_vector[i]) + \
-                               (self._coeff_p * random.random()) * (pbest_pop[i].position - s_space.pop[i].position) + \
-                               (self._coeff_g * random.random()) * (gbest_particle.position - s_space.pop[i].position)
-                s_space.pop[i].position = s_space.pop[i].position + new_velocity
+                part_pos = s_space.pop[i].position
+                if part_pos is not None and pbest_pop[i].position is not None and gbest_particle.position is not None:
+                    new_velocity = (self._velocity * velocity_vector[i]) + \
+                               (self._coeff_p * random.random()) * (pbest_pop[i].position - part_pos) + \
+                               (self._coeff_g * random.random()) * (gbest_particle.position - part_pos)
+                    s_space.pop[i].position = s_space.pop[i].position + new_velocity
 
             _, repeated = NumericSS.evaluate_gradual_pattern(repeated, s_space, self)
             
@@ -123,10 +125,10 @@ class ParticleGRAANK(DataGP):
             "Velocity": f"{self._velocity}",
             "Personal coefficient": f"{self._coeff_p}",
             "Global coefficient": f"{self._coeff_g}",
-            "Number of iterations": s_space.iter_count,
+            "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds"}
         self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
-        out: object = json.dumps(out_dict, indent=4)
+        out: str = json.dumps(out_dict, indent=4)
         return out
