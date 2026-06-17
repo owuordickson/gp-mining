@@ -325,7 +325,7 @@ class DataGP:
             write_file(out_txt, str(f_name+'.txt'), wr=True)
 
     @classmethod
-    def gen_pairwise_data(cls, data_src: pd.DataFrame | str, min_sup :float=0.5) -> bool:
+    def save_pairwise_data(cls, data_src: pd.DataFrame | str, min_sup: float = 0.5, out_dir: str = "") -> bool:
         """
         Given a numeric dataset, this method generates all the pairwise matrices for the all the gradual items (GI)
         which are obtained from the dataset's features/columns.
@@ -335,10 +335,11 @@ class DataGP:
         >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
         >>> columns = ['Age', 'Salary', 'Cars', 'Expenses']
         >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>> sgp.gen_pairwise_data(dummy_df)
+        >>> sgp.save_pairwise_data(dummy_df, out_dir="mat_data")
 
         :param data_src: Pandas dataframe or CSV file name as a string
         :param min_sup: Minimum support value for the pairwise matrices.
+        :param out_dir: Optional directory path where CSV files should be saved.
 
         :return: True if data saved to CSV files, False otherwise.
         """
@@ -349,12 +350,17 @@ class DataGP:
         if d_set._valid_bins is None:
             return False
 
-        out_dir = ""
+        # Create the directory if it doesn't exist (does nothing if out_dir is "")
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+
         for gi_str, gp_data in (d_set._valid_bins or {}).items():
             gi: GI = GI.from_string(gi_str)
             file_name = f"{gi.as_string(d_set.titles)}.csv"
             file = os.path.join(out_dir, file_name)
-            np.savetxt(file, gp_data.bin_mat, delimiter=',', fmt='%d')
+
+            # Note: Changed fmt to '%.0f' to support floats without decimal places safely
+            np.savetxt(file, gp_data.bin_mat, delimiter=',', fmt='%.0f')
         return True
 
     @classmethod

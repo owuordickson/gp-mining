@@ -1,5 +1,7 @@
 import numpy as np
 import pandas
+
+from so4gp import DataGP
 from so4gp.algorithms import GRAANK, AntGRAANK, GeneticGRAANK, HillClimbingGRAANK, RandomGRAANK, ParticleGRAANK, TGrad, TGradAMI, ClusterGP
 from src import so4gp as sgp
 
@@ -29,6 +31,9 @@ if __name__ == "__main__":
 
     ## Test Time
     #print(sgp.DataGP.test_time("09-01-2005"))
+
+    # Generate dataset
+    # DataGP.save_pairwise_data(dummy_df)
 
     """
     ## Test Warping Path

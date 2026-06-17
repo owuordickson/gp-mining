@@ -68,6 +68,21 @@ class GI:
         """The Gradual Item (GI) in tuple format"""
         return tuple((self._attribute_col, self._symbol))
 
+    def as_string(self, columns: list[str]) -> str:
+        """
+        The Gradual Item (GI) in string format col_pos|col_neg.
+
+        :param columns: Column/feature titles/names of the dataset.
+        :return: GI as a word
+        """
+        suffix = ""
+        if self.symbol == "-":
+            suffix = "_neg"
+        elif self.symbol == "+":
+            suffix = "_pos"
+        col_title: str = columns[self.attribute_col]
+        return f"{col_title.lower()}{suffix}"
+
     def to_string(self) -> str:
         """
         Returns a GI in string format
