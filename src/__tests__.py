@@ -33,7 +33,7 @@ if __name__ == "__main__":
     #print(sgp.DataGP.test_time("09-01-2005"))
 
     # Generate dataset
-    # DataGP.save_pairwise_data(dummy_df)
+    # sgp.save_pairwise_data(dummy_df)
 
     """
     ## Test Warping Path

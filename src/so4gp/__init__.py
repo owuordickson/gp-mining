@@ -1,3 +1,5 @@
+import pandas
+
 from .data_gp import DataGP
 from .gradual_patterns import GI
 from .gradual_patterns import GP
@@ -11,15 +13,15 @@ from .utils import get_slurm_cores
 
 from functools import wraps
 @wraps(DataGP.analyze_gps)
-def analyze_gps(*args, **kwargs):
-    return DataGP.analyze_gps(*args, **kwargs)
+def analyze_gps(data_src: pandas.DataFrame|str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
+    return DataGP.analyze_gps(data_src=data_src, min_sup=min_sup, est_gps=est_gps, approach=approach)
 
-@wraps(DataGP.save_pairwise_data)
-def save_pairwise_data(*args, **kwargs):
-    return DataGP.save_pairwise_data(*args, **kwargs)
+def save_pairwise_data(data_src: pandas.DataFrame|str, min_sup: float = 0.5, out_dir: str = "") -> bool:
+    # Explicitly call the class-method using the class name
+    return DataGP.save_pairwise_data(data_src=data_src, min_sup=min_sup, out_dir=out_dir)
 
 # Project Details
-__version__ = "0.9.0"
+__version__ = "0.9.1"
 __title__ = f"so4gp (v{__version__})"
 __author__ = "Dickson Owuor"
 __credits__ = "Montpellier University"
