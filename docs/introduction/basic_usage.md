@@ -37,7 +37,13 @@ After installing the ```so4gp``` package, you can import it as follows:
 import so4gp as sgp
 ```
 
-The ```sgp``` namespace contains all necessary classes, functions, and algorithms. Classes and functions are accessible via ```sgp.ClassName``` or ```sgp.function_name```, while algorithms are located under ```sgp.algorithms.AlgorithmName```.
+The ```sgp``` namespace contains all necessary classes, functions, and algorithms. Classes and functions are accessible via ```sgp.ClassName``` or ```sgp.function_name```.
+
+To use the algorithms, import them via:
+
+```{code-block python}
+from so4gp.algorithms import GRAANK, AntGRAANK, GeneticGRAANK, ClusterGP, TGradAMI
+```
 
 The ```so4gp``` algorithms require a numeric dataset provided as either a ```pandas.DataFrame``` or a path to a ```CSV``` file.
 

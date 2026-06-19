@@ -29,6 +29,8 @@ First and foremost, import the **so4gp** python package via:
 
 ```python
 import so4gp as sgp
+# OR 
+from so4gp.algorithms import GRAANK
 ```
 
 ### GRAdual rANKing Algorithm for GPs (GRAANK)
@@ -37,12 +39,12 @@ This is the classical approach (initially proposed by Anne Laurent) for mining g
 
 ```python
 import pandas as pd
-import so4gp as sgp
+from so4gp.algorithms import GRAANK
 
 dummy_data = [["2021-03", 30, 3, 1, 10], ["2021-04", 35, 2, 2, 8], ["2021-05", 40, 4, 2, 7], ["2021-06", 50, 1, 1, 6], ["2021-07", 52, 7, 1, 2]]
 dummy_df = pd.DataFrame(dummy_data, columns=['Date', 'Age', 'Salary', 'Cars', 'Expenses'])
     
-mine_obj = sgp.algorithms.GRAANK(data_source=dummy_df, min_sup=0.5, eq=False)
+mine_obj = GRAANK(data_source=dummy_df, min_sup=0.5, eq=False)
 gp_json = mine_obj.discover()
 print(gp_json)
 
@@ -60,7 +62,7 @@ The default output is the format of JSON:
 
 ```json
 {
-	"Algorithm": "RS-GRAANK",
+	"Algorithm": "GRAANK",
 	"Best Patterns": [
             [["Age+", "Salary+"], 0.6], 
             [["Expenses-", "Age+", "Salary+"], 0.6]
