@@ -42,6 +42,12 @@ source_suffix = {
     ".md": "markdown",
 }
 
+# Enable dollarmath parsing inside Markdown files
+myst_enable_extensions = [
+    "dollarmath",
+    "amsmath",
+]
+
 templates_path = ["_templates"]
 
 exclude_patterns = [
