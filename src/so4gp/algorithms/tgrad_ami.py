@@ -163,7 +163,8 @@ class TGradAMI(TGrad):
         time_data = np.array(time_data)
         return delayed_data, time_data
 
-    def discover_tgp(self, use_clustering: bool = False, transformation_steps: dict|None = None, eval_mode: bool = False) -> dict:
+    def discover_tgp(self, use_clustering: bool = False, transformation_steps: dict|None = None,
+                     eval_mode: bool = False, save_results: bool = True) -> dict:
         """
         A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
         transformation that maintains MI and estimate the best time-delay value of the mined Fuzzy Temporal Gradual
@@ -172,6 +173,8 @@ class TGradAMI(TGrad):
         :param use_clustering: Use a clustering algorithm to estimate the best time-delay value.
         :param transformation_steps: Data transformation steps (used to override the computed transformation steps).
         :param eval_mode: Run algorithm in evaluation mode.
+        :param save_results: [optional] Save results to a csv file.
+
         :return: List of (FTGPs as DICT object) or (FTGPs and evaluation data as a Python dict) when executed in evaluation mode.
         """
 
@@ -224,7 +227,8 @@ class TGradAMI(TGrad):
             "MI Error": f"{self.mi_error:.2f}",
             "Target Column": f"{self._target_col}",
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict, target_col=self.target_col)
+        if save_results:
+            self.generate_output_files(out_dict, target_col=self.target_col)
 
         out_dict.update(add_dict)
         return out_dict

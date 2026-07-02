@@ -75,12 +75,14 @@ class TGrad(GRAANK):
         if 0 < value <= 1:
             self._min_rep = value
 
-    def discover_tgp(self, parallel: bool = False, num_cores: int = 1) -> str:
+    def discover_tgp(self, parallel: bool = False, num_cores: int = 1, save_results: bool = True) -> str:
         """
         Applies fuzzy-logic, data transformation, and gradual pattern mining to mine for Fuzzy Temporal Gradual Patterns.
 
         :param parallel: Allow multiprocessing.
         :param num_cores: Number of CPU cores for the algorithm to use.
+        :param save_results: [optional] Save results to a csv file.
+
         :return: List of FTGPs as JSON string object
         """
 
@@ -118,7 +120,8 @@ class TGrad(GRAANK):
             "Minimum Representation": f"{self.min_rep:.2f}",
             "Target Column": f"{self._target_col}",
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict, target_col=self.target_col)
+        if save_results:
+            self.generate_output_files(out_dict, target_col=self.target_col)
 
         out_dict.update({"Patterns": self.display_patterns})
         out: str = json.dumps(out_dict, indent=4)

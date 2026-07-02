@@ -152,7 +152,8 @@ class GRAANK(DataGP):
         return res_dict, invalid_count
 
     def discover(self, ignore_support: bool = False, apriori_level: int | None = None,
-                 target_col: int | None = None, exclude_target: bool = False, compute_descriptors: bool = True) -> str:
+                 target_col: int | None = None, exclude_target: bool = False, compute_descriptors: bool = True,
+                 save_results: bool = True) -> str:
         """
         Uses apriori algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
@@ -162,6 +163,7 @@ class GRAANK(DataGP):
         :param target_col: Target feature's column index.
         :param exclude_target: Only accept GP candidates that do not contain the target feature.
         :param compute_descriptors: [optional] compute descriptors for each GP candidate.
+        :param save_results: [optional] Save results to a csv file.
 
         :return: JSON string
         """
@@ -202,7 +204,8 @@ class GRAANK(DataGP):
             "Algorithm": "GRAANK",
             # "Memory Usage (MiB)": f{mem_use)}"
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict, target_col=target_col)
+        if save_results:
+            self.generate_output_files(out_dict, target_col=target_col)
 
         out_dict.update({"Patterns": self.display_patterns, "Invalid Count": str(invalid_count)})
         out:str = json.dumps(out_dict,indent=4)

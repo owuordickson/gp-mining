@@ -220,12 +220,14 @@ class ClusterGP(DataGP):
                     lst_gps.append(gp)
         return lst_gps
 
-    def discover(self) -> str:
+    def discover(self, save_results: bool = True) -> str:
         """
         Applies spectral clustering to determine which gradual items belong to the same group based on the similarity
         of net-win vectors. Gradual items in the same cluster should have almost the same score vector. The candidates
         are validated if their computed support is greater than or equal to the minimum support threshold specified by
         the user.
+
+        :param save_results: [optional] Save results to a csv file.
 
         :return: JSON string
         """
@@ -264,7 +266,8 @@ class ClusterGP(DataGP):
             "Erasure probability": f"{self._erasure_probability}",
             "Number of iterations": f"{self._max_iteration}",
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict)
+        if save_results:
+            self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": self.display_patterns, "Invalid Count": str(0)})
         out: str = json.dumps(out_dict, indent=4)

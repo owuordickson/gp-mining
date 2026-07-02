@@ -54,10 +54,12 @@ class ParticleGRAANK(NumericSS):
         self._coeff_p: float = coeff_p
         self._coeff_g: float = coeff_g
 
-    def discover(self) -> str:
+    def discover(self, save_results: bool = True) -> str:
         """
         Searches through particle positions to find GP candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
+
+        :param save_results: [optional] Save results to a csv file.
 
         :return: JSON string object
         """
@@ -127,7 +129,8 @@ class ParticleGRAANK(NumericSS):
             "Global coefficient": f"{self._coeff_g}",
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict)
+        if save_results:
+            self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
         out: str = json.dumps(out_dict, indent=4)

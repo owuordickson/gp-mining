@@ -140,11 +140,13 @@ class AntGRAANK(DataGP):
                 p_matrix[j][i] += 1
         return p_matrix
 
-    def discover(self) -> str:
+    def discover(self, save_results: bool = True) -> str:
         """
         Applies ant-colony optimization algorithm and uses pheromone levels to find GP candidates. The candidates are
         validated if their computed support is greater than or equal to the minimum support threshold specified by the
         user.
+
+        :param save_results: [optional] Save results to a csv file.
 
         :return: JSON string object
         """
@@ -221,7 +223,8 @@ class AntGRAANK(DataGP):
             "Evaporation factor": f"{self._evaporation_factor}",
             "Number of iterations": f"{it_count}",
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict)
+        if save_results:
+            self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": self.display_patterns, "Invalid Count": str(invalid_count)})
         out: str = json.dumps(out_dict, indent=4)

@@ -46,10 +46,12 @@ class RandomGRAANK(NumericSS):
         self._max_iteration: int = max_iter
         self._n_var: int = 1
 
-    def discover(self) -> str:
+    def discover(self, save_results: bool = True) -> str:
         """
         Uses random search to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
+
+        :param save_results: [optional] Save results to a csv file.
 
         :return: JSON str object
         """
@@ -79,7 +81,8 @@ class RandomGRAANK(NumericSS):
             # "Memory Usage (MiB)": f{mem_use)}"
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict)
+        if save_results:
+            self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
         out: str = json.dumps(out_dict, indent=4)

@@ -107,10 +107,12 @@ class GeneticGRAANK(NumericSS):
         y.position = int(str_y)
         return y
 
-    def discover(self) -> str:
+    def discover(self, save_results: bool = True) -> str:
         """
         Uses genetic algorithm to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
+
+        :param save_results: [optional] Save results to a csv file.
 
         :return: JSON string object
         """
@@ -168,7 +170,8 @@ class GeneticGRAANK(NumericSS):
             "Mutation Sigma": f"{self._sigma}",
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds"}
-        self.generate_output_files(out_dict)
+        if save_results:
+            self.generate_output_files(out_dict)
 
         out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
         out: str = json.dumps(out_dict, indent=4)
