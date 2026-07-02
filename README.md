@@ -1,8 +1,23 @@
-[![Downloads](https://pepy.tech/badge/so4gp)](https://pepy.tech/project/so4gp) [![Downloads](https://pepy.tech/badge/so4gp/week)](https://pepy.tech/project/so4gp)
-![Dependents](https://badgen.net/github/dependents-repo/owuordickson/gp-mining/?icon=github)
-[![DOI](https://zenodo.org/badge/388183952.svg)](https://doi.org/10.5281/zenodo.16281808)
-![Dependents](https://badgen.net/github/license/owuordickson/gp-mining/?icon=github)
 
+<div align="center">
+
+<strong>Python implementation of Gradual Pattern (GP) mining algorithms</strong>
+
+[![PyPI][pypi-badge]][pypi-url]
+[![GNU licensed][gnu-badge]][gnu-url]
+[![Python Version][python-badge]][python-url]
+[![Documentation][docs-badge]][docs-url]
+
+</div>
+
+<div align="center">
+
+[![Downloads][downloads-badge]][downloads-url] 
+[![Downloads][weekly-downloads-badge]][weekly-downloads-url] 
+![Dependents][dependents-badge]
+[![DOI][doi-badge]][doi-url]
+
+</div>
 
 **SO4GP** is a high-performance Python library designed to optimize the extraction of gradual patterns from large-scale 
 datasets. By integrating advanced computation techniques and data management strategies, the library significantly 
@@ -104,3 +119,22 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 
 **See Docs for more details**
+
+[pypi-badge]: https://img.shields.io/pypi/v/so4gp.svg
+[pypi-url]: https://pypi.org/project/so4gp/
+[gnu-badge]: https://img.shields.io/pypi/l/so4gp.svg
+[gnu-url]: https://github.com/owuordickson/gp-mining/blob/main/LICENSE
+[python-badge]: https://img.shields.io/pypi/pyversions/so4gp.svg
+[python-url]: https://www.python.org/downloads/
+[docs-badge]: https://img.shields.io/badge/docs-so4gp-blue.svg
+[docs-url]: http://so4gp.readthedocs.io
+
+[downloads-badge]: https://pepy.tech/badge/so4gp
+[downloads-url]: https://pepy.tech/project/so4gp
+[weekly-downloads-badge]: https://pepy.tech/badge/so4gp/week
+[weekly-downloads-url]: https://pepy.tech/project/so4gp
+[dependents-badge]: https://badgen.net/github/dependents-repo/owuordickson/gp-mining/?icon=github
+[dependents-url]: https://github.com/owuordickson/gp-mining/network/dependents
+[doi-badge]: https://zenodo.org/badge/388183952.svg
+[doi-url]: https://doi.org/10.5281/zenodo.16281808
+

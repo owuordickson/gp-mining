@@ -15,12 +15,13 @@ from functools import wraps
 def analyze_gps(data_src: pd.DataFrame|str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
     return DataGP.analyze_gps(data_src=data_src, min_sup=min_sup, est_gps=est_gps, approach=approach)
 
+@wraps(DataGP.save_pairwise_data)
 def save_pairwise_data(data_src: pd.DataFrame|str, min_sup: float = 0.5, out_dir: str = "") -> bool:
     # Explicitly call the class-method using the class name
     return DataGP.save_pairwise_data(data_src=data_src, min_sup=min_sup, out_dir=out_dir)
 
 # Project Details
-__version__ = "0.9.2"
+__version__ = "0.9.3"
 __title__ = f"so4gp (v{__version__})"
 __author__ = "Dickson Owuor"
 __credits__ = "Montpellier University"
