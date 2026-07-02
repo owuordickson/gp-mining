@@ -3,37 +3,34 @@ layout: "contents"
 firstpage:
 ---
 
-
 # Introduction
 
-A **Gradual Pattern (GP)** is a co-occurring set of gradual items (GI) that captures covariations between attributes. 
-A pattern's quality is measured quantitatively by its computed **support value**.
+A **Gradual Pattern (GP)** is a co-occurring set of gradual items (GI) that captures covariations between attributes. A pattern's quality is measured quantitatively by its computed **support value**.
 
 ### Illustrative Example
 Consider a dataset containing 6 objects across 3 features (`Age`, `Salary`, and `Cars`):
 
-| Object ID | Age | Salary | Cars |
-|:---------:|:---:|:---:|:---:|
-|   $o_1$   | 23 | 52,000 | 0 |
-|   $o_2$   | 27 | 51,000 | 1 |
-|   $o_3$   | 31 | 50,000 | 1 |
-|   $o_4$   | 36 | 48,000 | 1 |
-|   $o_5$   | 40 | 47,000 | 2 |
-|   $o_6$   | 40 | 45,000 | 2 |
+| Object | Age | Salary | Cars |
+|:---:|:---:|:---:|:---:|
+| o<sub>1</sub> | 23 | 52,000 | 0 |
+| o<sub>2</sub> | 27 | 51,000 | 1 |
+| o<sub>3</sub> | 31 | 50,000 | 1 |
+| o<sub>4</sub> | 36 | 48,000 | 1 |
+| o<sub>5</sub> | 40 | 47,000 | 2 |
+| o<sub>6</sub> | 40 | 45,000 | 2 |
 
 An extracted GP might take the following form:
 
-$$\{\text{Age}^+, \text{Salary}^-\} \quad [\text{Support} \approx 0.83]$$
+> **{ Age<sup>+</sup>, Salary<sup>-</sup> }** &nbsp;&nbsp;&nbsp;&nbsp; `[Support ≈ 0.83]`
 
-This mathematical expression reveals that in **83.3% of the dataset** (5 out of 6 objects), a strict increase in `Age` ($^+$) 
-strongly correlates with a simultaneous decrease in `Salary` ($^-$). 
+This expression reveals that in **83.3% of the dataset** (5 out of 6 objects), a strict increase in `Age` (<sup>+</sup>) strongly correlates with a simultaneous decrease in `Salary` (<sup>-</sup>). 
 
 #### Step-by-Step Validation:
-* Comparing $o_1 \rightarrow o_2$: Age increases ($23 \rightarrow 27$), Salary decreases ($52\text{k} \rightarrow 51\text{k}$). **(Valid)**
-* Comparing $o_2 \rightarrow o_3$: Age increases ($27 \rightarrow 31$), Salary decreases ($51\text{k} \rightarrow 50\text{k}$). **(Valid)**
-* Comparing $o_3 \rightarrow o_4$: Age increases ($31 \rightarrow 36$), Salary decreases ($50\text{k} \rightarrow 48\text{k}$). **(Valid)**
-* Comparing $o_4 \rightarrow o_5$: Age increases ($36 \rightarrow 40$), Salary decreases ($48\text{k} \rightarrow 47\text{k}$). **(Valid)**
-* Comparing $o_5 \rightarrow o_6$: Age stays the same ($40 \rightarrow 40$), but Salary decreases ($47\text{k} \rightarrow 45\text{k}$). Depending on your variation definition (strict vs. non-strict inequality), this step sequence validates 5 out of 6 objects.
+* Comparing o<sub>1</sub> → o<sub>2</sub>: Age increases (23 → 27), Salary decreases (52k → 51k). **(Valid)**
+* Comparing o<sub>2</sub> → o<sub>3</sub>: Age increases (27 → 31), Salary decreases (51k → 50k). **(Valid)**
+* Comparing o<sub>3</sub> → o<sub>4</sub>: Age increases (31 → 36), Salary decreases (50k → 48k). **(Valid)**
+* Comparing o<sub>4</sub> → o<sub>5</sub>: Age increases (36 → 40), Salary decreases (48k → 47k). **(Valid)**
+* Comparing o<sub>5</sub> → o<sub>6</sub>: Age stays the same (40 → 40), but Salary decreases (47k → 45k). Depending on your variation definition (strict vs. non-strict inequality), this step sequence validates 5 out of 6 objects.
 
 
 
