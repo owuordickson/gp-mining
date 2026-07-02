@@ -61,7 +61,7 @@ tutorials/timeseries_analysis
 :hidden:
 :caption: Development
 
-Github <https://github.com/owuordickson/sogp_pypi>
+Github <https://github.com/owuordickson/gp-mining>
 Paper <https://ieeexplore.ieee.org/abstract/document/8858883>
 release_notes/index
 ```

@@ -1,7 +1,7 @@
 [![Downloads](https://pepy.tech/badge/so4gp)](https://pepy.tech/project/so4gp) [![Downloads](https://pepy.tech/badge/so4gp/week)](https://pepy.tech/project/so4gp)
-![Dependents](https://badgen.net/github/dependents-repo/owuordickson/sogp_pypi/?icon=github)
+![Dependents](https://badgen.net/github/dependents-repo/owuordickson/gp-mining/?icon=github)
 [![DOI](https://zenodo.org/badge/388183952.svg)](https://doi.org/10.5281/zenodo.16281808)
-![Dependents](https://badgen.net/github/license/owuordickson/sogp_pypi/?icon=github)
+![Dependents](https://badgen.net/github/license/owuordickson/gp-mining/?icon=github)
 
 
 **SO4GP** is a high-performance Python library designed to optimize the extraction of gradual patterns from large-scale 
@@ -91,8 +91,8 @@ The default output is the format of JSON:
 
 Thanks go to these incredible people:
 
-<a href="https://github.com/owuordickson/sogp_pypi/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=owuordickson/sogp_pypi" />
+<a href="https://github.com/owuordickson/gp-mining/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=owuordickson/gp-mining" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
