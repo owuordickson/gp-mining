@@ -7,7 +7,7 @@ title: Release Notes
 
 ```{eval-rst}
 .. changelog::
-    :github: https://github.com/owuordickson/sogp_pypi/releases
+    :github: https://github.com/owuordickson/gp-mining/releases
     :pypi: https://pypi.org/project/so4gp/
     :changelog-url:
 ```

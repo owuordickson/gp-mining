@@ -4,17 +4,32 @@
 ![Dependents](https://badgen.net/github/license/owuordickson/sogp_pypi/?icon=github)
 
 
-**SO4GP** stands for: "Some Optimizations for Gradual Patterns". SO4GP applies optimizations such as swarm intelligence, HDF5 chunks, cluster analysis and many others in order to improve the efficiency of extracting gradual patterns. It provides Python algorithm implementations for these optimization techniques. The algorithm implementations include:
+**SO4GP** is a high-performance Python library designed to optimize the extraction of gradual patterns from large-scale 
+datasets. By integrating advanced computation techniques and data management strategies, the library significantly 
+reduces processing time and memory overhead during knowledge discovery. 
 
-* (Classical) GRAANK algorithm for extracting GPs
-* Ant Colony Optimization algorithm for extracting GPs
-* Genetic Algorithm for extracting GPs
-* Particle Swarm Optimization algorithm for extracting GPs
-* Random Search algorithm for extracting GPs
-* Local Search algorithm for extracting GPs
-* Clustering-based algorithm for extracting GPs
+## Implemented Extraction Algorithms
+The library provides native Python implementations for the following core and meta-heuristic gradual pattern mining algorithms:
 
-A GP (Gradual Pattern) is a set of gradual items (GI) and its quality is measured by its computed support value. For example given a data set with 3 columns (age, salary, cars) and 10 objects. A GP may take the form: {age+, salary-} with a support of 0.8. This implies that 8 out of 10 objects have the values of column age 'increasing' and column 'salary' decreasing.
+* **GRAANK**: The foundational classical approach for mining gradual patterns.
+* **Ant Colony Optimization (AntGRAANK)**: Meta-heuristic swarm optimization for search-space pruning.
+* **Genetic Algorithm (GeneticGRAANK)**: Evolutionary search strategy for optimized pattern extraction.
+* **Particle Swarm Optimization (ParticleGRAANK)**: Swarm intelligence framework for fast convergence.
+* **Random Search (HillClimbingGRAANK)**: Baseline stochastic search variant.
+* **Clustering-based Mining (ClusterGP)**: Data partitioning to accelerate pattern discovery.
+
+### What are Gradual Patterns?
+A **Gradual Pattern (GP)** is a co-occurring set of **gradual items (GI)** that captures covariations between attributes. 
+A pattern's quality is measured quantitatively by its computed **support value**.
+
+#### Example
+Consider a dataset containing 10 objects with 3 attributes: `age`, `salary`, and `cars`. An extracted GP might look like:
+
+$$\{\text{age}^+, \text{salary}^-\} \quad [\text{Support} = 0.8]$$
+
+This output explicitly reveals that in **80% of the dataset** (8 out of 10 objects), an increase in `age` ($^+$) strongly 
+correlates with a simultaneous decrease in `salary` ($^-$).
+
 
 ## Installation
 
@@ -23,7 +38,7 @@ pip install so4gp
 ```
 
 ## Usage
-In order to any algorithm for the purpose of extracting GPs, follow the instructions that follow.
+To use any algorithm to mine GPs, follow the instructions that follow.
 
 First and foremost, import the **so4gp** python package via:
 
@@ -35,7 +50,8 @@ from so4gp.algorithms import GRAANK
 
 ### GRAdual rANKing Algorithm for GPs (GRAANK)
 
-This is the classical approach (initially proposed by Anne Laurent) for mining gradual patterns. All the remaining algorithms are variants of this algorithm.
+This is the classical approach (initially proposed by Anne Laurent) for mining gradual patterns. All the remaining algorithms 
+are variants of this algorithm.
 
 ```python
 import pandas as pd

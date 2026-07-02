@@ -90,7 +90,7 @@ html_copy_source = False
 
 html_theme_options = {
     # "description": "A collection of gradual pattern mining algorithms and tools",  ## Not supported by Furo
-    "source_repository": "https://github.com/owuordickson/sogp_pypi",
+    "source_repository": "https://github.com/owuordickson/gp-mining",
     "source_branch": "main",
     "source_directory": "docs/",
     "top_of_page_buttons": ["view", "edit"],

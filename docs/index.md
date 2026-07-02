@@ -10,7 +10,9 @@ lastpage:
 :height: 100px
 ```
 
-**SO4GP** stands for: "Some Optimizations for Gradual Patterns". SO4GP applies optimizations such as swarm intelligence, HDF5 chunks, cluster analysis, and many others to improve the efficiency of extracting gradual patterns. 
+**SO4GP** stands for: "Some Optimizations for Gradual Patterns". **SO4GP** is a high-performance Python library designed 
+to optimize the extraction of gradual patterns from large-scale datasets. By integrating advanced computation techniques 
+and data management strategies, the library significantly reduces processing time and memory overhead during knowledge discovery.
 
 
 ```{toctree}
@@ -44,6 +46,6 @@ tutorials/timeseries_analysis
 :hidden:
 :caption: Development
 
-Github <https://github.com/owuordickson/sogp_pypi>
+Github <https://github.com/owuordickson/gp-mining>
 release_notes/index
 ```

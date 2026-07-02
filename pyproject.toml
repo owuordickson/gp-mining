@@ -38,11 +38,11 @@ classifiers = [
 
 
 [project.urls]
-Homepage = "https://github.com/owuordickson/sogp_pypi"
-Documentation = "http://sogp-pypi.readthedocs.io"
-Repository = "https://github.com/owuordickson/sogp_pypi.git"
-"Bug Tracker" = "https://github.com/owuordickson/sogp_pypi/issues"
-Changelog = "https://github.com/owuordickson/sogp_pypi/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/owuordickson/gp-mining"
+Documentation = "http://so4gp.readthedocs.io"
+Repository = "https://github.com/owuordickson/gp-mining.git"
+"Bug Tracker" = "https://github.com/owuordickson/gp-mining/issues"
+Changelog = "https://github.com/owuordickson/gp-mining/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 include-package-data = true
