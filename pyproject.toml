@@ -23,7 +23,7 @@ authors = [
 maintainers = [
   {name = "Dickson Owuor", email = "owuordickson@gmail.com"}
 ]
-description = "Some Python optimization algorithms for mining gradual patterns."
+description = "A Python library for gradual pattern mining algorithms."
 readme =  "README.md"
 license = "MIT"
 license-files = ["LICENSE*"]
