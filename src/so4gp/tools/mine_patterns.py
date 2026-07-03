@@ -125,7 +125,7 @@ def mine_gps(
         mine_obj = GRAANK(data_df, min_sup=min_support)
         return mine_obj.discover(target_col=target_column, save_results=False)
     else:
-        raise ValueError('Invalid algorithm name')
+        raise ValueError('Invalid algorithm!')
 
 
 @mcp.Tool
