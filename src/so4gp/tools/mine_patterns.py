@@ -28,7 +28,7 @@ mcp = FastMCP("Gradual Pattern Miner")
 @mcp.tool()
 def mine_gps(
     data: list[list[str | float | int]],
-    min_support: float,
+    min_support: float = 0.5,
     target_column: int|None = None,
     algorithm: str = 'graank',
     max_iteration: int|None = None,
@@ -136,9 +136,9 @@ def mine_gps(
 @mcp.tool()
 def mine_tgps(
     data: list[list[str | float | int]],
-    min_support: float,
-    target_column: int,
-    min_rep: float|None = None,
+        target_column: int,
+        min_support: float = 0.5,
+    min_rep: float = 0.5,
 ) -> str:
     """
     Mine temporal gradual patterns from time-series data using time lags.
@@ -151,8 +151,8 @@ def mine_tgps(
             Subsequent rows contain time-series values. A valid date-time column
             is required.
             Example: [["Date", "Age"], ["2021-03", 30], ["2021-04", 35]]
-        min_support: Minimum frequency threshold for a pattern (range: 0.0 to 1.0).
         target_column: Zero-based index of the target variable column.
+        min_support: Minimum frequency threshold for a pattern (range: 0.0 to 1.0).
         min_rep: Minimum representativity threshold for transforming the dataset
             (range: 0.0 to 1.0).
 
