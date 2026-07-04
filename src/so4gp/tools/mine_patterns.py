@@ -18,14 +18,19 @@ Credits:
 
 import mcp
 import pandas as pd
+from mcp.server.fastmcp import FastMCP
 
 
-@mcp.Tool
+# 1. Initialize the FastMCP server instance
+mcp = FastMCP("Gradual Pattern Miner")
+
+
+@mcp.tool()
 def mine_gps(
     data: list[list[str | float | int]],
     min_support: float,
     target_column: int|None = None,
-    algorithm: str|None = None,
+    algorithm: str = 'graank',
     max_iteration: int|None = None,
 ) -> str:
     """
@@ -128,7 +133,7 @@ def mine_gps(
         raise ValueError('Invalid algorithm!')
 
 
-@mcp.Tool
+@mcp.tool()
 def mine_tgps(
     data: list[list[str | float | int]],
     min_support: float,

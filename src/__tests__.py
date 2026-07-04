@@ -35,6 +35,12 @@ if __name__ == "__main__":
     # Generate dataset
     # sgp.save_pairwise_data(dummy_df)
 
+    # MCP Tools
+    # from so4gp.tools import mine_gps, mine_tgps
+    # lst_data = [["Date", "Age"], ["2021-03", 30], ["2021-04", 35]]
+    # res = mine_tgps(lst_data, min_support=0.1, target_column=0, min_rep=0.1)
+    # print(res)
+
     """
     ## Test Warping Path
     tgt_col = 0
