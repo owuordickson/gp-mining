@@ -13,3 +13,5 @@ To evaluate the performance of our proposed framework, we establish a competitiv
 | **Competitor** | **Classical Statistics ([SciPy](https://scipy.org))** | Measures linear relationships using the Pearson correlation coefficient. | Standard statistical baseline. |
 | **Excluded** | **[PAMI](https://github.io)** | Mines frequent patterns in univariate transactional data. | Not useful for this benchmark. |
 | **Excluded** | **[TabPFN-TS](https://github.com)** | Serves as a time-series prediction baseline for univariate data. | Not useful for this benchmark. |
+
+
