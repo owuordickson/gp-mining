@@ -34,31 +34,169 @@ This expression reveals that in **83.3% of the dataset** (5 out of 6 objects), a
 
 
 
+# Quick Start
+
 ## Installation
-The library is available on **PyPI**. To install it, run the following command in your terminal:
+
+`so4gp` is available on **PyPI**.
+
+Install the latest stable release using:
 
 ```shell
 pip install so4gp
 ```
 
-## Basic Usage
-After installing the ```so4gp``` package, you can import it as follows:
+You can verify the installation by importing the package:
 
-```{code-block} python
-import so4gp as sgp
+```python
+import so4gp
 ```
 
-The ```sgp``` namespace contains all necessary classes, functions, and algorithms. Classes and functions are accessible via ```sgp.ClassName``` or ```sgp.function_name```.
+---
 
-To use the algorithms, import them via:
+## Importing Algorithms
 
-```{code-block python}
+The `so4gp` package exposes its public algorithms through the
+`so4gp.algorithms` module.
+
+```python
 from so4gp.algorithms import GRAANK, TGRAANK
 ```
 
-The ```so4gp``` algorithms require a numeric dataset provided as either a ```pandas.DataFrame``` or a path to a ```CSV``` file.
+Alternatively, you can import the package namespace directly:
 
-All ```so4gp``` functions and classes are documented in the **API Section**.
+```python
+import so4gp as sgp
+```
+
+---
+
+## Input Data
+
+Most `so4gp` algorithms accept either:
+
+- a `pandas.DataFrame`
+- the path to a CSV file containing numerical data
+
+Datasets should contain numerical attributes. For temporal gradual pattern
+mining (`TGRAANK`), the dataset should additionally contain a timestamp or
+ordered temporal attribute.
+
+---
+
+## Example: Gradual Pattern Mining
+
+The example below extracts gradual patterns using the classical APRIORI-based
+GRAANK algorithm.
+
+```python
+import pandas as pd
+from so4gp.algorithms import GRAANK
+
+df = pd.DataFrame(
+    [
+        [30, 3, 1, 10],
+        [35, 2, 2, 8],
+        [40, 4, 2, 7],
+        [50, 1, 1, 6],
+        [52, 7, 1, 2],
+    ],
+    columns=["Age", "Salary", "Cars", "Expenses"],
+)
+
+miner = GRAANK(
+    data_source=df,
+    min_sup=0.5,
+)
+
+results = miner.discover()
+
+print(results)
+```
+
+The `discover()` method returns a JSON-formatted string containing the mined
+gradual patterns, their support values, and additional metadata.
+
+---
+
+## Example: Temporal Gradual Pattern Mining
+
+The following example discovers fuzzy temporal gradual patterns using the
+default Mutual Information (AMI) transformation algorithm.
+
+```python
+import pandas as pd
+from so4gp.algorithms import TGRAANK
+
+df = pd.DataFrame(
+    [
+        ["2021-03", 30, 3, 1, 10],
+        ["2021-04", 35, 2, 2, 8],
+        ["2021-05", 40, 4, 2, 7],
+        ["2021-06", 50, 1, 1, 6],
+        ["2021-07", 52, 7, 1, 2],
+    ],
+    columns=["Date", "Age", "Salary", "Cars", "Expenses"],
+)
+
+miner = TGRAANK(
+    data_source=df,
+    target_col=1,
+    min_sup=0.5,
+    min_rep=0.5,
+)
+
+results = miner.discover()
+
+print(results)
+```
+
+---
+
+## Choosing a Mining Algorithm
+
+`GRAANK` supports multiple search strategies through the `discover()` method.
+
+```python
+results = miner.discover(search_type="ga")
+```
+
+Supported search algorithms include:
+
+| Algorithm | Description |
+|-----------|-------------|
+| `apriori` | Classical exhaustive level-wise search |
+| `ga` | Genetic Algorithm |
+| `aco` | Ant Colony Optimization |
+| `pso` | Particle Swarm Optimization |
+| `hc` | Hill Climbing |
+| `random` | Random Search |
+
+Similarly, `TGRAANK` supports multiple temporal transformation algorithms.
+
+```python
+results = miner.discover(transformation_algorithm="ami")
+```
+
+Supported transformation algorithms include:
+
+| Algorithm | Description |
+|-----------|-------------|
+| `ami` | Average Mutual Information-based transformation (recommended) |
+| `all` | Classical TGrad fuzzy temporal transformation |
+
+---
+
+## Learn More
+
+The complete documentation includes:
+
+- **Quick Start** — installation and introductory examples.
+- **Algorithm Reference** — algorithm descriptions and usage.
+- **API Reference** — complete documentation of all public classes, methods, and functions.
+- **Examples** — practical mining workflows and advanced use cases.
+
+Refer to the **Algorithm Reference** for detailed descriptions of each mining algorithm and the **API Reference** for complete parameter documentation.
 
 ## References
 * Owuor, D., Runkler T., Laurent A., Menya E., Orero J (2021), Ant Colony Optimization for Mining Gradual Patterns. International Journal of Machine Learning and Cybernetics. [https://doi.org/10.1007/s13042-021-01390-w](https://doi.org/10.1007/s13042-021-01390-w)

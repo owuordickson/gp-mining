@@ -1,12 +1,30 @@
 Algorithm Reference
 ===================
 
+GRAANK
+-------
 
-.. autosummary::
-   :toctree: generated
-   :recursive:
+.. autoclass:: so4gp.algorithms.graank.GRAANK
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   so4gp.algorithms.graank.GRAANK
-   so4gp.algorithms.tgraank.TGRAANK
-   so4gp.algorithms.cluster_gp.ClusterGP
-   so4gp.algorithms.grad_pfs.GradPFS
+TGRAANK
+--------
+
+.. autoclass:: so4gp.algorithms.tgraank.TGRAANK
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ClusterGP
+---------
+
+.. autoclass:: so4gp.algorithms.cluster_gp.ClusterGP
+   :members:
+
+GradPFS
+--------
+
+.. autoclass:: so4gp.algorithms.grad_pfs.GradPFS
+   :members:
