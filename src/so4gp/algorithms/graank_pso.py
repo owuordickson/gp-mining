@@ -9,7 +9,7 @@ import json
 import time
 import random
 import numpy as np
-from .numeric_ss import NumericSS
+from .graank_base import NumericSS
 
 
 class ParticleGRAANK(NumericSS):

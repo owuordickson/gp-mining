@@ -8,7 +8,7 @@
 import json
 import time
 import random
-from .numeric_ss import NumericSS
+from .graank_base import NumericSS
 
 
 class RandomGRAANK(NumericSS):
