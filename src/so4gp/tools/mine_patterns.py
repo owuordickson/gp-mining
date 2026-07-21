@@ -225,6 +225,6 @@ def mine_tgps(
     data_df = pd.DataFrame(data, columns=column_names)
 
     # Run the mining algorithm
-    from ..algorithms.tgrad_ami import TGradAMI
-    mine_obj = TGradAMI(data_df, min_sup=min_support, target_col=target_column, min_rep=min_rep)
-    return mine_obj.discover(save_results=False)
+    from ..algorithms.tgraank import TGRAANK
+    mine_obj = TGRAANK(data_df, min_sup=min_support, target_col=target_column, min_rep=min_rep)
+    return mine_obj.discover(transformation_algorithm='ami', save_results=False)
