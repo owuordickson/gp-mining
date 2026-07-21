@@ -31,16 +31,6 @@ class GRAANKAlg(BaseGrad):
 
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
 
-        >>> from so4gp.algorithms import GRAANKAlg
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = GRAANKAlg(data_source=dummy_df, min_sup=0.5, eq=False)
-        >>> result_dict = str(mine_obj.discover())
-        >>> # print(result['Patterns'])
-        >>> print(result_dict) # doctest: +SKIP
         """
         super(GRAANKAlg, self).__init__(*args, **kwargs)
 

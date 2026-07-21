@@ -9,40 +9,102 @@ from .base.graank_alg import GRAANKAlg
 
 
 class GRAANK:
+    """
+    Mine Gradual Patterns (GPs) from numerical datasets.
 
-    def __init__(self, data_source, min_sup=0.5, eq=False) -> None:
+    GRAANK is a unified interface for discovering gradual patterns using either
+    the classical APRIORI algorithm or several metaheuristic optimization
+    algorithms. A gradual pattern (GP) is a set of gradual items (GIs) that
+    describe co-variation among numerical attributes.
+
+    A gradual item consists of an attribute and a direction:
+
+    * ``Age+``  : attribute values increase
+    * ``Salary-`` : attribute values decrease
+
+    A gradual pattern is a collection of gradual items, for example::
+
+        {Age+, Salary-}
+
+    with a support of ``0.80`` indicates that approximately 80% of all object
+    pairs satisfy the relationship "Age increases while Salary decreases."
+
+    Supported search algorithms:
+
+    * ``apriori`` — Classical exhaustive level-wise search (Laurent et al.).
+    * ``ga`` — Genetic Algorithm.
+    * ``aco`` — Ant Colony Optimization.
+    * ``pso`` — Particle Swarm Optimization.
+    * ``hc`` — Hill Climbing.
+    * ``random`` — Random Search.
+
+    References:
+        Anne Laurent, et al.
+        "Mining Gradual Patterns."
+        https://link.springer.com/chapter/10.1007/978-3-642-04957-6_33
+    """
+
+    def __init__(self, data_source, min_sup: float = 0.5, eq: bool = False) -> None:
         """
-        Extracts gradual patterns (GPs) from a numeric dataset using the GRAANK algorithm. The algorithm relies on the
-        APRIORI approach for generating GP candidates. This work was proposed by Anne Laurent
-        and published in: https://link.springer.com/chapter/10.1007/978-3-642-04957-6_33.
+        Initialize a gradual pattern mining session.
 
-             A GP is a set of gradual items (GI), and its quality is measured by its computed support value. For example,
-             given a data set with 3 columns (age, salary, cars) and 10 objects. A GP may take the form: {age+, salary-}
-             with a support of 0.8. This implies that 8 out of 10 objects have the values of column age 'increasing' and
-             column 'salary' decreasing.
+        This constructor prepares the mining engine and creates a default
+        :class:`GRAANKAlg` instance that performs classical APRIORI-based gradual
+        pattern mining. Alternative search algorithms can later be selected by
+        calling :meth:`discover` with the appropriate search type.
 
-        This class extends class DataGP which is responsible for generating the GP bitmaps.
+        Args:
+            data_source:
+                Input dataset.
 
-        :param data_source: [required] a data source, it can either be a 'file in csv format' or a 'Pandas DataFrame'
-        :type data_source: pd.DataFrame | str
+                Supported inputs include:
 
-        :param min_sup: [optional] minimum support threshold, the default is 0.5
-        :type min_sup: float
+                * ``pandas.DataFrame``
+                * Path to a CSV file
 
-        :param eq: [optional] encode equal values as gradual, the default is False
-        :type eq: bool
+                The dataset must contain numerical attributes.
 
-        >>> from so4gp.algorithms import GRAANK
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = GRAANKAlg(data_source=dummy_df, min_sup=0.5, eq=False)
-        >>> result_json = str(mine_obj.discover())
-        >>> # print(result['Patterns'])
-        >>> print(result_json) # doctest: +SKIP
+            min_sup:
+                Minimum support threshold in the interval ``(0, 1]``.
 
+                A candidate gradual pattern is considered frequent only if its
+                computed support is greater than or equal to this value.
+
+            eq:
+                Whether equal values should be treated as satisfying gradual
+                comparisons.
+
+                * ``False`` (default): use strict comparisons
+                  (``<`` and ``>``).
+
+                * ``True``: equal values are considered gradual
+                  (``<=`` and ``>=``).
+
+        Attributes:
+            mine_obj:
+                Active mining engine used by :meth:`discover`.
+
+        Raises:
+            ValueError:
+                If the supplied dataset cannot be loaded.
+
+        Example:
+            >>> import pandas as pd
+            >>> from so4gp.algorithms import GRAANK
+            >>>
+            >>> df = pd.DataFrame(
+            ...     [
+            ...         [30, 3, 1, 10],
+            ...         [35, 2, 2, 8],
+            ...         [40, 4, 2, 7],
+            ...         [50, 1, 1, 6],
+            ...         [52, 7, 1, 2],
+            ...     ],
+            ...     columns=["Age", "Salary", "Cars", "Expenses"],
+            ... )
+            >>>
+            >>> miner = GRAANK(df, min_sup=0.5)
+            >>> result = miner.discover()
         """
         self._data_src = data_source
         self._min_supp: float = min_sup
@@ -59,21 +121,108 @@ class GRAANK:
                  target_col: int | None = None, exclude_target: bool = False,
                  compute_descriptors: bool = True, save_results: bool = True) -> str:
         """
-        Uses a search algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
-        support is greater than or equal to the minimum support threshold specified by the user. The search algorithm
-        can either be: 'apriori', 'genetic algorithm (ga)', 'ant-colony-search (aco)', 'random-search (random)',
-        'hill-climbing-search (hc)', 'particle-swarm-search (pso)'
+        Discover gradual patterns using the selected search strategy.
 
-        :param search_type: search algorithm to use [default: 'apriori'].
-            Allowed values: ['apriori', 'ga', 'aco', 'random', 'hc', 'pso']
-        :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
-        :param max_iteration: Maximum APRIORI/iteration level for generating candidates.
-        :param target_col: Target feature's column index.
-        :param exclude_target: Only accept GP candidates that do not contain the target feature.
-        :param compute_descriptors: [optional] compute descriptors for each GP candidate.
-        :param save_results: [optional] Save results to a csv file.
+        The mining process searches the gradual pattern space using either the
+        classical APRIORI algorithm or one of several metaheuristic optimization
+        techniques.
 
-        :return: JSON string
+        Search Strategies:
+            ``apriori``:
+                Exhaustive level-wise candidate generation using the APRIORI
+                principle.
+
+            ``ga``:
+                Genetic Algorithm.
+
+                Candidate gradual patterns are encoded as chromosomes.
+                Support determines the fitness (or inverse cost), and evolutionary
+                operators are used to search for high-quality patterns.
+
+            ``aco``:
+                Ant Colony Optimization.
+
+                Gradual items form pheromone-guided solution paths.
+                Valid gradual patterns reinforce pheromone trails, biasing future
+                candidate generation toward promising regions of the search space.
+
+            ``pso``:
+                Particle Swarm Optimization.
+
+                Each particle represents a gradual pattern candidate.
+                Particle positions evolve according to personal and global best
+                solutions based on support.
+
+            ``hc``:
+                Hill Climbing.
+
+                Starts from an initial solution and repeatedly explores neighboring
+                gradual patterns, moving toward candidates with improved support.
+
+            ``random``:
+                Random Search.
+
+                Randomly samples gradual pattern candidates and evaluates them
+                independently without maintaining search history.
+
+        Args:
+            search_type:
+                Search algorithm to use.
+
+                Supported values are:
+
+                * ``apriori``
+                * ``ga``
+                * ``aco``
+                * ``pso``
+                * ``hc``
+                * ``random``
+
+            ignore_support:
+                If ``True``, discovered patterns are returned regardless of the
+                minimum support threshold.
+
+            max_iteration:
+                Maximum number of search iterations.
+
+                For APRIORI, this limits the maximum candidate level.
+                For metaheuristics, it specifies the optimization iterations.
+
+            target_col:
+                Index of the target attribute.
+
+                When specified, candidate gradual patterns may be filtered to
+                either include or exclude this attribute.
+
+            exclude_target:
+                Controls target attribute filtering.
+
+                * ``False`` (default):
+                  only patterns containing the target attribute are accepted.
+
+                * ``True``:
+                  only patterns **not** containing the target attribute are
+                  accepted.
+
+            compute_descriptors:
+                Compute additional descriptors for each gradual pattern.
+
+            save_results:
+                Generate CSV output files after mining.
+
+        Returns:
+            JSON-formatted string containing the mining results, including the
+            discovered gradual patterns, statistics, descriptors, and metadata.
+
+        Raises:
+            ValueError:
+                If an unsupported search algorithm is requested.
+
+        Notes:
+            Metaheuristic algorithms provide approximate solutions and are often
+            substantially faster than exhaustive APRIORI search on high-dimensional
+            datasets, although they do not guarantee complete enumeration of all
+            frequent gradual patterns.
         """
 
         if search_type == "apriori":

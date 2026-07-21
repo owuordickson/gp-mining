@@ -28,18 +28,6 @@ class RandomGRAANK(BaseGrad):
         :param args: [required] a data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
         :param max_iter: [optional] maximum_iteration, default is 1
 
-        >>> from so4gp.algorithms import RandomGRAANK
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = RandomGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3)
-        >>> result_dict = mine_obj.discover()
-        >>> # print(result['Patterns'])
-        >>> print(result_dict) # doctest: +SKIP
-        {"Algorithm": "RS-GRAANK", "Best Patterns": [[["Age+", "Salary+", "Expenses-"], 0.6]], "Invalid Count": 1,
-            "Iterations": 3}
         """
         super(RandomGRAANK, self).__init__(*args, **kwargs)
         self._max_iteration: int = max_iter

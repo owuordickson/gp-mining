@@ -34,17 +34,6 @@ class ParticleGRAANK(BaseGrad):
         :param coeff_p: [optional] personal coefficient, default is 0.01
         :param coeff_g: [optional] global coefficient, default is 0.9
 
-        >>> from so4gp.algorithms import ParticleGRAANK
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = ParticleGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3, n_particle=10)
-        >>> result_dict = mine_obj.discover()
-        >>> # print(result['Patterns'])
-        >>> print(result_dict) # doctest: +SKIP
-        {"Algorithm": "PSO-GRAANK", "Best Patterns": [], "Invalid Count": 12, "Iterations": 2}
         """
         super(ParticleGRAANK, self).__init__(*args, **kwargs)
         self._max_iteration: int = max_iter

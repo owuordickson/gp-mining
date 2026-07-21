@@ -29,17 +29,6 @@ class HillClimbingGRAANK(BaseGrad):
         :param max_iter: [optional] maximum_iteration, default is 1
         :param step_size: [optional] step size, default is 0.5
 
-        >>> from so4gp.algorithms import HillClimbingGRAANK
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = HillClimbingGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3, step_size=0.5)
-        >>> result_dict = mine_obj.discover()
-        >>> # print(result['Patterns'])
-        >>> print(result_dict) # doctest: +SKIP
-        {"Algorithm": "LS-GRAANK", "Best Patterns": [[["Age+", "Expenses-"], 1.0]], "Invalid Count": 2, "Iterations": 2}
         """
         super(HillClimbingGRAANK, self).__init__(*args, **kwargs)
         self._step_size: float = step_size
