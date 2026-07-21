@@ -10,11 +10,11 @@ import time
 import numpy as np
 from typing import cast
 
-from . import NumericSS
+from . import BaseGrad
 from ..gradual_patterns import GI, GP, PairwiseMatrix
 
 
-class AntGRAANK(NumericSS):
+class AntGRAANK(BaseGrad):
 
     def __init__(self, *args, max_iter: int = 1, e_factor: float = 0.5, **kwargs):
         """Extract gradual patterns (GPs) from a numeric data source using the Ant Colony Optimization approach

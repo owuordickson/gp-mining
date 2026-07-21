@@ -8,10 +8,10 @@
 import json
 import time
 import random
-from .graank_base import NumericSS
+from .graank_base import BaseGrad
 
 
-class HillClimbingGRAANK(NumericSS):
+class HillClimbingGRAANK(BaseGrad):
 
     def __init__(self, *args, max_iter: int = 1, step_size: float = 0.5, **kwargs):
         """
@@ -64,7 +64,7 @@ class HillClimbingGRAANK(NumericSS):
 
         # run the hill climb
         repeated = 0
-        candidate = NumericSS.Candidate()
+        candidate = BaseGrad.Candidate()
         while s_space.counter < self._max_iteration:
             # while eval_count < max_evaluations:
             # take a step
@@ -75,10 +75,10 @@ class HillClimbingGRAANK(NumericSS):
                     candidate.position = best_pos + (random.randrange(s_space.var_min, s_space.var_max) * self._step_size)
 
             # Evaluate candidate
-            NumericSS.evaluate_candidate(candidate, s_space, self.valid_bins)
+            BaseGrad.evaluate_candidate(candidate, s_space, self.valid_bins)
 
             # Evaluate GP
-            _, repeated = NumericSS.evaluate_gradual_pattern(repeated, s_space, self)
+            _, repeated = BaseGrad.evaluate_gradual_pattern(repeated, s_space, self)
 
         for gp in s_space.best_patterns:
             self.add_gradual_pattern(gp)

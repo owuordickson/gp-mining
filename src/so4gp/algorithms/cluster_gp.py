@@ -10,11 +10,11 @@ import time
 import numpy as np
 from sklearn.cluster import KMeans
 
-from . import NumericSS
+from . import BaseGrad
 from ..gradual_patterns import GI, GP
 
 
-class ClusterGP(NumericSS):
+class ClusterGP(BaseGrad):
 
     def __init__(self, *args, e_prob: float = 0.5, max_iter: int = 10, **kwargs):
         """

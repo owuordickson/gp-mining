@@ -12,7 +12,7 @@ from ..data_gp import DataGP
 from ..gradual_patterns import GI, GP, PairwiseMatrix
 
 
-class NumericSS(DataGP):
+class BaseGrad(DataGP):
 
     @dataclass
     class Candidate:
@@ -27,17 +27,17 @@ class NumericSS(DataGP):
         eval_count: int
         counter: int
         invalid_count: int
-        best_sol: "NumericSS.Candidate"
+        best_sol: "BaseGrad.Candidate"
         best_costs: np.ndarray
         best_patterns: list[GP]
         str_best_gps: list
-        pop: list["NumericSS.Candidate"]
+        pop: list["BaseGrad.Candidate"]
 
     def __init__(self, *args, **kwargs):
         # Initialize DataGP
-        super(NumericSS, self).__init__(*args, **kwargs)
+        super(BaseGrad, self).__init__(*args, **kwargs)
 
-    def init_search_space(self, pop_size: int, max_iter: int) -> "NumericSS.SearchSpace|str":
+    def init_search_space(self, pop_size: int, max_iter: int) -> "BaseGrad.SearchSpace|str":
         """
         Initialize the search space with pairwise matrices
         :param pop_size: population size
@@ -52,7 +52,7 @@ class NumericSS(DataGP):
             return "Pairwise matrices not available!"
 
         # Initialize search space
-        s_space = NumericSS.initialize_search_space(self.valid_bins, pop_size, max_iter)
+        s_space = BaseGrad.initialize_search_space(self.valid_bins, pop_size, max_iter)
         if s_space is None:
             return "Search space is empty!"
         return s_space
@@ -67,7 +67,7 @@ class NumericSS(DataGP):
         attr_keys = [GI.from_string(gi_str).to_string() for gi_str in gi_key_list]
 
         # Empty Individual Template
-        empty_candidate = NumericSS.Candidate (
+        empty_candidate = BaseGrad.Candidate (
             position=None,
             cost=None
         )
@@ -81,13 +81,13 @@ class NumericSS(DataGP):
             pop[i].cost = 1
 
         # Initialize best candidate
-        best_candidate = NumericSS.Candidate(
+        best_candidate = BaseGrad.Candidate(
             position=pop[0].position,
-            cost = NumericSS.cost_function(pop[0].position, valid_bins_dict)
+            cost = BaseGrad.cost_function(pop[0].position, valid_bins_dict)
         )
 
         # Initialize SearchSpace parameters
-        search_space = NumericSS.SearchSpace(
+        search_space = BaseGrad.SearchSpace(
             iter_count=0,
             eval_count=0,
             counter=0,
@@ -146,7 +146,7 @@ class NumericSS(DataGP):
             return cost
 
         gi_key_list = list(valid_bins_dict.keys())
-        pattern = NumericSS.decode_gp(position, valid_bins_dict)
+        pattern = BaseGrad.decode_gp(position, valid_bins_dict)
 
         pw_mat: PairwiseMatrix|None = None
         for gi in pattern.gradual_items:
@@ -164,7 +164,7 @@ class NumericSS(DataGP):
         return cost
 
     @staticmethod
-    def evaluate_candidate(candidate: "NumericSS.Candidate|None", s_space: "NumericSS.SearchSpace|None", valid_bins_dict: dict|None)-> "NumericSS.SearchSpace|None":
+    def evaluate_candidate(candidate: "BaseGrad.Candidate|None", s_space: "BaseGrad.SearchSpace|None", valid_bins_dict: dict | None)-> "BaseGrad.SearchSpace|None":
         """"""
 
         if candidate is None or s_space is None or valid_bins_dict is None:
@@ -181,20 +181,21 @@ class NumericSS(DataGP):
         apply_bound()
         # Update: What about duplicate candidate (position already exists in the search-space)?
         
-        candidate.cost = NumericSS.cost_function(candidate.position, valid_bins_dict)
+        candidate.cost = BaseGrad.cost_function(candidate.position, valid_bins_dict)
         if candidate.cost == 1:
             s_space.invalid_count += 1
         if candidate.cost is not None and s_space.best_sol.cost is not None:
             if candidate.cost < s_space.best_sol.cost:
-                s_space.best_sol = NumericSS.Candidate(position=candidate.position, cost=candidate.cost)
+                s_space.best_sol = BaseGrad.Candidate(position=candidate.position, cost=candidate.cost)
         s_space.eval_count += 1
         return s_space
 
     @staticmethod
-    def evaluate_gradual_pattern(repeat_count: int, s_space: "NumericSS.SearchSpace", data_gp: DataGP) -> tuple["NumericSS.SearchSpace", int]:
+    def evaluate_gradual_pattern(repeat_count: int, s_space: "BaseGrad.SearchSpace", data_gp: DataGP) -> tuple[
+        "BaseGrad.SearchSpace", int]:
         """"""
         dim = data_gp.attr_size
-        best_gp: GP = NumericSS.decode_gp(s_space.best_sol.position, data_gp.valid_bins)
+        best_gp: GP = BaseGrad.decode_gp(s_space.best_sol.position, data_gp.valid_bins)
         best_gp.support = float(1 / s_space.best_sol.cost) / float(dim * (dim - 1.0) / 2.0)
         is_present = best_gp.is_duplicate(s_space.best_patterns)
         is_sub = best_gp.check_am(s_space.best_patterns, subset=True)

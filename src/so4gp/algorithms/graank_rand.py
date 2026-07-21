@@ -8,10 +8,10 @@
 import json
 import time
 import random
-from .graank_base import NumericSS
+from .graank_base import BaseGrad
 
 
-class RandomGRAANK(NumericSS):
+class RandomGRAANK(BaseGrad):
 
     def __init__(self, *args, max_iter: int = 1, **kwargs):
         """
@@ -61,16 +61,16 @@ class RandomGRAANK(NumericSS):
         if isinstance(s_space, str):
             return s_space
 
-        repeated, candidate = 0, NumericSS.Candidate()
+        repeated, candidate = 0, BaseGrad.Candidate()
         while s_space.counter < self._max_iteration:
             # while eval_count < max_evaluations:
             candidate.position = ((s_space.var_min + random.random()) * (s_space.var_max - s_space.var_min))
 
             # Evaluate candidate
-            NumericSS.evaluate_candidate(candidate, s_space, self.valid_bins)
+            BaseGrad.evaluate_candidate(candidate, s_space, self.valid_bins)
 
             # Evaluate GP
-            _, repeated = NumericSS.evaluate_gradual_pattern(repeated, s_space, self)
+            _, repeated = BaseGrad.evaluate_gradual_pattern(repeated, s_space, self)
 
         for gp in s_space.best_patterns:
             self.add_gradual_pattern(gp)

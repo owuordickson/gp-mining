@@ -4,7 +4,7 @@ from .graank_ga import GeneticGRAANK
 from .graank import GRAANK
 from .grad_pfs import GradPFS
 from .graank_hc import HillClimbingGRAANK
-from .graank_base import NumericSS
+from .graank_base import BaseGrad
 from .graank_pso import ParticleGRAANK
 from .graank_rand import RandomGRAANK
 from .tgrad import TGrad
@@ -17,7 +17,7 @@ __all__ = [
     "GRAANK",
     "GradPFS",
     "HillClimbingGRAANK",
-    "NumericSS",
+    "BaseGrad",
     "ParticleGRAANK",
     "RandomGRAANK",
     "TGrad",

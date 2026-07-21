@@ -10,12 +10,12 @@ import copy
 import time
 import numpy as np
 
-from . import NumericSS
+from . import BaseGrad
 from ..data_gp import DataGP
 from ..gradual_patterns import GI, GP, PairwiseMatrix
 
 
-class GRAANK(NumericSS):
+class GRAANK(BaseGrad):
 
     def __init__(self, *args, **kwargs):
         """

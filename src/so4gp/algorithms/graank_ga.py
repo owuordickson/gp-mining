@@ -9,10 +9,10 @@ import json
 import time
 import random
 import numpy as np
-from .graank_base import NumericSS
+from .graank_base import BaseGrad
 
 
-class GeneticGRAANK(NumericSS):
+class GeneticGRAANK(BaseGrad):
 
     def __init__(self, *args, max_iter=1, n_pop=5, pc=0.5, gamma=1.0, mu=0.9, sigma=0.9, **kwargs):
         """
@@ -67,7 +67,7 @@ class GeneticGRAANK(NumericSS):
         self._mu: float = mu
         self._sigma: float = sigma
 
-    def _crossover(self, p1: NumericSS.Candidate, p2: NumericSS.Candidate) -> tuple[NumericSS.Candidate, NumericSS.Candidate]:
+    def _crossover(self, p1: BaseGrad.Candidate, p2: BaseGrad.Candidate) -> tuple[BaseGrad.Candidate, BaseGrad.Candidate]:
         """
         Crosses over the genes of 2 parents (an individual with a specific position and cost) to generate 2
         different offsprings.
@@ -76,14 +76,14 @@ class GeneticGRAANK(NumericSS):
         :param p2: The parent-2 individual
         :return: Two offsprings (children)
         """
-        c1 = NumericSS.Candidate()
-        c2 = NumericSS.Candidate()
+        c1 = BaseGrad.Candidate()
+        c2 = BaseGrad.Candidate()
         alpha: float = random.uniform(0, self._gamma)
         c1.position = float(alpha * p1.position + (1 - alpha) * p2.position)
         c2.position = float(alpha * p2.position + (1 - alpha) * p1.position)
         return c1, c2
 
-    def _mutate(self, x: NumericSS.Candidate):
+    def _mutate(self, x: BaseGrad.Candidate):
         """
 
         Mutates an individual's position to create a new and different individual.
@@ -91,7 +91,7 @@ class GeneticGRAANK(NumericSS):
         :param x: The existing individual
         :return: A new individual
         """
-        y = NumericSS.Candidate(position=x.position, cost=x.cost)
+        y = BaseGrad.Candidate(position=x.position, cost=x.cost)
         str_x = str(int(y.position) if y.position is not None else 0)
         flag = np.random.rand(*(len(str_x),)) <= self._mu
         ind = np.argwhere(flag)
@@ -135,14 +135,14 @@ class GeneticGRAANK(NumericSS):
 
                 # a. Perform Crossover
                 c1, c2 = self._crossover(p1, p2)
-                NumericSS.evaluate_candidate(c1, s_space, self.valid_bins)
-                NumericSS.evaluate_candidate(c2, s_space, self.valid_bins)
+                BaseGrad.evaluate_candidate(c1, s_space, self.valid_bins)
+                BaseGrad.evaluate_candidate(c2, s_space, self.valid_bins)
 
                 # b. Perform Mutation
                 c1 = self._mutate(c1)
                 c2 = self._mutate(c2)
-                NumericSS.evaluate_candidate(c1, s_space, self.valid_bins)
-                NumericSS.evaluate_candidate(c2, s_space, self.valid_bins)
+                BaseGrad.evaluate_candidate(c1, s_space, self.valid_bins)
+                BaseGrad.evaluate_candidate(c2, s_space, self.valid_bins)
 
                 # c. Add Offsprings to c_pop
                 c_pop.append(c1)
@@ -154,7 +154,7 @@ class GeneticGRAANK(NumericSS):
             s_space.pop = s_space.pop[0:self._parent_pop]
 
             # Evaluate GP
-            _, repeated = NumericSS.evaluate_gradual_pattern(repeated, s_space, self)
+            _, repeated = BaseGrad.evaluate_gradual_pattern(repeated, s_space, self)
 
         for gp in s_space.best_patterns:
             self.add_gradual_pattern(gp)

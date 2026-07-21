@@ -9,10 +9,10 @@ import json
 import time
 import random
 import numpy as np
-from .graank_base import NumericSS
+from .graank_base import BaseGrad
 
 
-class ParticleGRAANK(NumericSS):
+class ParticleGRAANK(BaseGrad):
 
     def __init__(self, *args, max_iter: int = 1, n_particle: int = 5, vel: float = 0.9,
                  coeff_p: float = 0.01, coeff_g: float = 0.9, **kwargs):
@@ -79,14 +79,14 @@ class ParticleGRAANK(NumericSS):
             for i in range(self._n_particles):
                 part_pos = s_space.pop[i].position
                 if part_pos is None:
-                    s_space.pop[i].cost = NumericSS.cost_function(part_pos, self.valid_bins)
+                    s_space.pop[i].cost = BaseGrad.cost_function(part_pos, self.valid_bins)
                     if s_space.pop[i].cost == 1:
                         s_space.invalid_count += 1
                     s_space.eval_count += 1
                 elif part_pos < s_space.var_min or part_pos > s_space.var_max:
                     s_space.pop[i].cost = 1
                 else:
-                    s_space.pop[i].cost = NumericSS.cost_function(part_pos, self.valid_bins)
+                    s_space.pop[i].cost = BaseGrad.cost_function(part_pos, self.valid_bins)
                     if s_space.pop[i].cost == 1:
                         s_space.invalid_count += 1
                     s_space.eval_count += 1
@@ -104,7 +104,7 @@ class ParticleGRAANK(NumericSS):
             #    break
             if gbest_particle.cost is not None and s_space.best_sol.cost is not None:
                 if s_space.best_sol.cost > gbest_particle.cost:
-                    s_space.best_sol = NumericSS.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
+                    s_space.best_sol = BaseGrad.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
 
             for i in range(self._n_particles):
                 part_pos = s_space.pop[i].position
@@ -114,7 +114,7 @@ class ParticleGRAANK(NumericSS):
                                (self._coeff_g * random.random()) * (gbest_particle.position - part_pos)
                     s_space.pop[i].position = s_space.pop[i].position + new_velocity
 
-            _, repeated = NumericSS.evaluate_gradual_pattern(repeated, s_space, self)
+            _, repeated = BaseGrad.evaluate_gradual_pattern(repeated, s_space, self)
             
         for gp in s_space.best_patterns:
             self.add_gradual_pattern(gp)
