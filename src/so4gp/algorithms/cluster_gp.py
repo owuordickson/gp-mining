@@ -10,7 +10,7 @@ import time
 import numpy as np
 from sklearn.cluster import KMeans
 
-from .graank_base import BaseGrad
+from .base.graank_base import BaseGrad
 from ..gradual_patterns import GI, GP
 
 

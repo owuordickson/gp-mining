@@ -5,7 +5,7 @@
 
 
 import json
-from .base.graank_alg import GRAANKAlg
+from .base.graank_alg import OrigGRAANK
 
 
 class GRAANK:
@@ -49,9 +49,9 @@ class GRAANK:
         Initialize a gradual pattern mining session.
 
         This constructor prepares the mining engine and creates a default
-        :class:`GRAANKAlg` instance that performs classical APRIORI-based gradual
+        :class:`OrigGRAANK` instance that performs classical APRIORI-based gradual
         pattern mining. Alternative search algorithms can later be selected by
-        calling :meth:`discover` with the appropriate search type.
+        calling `discover()` with the appropriate search type.
 
         Args:
             data_source:
@@ -81,8 +81,8 @@ class GRAANK:
                   (``<=`` and ``>=``).
 
         Attributes:
-            mine_obj:
-                Active mining engine used by :meth:`discover`.
+            mining_engine:
+                Active mining engine used by discover()`.
 
         Raises:
             ValueError:
@@ -109,10 +109,10 @@ class GRAANK:
         self._data_src = data_source
         self._min_supp: float = min_sup
         self._eq: bool = eq
-        self._mine_obj = GRAANKAlg(data_source, min_sup=min_sup, eq=eq)
+        self._mine_obj = OrigGRAANK(data_source, min_sup=min_sup, eq=eq)
 
     @property
-    def mine_obj(self):
+    def mining_engine(self):
         return self._mine_obj
 
     def discover(self,
@@ -251,7 +251,7 @@ class GRAANK:
         if self._mine_obj is None:
             raise ValueError("Invalid search type!")
 
-        if isinstance(self._mine_obj, GRAANKAlg):
+        if isinstance(self._mine_obj, OrigGRAANK):
             res_dict = self._mine_obj.discover(ignore_support=ignore_support, target_col=target_col, exclude_target=exclude_target, apriori_level=max_iteration, compute_descriptors=compute_descriptors)
         else:
             res_dict = self._mine_obj.discover(ignore_support=ignore_support, target_col=target_col, exclude_target=exclude_target)

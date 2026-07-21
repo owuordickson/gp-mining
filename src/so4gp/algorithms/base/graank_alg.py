@@ -14,7 +14,7 @@ from ...data_gp import DataGP
 from ...gradual_patterns import GI, GP, PairwiseMatrix
 
 
-class GRAANKAlg(BaseGrad):
+class OrigGRAANK(BaseGrad):
 
     def __init__(self, *args, **kwargs):
         """
@@ -32,7 +32,7 @@ class GRAANKAlg(BaseGrad):
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
 
         """
-        super(GRAANKAlg, self).__init__(*args, **kwargs)
+        super(OrigGRAANK, self).__init__(*args, **kwargs)
 
     def _gen_apriori_candidates(self, gi_dict: dict|None, ignore_sup: bool = False,
                                 target_col: int | None = None, exclude_target: bool = False):

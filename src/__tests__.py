@@ -2,7 +2,7 @@ import numpy as np
 import pandas
 
 from so4gp import DataGP
-from so4gp.algorithms import GRAANKAlg, AntGRAANK, GeneticGRAANK, HillClimbingGRAANK, RandomGRAANK, ParticleGRAANK, TGrad, TGradAMI, ClusterGP
+from so4gp.algorithms import GRAANK, TGrad, TGradAMI, ClusterGP
 from src import so4gp as sgp
 
 if __name__ == "__main__":
@@ -14,18 +14,18 @@ if __name__ == "__main__":
     # dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
 
     ## Test Algorithms
-    mine_obj = GRAANKAlg(dummy_df, min_sup=0.5, eq=False)
+    mine_obj = GRAANK(dummy_df, min_sup=0.5, eq=False)
     # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0)
-    # mine_obj = AntGRAANK(dummy_df)
-    # mine_obj = GeneticGRAANK(dummy_df)
-    # mine_obj = HillClimbingGRAANK(dummy_df, min_sup=0.1)
-    # mine_obj = RandomGRAANK(dummy_df)
-    # mine_obj = ParticleGRAANK(dummy_df, min_sup=0.1)
     # mine_obj1 = TGrad(dummy_df, target_col=1, min_sup=0.2, min_rep=0.1)
     # mine_obj2 = TGradAMI(dummy_df, min_sup=0.5, target_col=1, min_rep=0.5, min_error=0.1)
     # result_json = mine_obj.discover(target_col=2, compute_descriptors=True)  # GRAANK
-    # result_json = mine_obj.discover(target_col=1, exclude_target=False)  # OTHERS
-    #result_json = mine_obj.discover()
+    result_json = mine_obj.discover()                                          # GRAANK/ClusterGP
+    # result_json = mine_obj.discover(search_type='aco', target_col=1, exclude_target=False)      # ACO
+    # result_json = mine_obj.discover(search_type='ga', target_col=1, exclude_target=False)      # GA
+    # result_json = mine_obj.discover(search_type='pso', target_col=1, exclude_target=False)      # PSO
+    # result_json = mine_obj.discover(search_type='hl', target_col=1, exclude_target=False)      # HL
+    # result_json = mine_obj.discover(search_type='random', target_col=1, exclude_target=False)      # Random
+
     # result_json = mine_obj1.discover_tgp(parallel=False)  # TGrad
     # result_json = mine_obj2.discover_tgp(use_clustering=False, eval_mode=True)  # TGradAMI
     print(f"{result_json}\n")
