@@ -10,7 +10,7 @@ import copy
 import time
 import numpy as np
 
-from . import BaseGrad
+from .graank_base import BaseGrad
 from ..data_gp import DataGP
 from ..gradual_patterns import GI, GP, PairwiseMatrix
 
@@ -171,8 +171,7 @@ class GRAANK(BaseGrad):
         """
 
         start = time.time()
-        self.fit_bitmap()
-        self.clear_gradual_patterns()
+        self.init_search_space(0, 0)
         valid_bins_dict: dict|None = copy.deepcopy(self.valid_bins)
 
         if valid_bins_dict is None:

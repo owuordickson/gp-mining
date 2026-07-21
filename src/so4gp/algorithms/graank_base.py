@@ -51,14 +51,17 @@ class BaseGrad(DataGP):
         if self.valid_bins is None:
             return "Pairwise matrices not available!"
 
+        if pop_size == 0:
+            return "Population size is zero!"
+
         # Initialize search space
-        s_space = BaseGrad.initialize_search_space(self.valid_bins, pop_size, max_iter)
+        s_space = BaseGrad.initialize_numeric_search_space(self.valid_bins, pop_size, max_iter)
         if s_space is None:
             return "Search space is empty!"
         return s_space
 
     @staticmethod
-    def initialize_search_space(valid_bins_dict: dict | None, total_pop: int, max_iter: int):
+    def initialize_numeric_search_space(valid_bins_dict: dict | None, total_pop: int, max_iter: int):
         """Create a population of candidate solutions."""
         if valid_bins_dict is None:
             return None

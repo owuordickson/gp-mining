@@ -10,7 +10,7 @@ import time
 import numpy as np
 from typing import cast
 
-from . import BaseGrad
+from .graank_base import BaseGrad
 from ..gradual_patterns import GI, GP, PairwiseMatrix
 
 
@@ -60,7 +60,7 @@ class AntGRAANK(BaseGrad):
         :return: distance matrix (d) and attribute keys
         """
 
-        self.fit_bitmap()
+        # Get valid GI bitmaps
         gi_dict = self.valid_bins
 
         # 1. Fetch valid bins group
@@ -153,8 +153,9 @@ class AntGRAANK(BaseGrad):
         """
 
         start = time.time()
+        self.init_search_space(0, 0)
         self._fit()  # distance matrix (d) & attributes corresponding to d
-        self.clear_gradual_patterns()
+
         d = self._distance_matrix
         if d is None:
             out = json.dumps(
