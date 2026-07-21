@@ -9,11 +9,12 @@ import json
 import time
 import numpy as np
 from sklearn.cluster import KMeans
-from ..data_gp import DataGP
+
+from . import NumericSS
 from ..gradual_patterns import GI, GP
 
 
-class ClusterGP(DataGP):
+class ClusterGP(NumericSS):
 
     def __init__(self, *args, e_prob: float = 0.5, max_iter: int = 10, **kwargs):
         """

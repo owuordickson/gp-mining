@@ -11,7 +11,7 @@ from .tgrad import TGrad
 
 class TGradAMI(TGrad):
 
-    def __init__(self, *args, min_error: float = 0.0001, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Algorithm for estimating time-lag using Average Mutual Information (AMI) and KMeans clustering which is
         extended to mining gradual patterns. The average mutual information I(X; Y) is a measure of the “information”
@@ -26,7 +26,6 @@ class TGradAMI(TGrad):
 
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
         :param kwargs: [required] target-column or attribute or feature, [optional] minimum representativity
-        :param min_error: [optional] minimum Mutual Information error margin.
 
         >>> from so4gp.algorithms import TGradAMI
         >>> import pandas
@@ -34,20 +33,15 @@ class TGradAMI(TGrad):
         >>> dummy_data = [["2021-03", 30, 3, 1, 10], ["2021-04", 35, 2, 2, 8], ["2021-05", 40, 4, 2, 7], ["2021-06", 50, 1, 1, 6], ["2021-07", 52, 7, 1, 2]]
         >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Date', 'Age', 'Salary', 'Cars', 'Expenses'])
         >>>
-        >>> mine_obj = TGradAMI(dummy_df, min_sup=0.5, target_col=1, min_rep=0.5, min_error=0.1)
-        >>> result_dict = mine_obj.discover_tgp(use_clustering=True, eval_mode=False)
+        >>> mine_obj = TGradAMI(dummy_df, min_sup=0.5, target_col=1, min_rep=0.5)
+        >>> result_dict = mine_obj.discover_tgp(use_clustering=True, error_margin=0.1, eval_mode=False)
         >>>
         >>> # print(result['Patterns'])
         >>> print(result_dict)
         """
         super(TGradAMI, self).__init__(*args, **kwargs)
-        self._error_margin: float = min_error
         self._feature_cols: np.ndarray = np.setdiff1d(self.attr_cols, self.target_col)
         self._mi_error: float = 0
-
-    @property
-    def error_margin(self):
-        return self._error_margin
 
     @property
     def mi_error(self):
@@ -57,7 +51,7 @@ class TGradAMI(TGrad):
     def feature_cols(self):
         return self._feature_cols
 
-    def find_best_mutual_info(self):
+    def find_best_mutual_info(self, error_margin):
         """
         A method that computes the mutual information I(X; Y) of the original dataset and all the transformed datasets
         w.r.t. Minimum representativity threshold.
@@ -66,6 +60,8 @@ class TGradAMI(TGrad):
         encoding allows our algorithm to treat that MI as useless). So now, that allows our algorithm to easily
         distinguish very small MI values. This is beautiful because if the initial MI is 0, then both will be -1, making it
         the optimal MI with any other -1 in the time-delayed MIs.
+
+        :param error_margin: minimum Mutual Information error margin.
 
         :return: {column index: transformation step}
         """
@@ -93,7 +89,7 @@ class TGradAMI(TGrad):
             # Compute MI error
             squared_diff = np.square(np.subtract(mi_vals, init_mi_info))
             mse_arr = np.sqrt(squared_diff)
-            is_mi_preserved = np.all(mse_arr <= self._error_margin)
+            is_mi_preserved = np.all(mse_arr <= error_margin)
             if is_mi_preserved:
                 optimal_dict = {int(self._feature_cols[i]): step for i in range(len(self._feature_cols))}
                 self._mi_error = round(np.min(mse_arr), 5)
@@ -164,6 +160,7 @@ class TGradAMI(TGrad):
         return delayed_data, time_data
 
     def discover_tgp(self, use_clustering: bool = False, transformation_steps: dict|None = None,
+                     error_margin: float = 0.0001,
                      eval_mode: bool = False, save_results: bool = True) -> dict:
         """
         A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
@@ -172,6 +169,7 @@ class TGradAMI(TGrad):
 
         :param use_clustering: Use a clustering algorithm to estimate the best time-delay value.
         :param transformation_steps: Data transformation steps (used to override the computed transformation steps).
+        :param error_margin: [optional] minimum Mutual Information error margin.
         :param eval_mode: Run algorithm in evaluation mode.
         :param save_results: [optional] Save results to a csv file.
 
@@ -188,7 +186,7 @@ class TGradAMI(TGrad):
                 if v > max_step:
                     max_step = v
         else:
-            optimal_dict, max_step = self.find_best_mutual_info()
+            optimal_dict, max_step = self.find_best_mutual_info(error_margin=error_margin)
 
         # 2. Create a final (and dynamic) delayed dataset
         delayed_data, time_data = self.gather_delayed_data(optimal_dict, max_step)
@@ -223,7 +221,7 @@ class TGradAMI(TGrad):
             "Algorithm": "TGradAMI",
             # "Memory Usage (MiB)": f{mem_use)}",
             "Minimum Representation": f"{self.min_rep:.2f}",
-            "MI Minimum Error": f"{self.error_margin:.2f}",
+            "MI Minimum Error": f"{error_margin:.2f}",
             "MI Error": f"{self.mi_error:.2f}",
             "Target Column": f"{self._target_col}",
             "Run-time": f"{duration:.6f} seconds"}

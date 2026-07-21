@@ -9,11 +9,13 @@ import json
 import copy
 import time
 import numpy as np
+
+from . import NumericSS
 from ..data_gp import DataGP
 from ..gradual_patterns import GI, GP, PairwiseMatrix
 
 
-class GRAANK(DataGP):
+class GRAANK(NumericSS):
 
     def __init__(self, *args, **kwargs):
         """
