@@ -1,7 +1,7 @@
-Pairwise Matrix
+Gradual Item
 ===============
 
-.. autoclass:: so4gp.gradual_patterns.PairwiseMatrix
+.. autoclass:: so4gp.gradual_patterns.GI
    :members:
    :undoc-members:
    :show-inheritance:

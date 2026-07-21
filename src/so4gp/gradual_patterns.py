@@ -20,6 +20,7 @@ from dataclasses import dataclass
 
 @dataclass
 class PairwiseMatrix:
+    """A data-class for storing pairwise (bitmap) matrix and its support value."""
     bin_mat: np.ndarray
     support: float
 
@@ -448,16 +449,16 @@ class GP:
 
         1. Density (ρ_g):
             Proportion of concordant index pairs relative to all possible pairs
-            ρ_g = |W_g| / C(n, 2)
+            ρ_g = |``W_g``| / C(n, 2)
 
         2. Average Deviation from Diagonal (μ_g):
-            Mean absolute distance |i - j| across all pairs in W_g.
+            Mean absolute distance ``|i - j|`` across all pairs in ``W_g``.
 
         3. Rank Dispersion (σ_g):
-            Standard deviation of |i - j|, capturing variability of index distances across all pairs in W_g.
+            Standard deviation of ``|i - j|``, capturing variability of index distances across all pairs in ``W_g``.
 
         4. Graph Connectivity (κ_g):
-            Number of connected components when W_g is interpreted as an undirected graph.
+            Number of connected components when ``W_g`` is interpreted as an undirected graph.
 
         5. Singularity Score (S_g):
             Measures concentration of index participation (node degree skewness).
@@ -487,7 +488,7 @@ class GP:
             """
             Warping set density
 
-            ρ_g = |W_g| / C(n, 2)
+            ρ_g = |``W_g``| / C(n, 2)
             """
             return float(pair_count) / float(total_pairs)
 
@@ -495,7 +496,7 @@ class GP:
             """
             Average Deviation from Diagonal
 
-            μ_g = (1 / |W_g|) * Σ |i - j|
+            μ_g = (1 / |``W_g``|) * Σ ``|i - j|``
             """
             deviations = np.abs(i_vals - j_vals)
             return float(np.mean(deviations))
@@ -504,29 +505,29 @@ class GP:
             """
             Rank Dispersion
 
-            σ_g = sqrt((1 / |W_g|) * Σ (|i - j| - μ_g)^2)
+            σ_g = sqrt((1 / |``W_g``|) * Σ (``|i - j|`` - μ_g)^2)
             """
             deviations = np.abs(i_vals - j_vals)
             return float(np.std(deviations))
 
         def compute_graph_connectivity(active_only: bool = True) -> int:
             """
-            Computes the graph connectivity (number of connected components) of the gradual warping set W_g.
+            Computes the graph connectivity (number of connected components) of the gradual warping set ``W_g``.
 
-            The warping set W_g is interpreted as an undirected graph G = (V, E), where:
+            The warping set ``W_g`` is interpreted as an undirected graph G = (V, E), where:
                 - V is the set of object indices
-                - E = W_g is the set of edges (i, j)
+                - E = ``W_g`` is the set of edges (i, j)
 
             Two modes of computation are supported:
 
             1. Global connectivity (active_only = False):
                 - V = {0, 1, ..., n-1}
-                - Includes all dataset objects, even those not present in W_g
+                - Includes all dataset objects, even those not present in ``W_g``
                 - Isolated nodes are counted as individual connected components
                 - Captures global fragmentation of the dataset
 
             2. Active connectivity (active_only = True):
-                - V = set of indices appearing in W_g
+                - V = set of indices appearing in ``W_g``
                 - Ignores isolated nodes not participating in any pair
                 - Captures structural connectivity of the gradual pattern itself
 
@@ -535,7 +536,7 @@ class GP:
                 - Higher κ_g indicates fragmentation
                 - Path-like behavior is approximated when κ_g = 1
 
-            :param active_only: If True, compute connectivity using only nodes present in W_g;
+            :param active_only: If True, compute connectivity using only nodes present in ``W_g``;
                                 otherwise, include all dataset nodes.
             :return: Number of connected components (κ_g)
             """

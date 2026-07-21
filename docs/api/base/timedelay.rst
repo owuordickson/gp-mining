@@ -1,5 +1,5 @@
-Gradual Pattern
-===============
+Time Delay
+==========
 
 .. autoclass:: so4gp.gradual_patterns.TimeDelay
    :members:
