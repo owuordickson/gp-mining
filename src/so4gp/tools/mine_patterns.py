@@ -112,19 +112,14 @@ def mine_gps(
             mine_obj = ClusterGP(data_df, min_sup=min_support)
         return mine_obj.discover(save_results=False)
     elif algorithm == 'graank-aco':
-        from ..algorithms.graank_aco import AntGRAANK
-        if max_iteration is not None:
-            mine_obj = AntGRAANK(data_df, min_sup=min_support, max_iter=max_iteration)
-        else:
-            mine_obj = AntGRAANK(data_df, min_sup=min_support)
-        return mine_obj.discover(target_col=target_column, save_results=False)
+        from ..algorithms.graank import GRAANK
+        mine_obj = GRAANK(data_df, min_sup=min_support)
+        return mine_obj.discover(search_type='aco', target_col=target_column, max_iteration=max_iteration, save_results=False)
     elif algorithm == 'graank-ga':
-        from ..algorithms.graank_ga import GeneticGRAANK
-        if max_iteration is not None:
-            mine_obj = GeneticGRAANK(data_df, min_sup=min_support, max_iter=max_iteration)
-        else:
-            mine_obj = GeneticGRAANK(data_df, min_sup=min_support)
-        return mine_obj.discover(target_col=target_column, save_results=False)
+        from ..algorithms.graank import GRAANK
+        mine_obj = GRAANK(data_df, min_sup=min_support)
+        return mine_obj.discover(search_type='ga', target_col=target_column, max_iteration=max_iteration,
+                                 save_results=False)
     elif algorithm == 'graank':
         from ..algorithms.graank import GRAANK
         mine_obj = GRAANK(data_df, min_sup=min_support)

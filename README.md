@@ -60,7 +60,7 @@ First and foremost, import the **so4gp** python package via:
 ```python
 import so4gp as sgp
 # OR 
-from so4gp.algorithms import GRAANK
+from so4gp.algorithms import GRAANKAlg
 ```
 
 ### GRAdual rANKing Algorithm for GPs (GRAANK)
@@ -70,12 +70,13 @@ are variants of this algorithm.
 
 ```python
 import pandas as pd
-from so4gp.algorithms import GRAANK
+from so4gp.algorithms import GRAANKAlg
 
-dummy_data = [["2021-03", 30, 3, 1, 10], ["2021-04", 35, 2, 2, 8], ["2021-05", 40, 4, 2, 7], ["2021-06", 50, 1, 1, 6], ["2021-07", 52, 7, 1, 2]]
+dummy_data = [["2021-03", 30, 3, 1, 10], ["2021-04", 35, 2, 2, 8], ["2021-05", 40, 4, 2, 7], ["2021-06", 50, 1, 1, 6],
+              ["2021-07", 52, 7, 1, 2]]
 dummy_df = pd.DataFrame(dummy_data, columns=['Date', 'Age', 'Salary', 'Cars', 'Expenses'])
-    
-mine_obj = GRAANK(data_source=dummy_df, min_sup=0.5, eq=False)
+
+mine_obj = GRAANKAlg(data_source=dummy_df, min_sup=0.5, eq=False)
 gp_json = mine_obj.discover()
 print(gp_json)
 

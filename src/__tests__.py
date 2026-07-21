@@ -2,7 +2,7 @@ import numpy as np
 import pandas
 
 from so4gp import DataGP
-from so4gp.algorithms import GRAANK, AntGRAANK, GeneticGRAANK, HillClimbingGRAANK, RandomGRAANK, ParticleGRAANK, TGrad, TGradAMI, ClusterGP
+from so4gp.algorithms import GRAANKAlg, AntGRAANK, GeneticGRAANK, HillClimbingGRAANK, RandomGRAANK, ParticleGRAANK, TGrad, TGradAMI, ClusterGP
 from src import so4gp as sgp
 
 if __name__ == "__main__":
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
 
     ## Test Algorithms
-    mine_obj = GRAANK(dummy_df, min_sup=0.5, eq=False)
+    mine_obj = GRAANKAlg(dummy_df, min_sup=0.5, eq=False)
     # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0)
     # mine_obj = AntGRAANK(dummy_df)
     # mine_obj = GeneticGRAANK(dummy_df)

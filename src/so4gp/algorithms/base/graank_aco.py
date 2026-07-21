@@ -10,7 +10,7 @@ import numpy as np
 from typing import cast
 
 from .graank_base import BaseGrad
-from ..gradual_patterns import GI, GP, PairwiseMatrix
+from ...gradual_patterns import GI, GP, PairwiseMatrix
 
 
 class AntGRAANK(BaseGrad):
@@ -33,18 +33,6 @@ class AntGRAANK(BaseGrad):
     :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
     :param max_iter: [optional] maximum_iteration, default is 1
     :param e_factor: [optional] evaporation factor, default is 0.5
-
-        >>> from so4gp.algorithms import AntGRAANK
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = AntGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3, e_factor=0.5)
-        >>> result_dict = mine_obj.discover()
-        >>> # print(result['Patterns'])
-        >>> print(result_dict) # doctest: +SKIP
-        {"Algorithm": "ACO-GRAANK", "Best Patterns": [[["Expenses-", "Age+"], 1.0]], "Invalid Count": 1, "Iterations":3}
 
         """
         super(AntGRAANK, self).__init__(*args, **kwargs)

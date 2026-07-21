@@ -8,8 +8,8 @@
 import random
 import numpy as np
 from dataclasses import dataclass
-from ..data_gp import DataGP
-from ..gradual_patterns import GI, GP, PairwiseMatrix
+from ...data_gp import DataGP
+from ...gradual_patterns import GI, GP, PairwiseMatrix
 
 
 class BaseGrad(DataGP):

@@ -12,12 +12,12 @@ import skfuzzy as fuzzy
 import multiprocessing as mp
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
-from .graank import GRAANK
+from .graank_alg import GRAANKAlg
 from ..data_gp import DataGP
 from ..gradual_patterns import GI, TGP, TimeDelay
 
 
-class TGrad(GRAANK):
+class TGrad(GRAANKAlg):
 
     def __init__(self, *args, target_col: int, min_rep: float = 0.5, **kwargs):
         """
