@@ -5,14 +5,13 @@
 # repository for complete details.
 
 
-import json
 import time
 import random
 import numpy as np
-from .numeric_ss import NumericSS
+from .graank_base import BaseGrad
 
 
-class ParticleGRAANK(NumericSS):
+class ParticleGRAANK(BaseGrad):
 
     def __init__(self, *args, max_iter: int = 1, n_particle: int = 5, vel: float = 0.9,
                  coeff_p: float = 0.01, coeff_g: float = 0.9, **kwargs):
@@ -35,17 +34,6 @@ class ParticleGRAANK(NumericSS):
         :param coeff_p: [optional] personal coefficient, default is 0.01
         :param coeff_g: [optional] global coefficient, default is 0.9
 
-        >>> from so4gp.algorithms import ParticleGRAANK
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = ParticleGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3, n_particle=10)
-        >>> result_json = mine_obj.discover()
-        >>> # print(result['Patterns'])
-        >>> print(result_json) # doctest: +SKIP
-        {"Algorithm": "PSO-GRAANK", "Best Patterns": [], "Invalid Count": 12, "Iterations": 2}
         """
         super(ParticleGRAANK, self).__init__(*args, **kwargs)
         self._max_iteration: int = max_iter
@@ -54,20 +42,22 @@ class ParticleGRAANK(NumericSS):
         self._coeff_p: float = coeff_p
         self._coeff_g: float = coeff_g
 
-    def discover(self, save_results: bool = True) -> str:
+    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False) -> dict:
         """
         Searches through particle positions to find GP candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
 
-        :param save_results: [optional] Save results to a csv file.
+        :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
+        :param target_col: Target feature's column index.
+        :param exclude_target: Only accept GP candidates that do not contain the target feature.
 
-        :return: JSON string object
+        :return: A dict object
         """
 
         start = time.time()
         s_space = self.init_search_space(self._n_particles, self._max_iteration)
         if isinstance(s_space, str):
-            return s_space
+            return {"Error": s_space}
 
         pbest_pop = s_space.pop.copy()
         gbest_particle = pbest_pop[0]
@@ -79,14 +69,14 @@ class ParticleGRAANK(NumericSS):
             for i in range(self._n_particles):
                 part_pos = s_space.pop[i].position
                 if part_pos is None:
-                    s_space.pop[i].cost = NumericSS.cost_function(part_pos, self.valid_bins)
+                    s_space.pop[i].cost = BaseGrad.cost_function(part_pos, self.valid_bins)
                     if s_space.pop[i].cost == 1:
                         s_space.invalid_count += 1
                     s_space.eval_count += 1
                 elif part_pos < s_space.var_min or part_pos > s_space.var_max:
                     s_space.pop[i].cost = 1
                 else:
-                    s_space.pop[i].cost = NumericSS.cost_function(part_pos, self.valid_bins)
+                    s_space.pop[i].cost = BaseGrad.cost_function(part_pos, self.valid_bins)
                     if s_space.pop[i].cost == 1:
                         s_space.invalid_count += 1
                     s_space.eval_count += 1
@@ -104,7 +94,7 @@ class ParticleGRAANK(NumericSS):
             #    break
             if gbest_particle.cost is not None and s_space.best_sol.cost is not None:
                 if s_space.best_sol.cost > gbest_particle.cost:
-                    s_space.best_sol = NumericSS.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
+                    s_space.best_sol = BaseGrad.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
 
             for i in range(self._n_particles):
                 part_pos = s_space.pop[i].position
@@ -114,7 +104,7 @@ class ParticleGRAANK(NumericSS):
                                (self._coeff_g * random.random()) * (gbest_particle.position - part_pos)
                     s_space.pop[i].position = s_space.pop[i].position + new_velocity
 
-            _, repeated = NumericSS.evaluate_gradual_pattern(repeated, s_space, self)
+            _, repeated = BaseGrad.evaluate_gradual_pattern(repeated, s_space, self, ignore_support, target_col, exclude_target)
             
         for gp in s_space.best_patterns:
             self.add_gradual_pattern(gp)
@@ -128,10 +118,6 @@ class ParticleGRAANK(NumericSS):
             "Personal coefficient": f"{self._coeff_p}",
             "Global coefficient": f"{self._coeff_g}",
             "Number of iterations": f"{s_space.iter_count}",
-            "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict)
-
-        out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
-        out: str = json.dumps(out_dict, indent=4)
-        return out
+            "Run-time": f"{duration:.6f} seconds",
+            "Invalid Count": f"{s_space.invalid_count}"}
+        return out_dict

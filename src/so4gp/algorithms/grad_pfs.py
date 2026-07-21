@@ -10,10 +10,10 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from .graank import GRAANK
+from .base.graank_alg import OrigGRAANK
 from .cluster_gp import ClusterGP
-from .graank_aco import AntGRAANK
-from .graank_ga import GeneticGRAANK
+from .base.graank_aco import AntGRAANK
+from .base.graank_ga import GeneticGRAANK
 
 
 class GradPFS:
@@ -77,7 +77,7 @@ class GradPFS:
         """
 
         # 1. Instantiate GRAANK object and extract GPs
-        grad = GRAANK(self.data_src)
+        grad = OrigGRAANK(self.data_src)
         self.titles = grad.titles
         self.data = grad.data
         grad.discover(ignore_support=True, apriori_level=2, target_col=self.target_col)
@@ -142,7 +142,7 @@ class GradPFS:
         elif algorithm == 'CLU':
             grad = GeneticGRAANK(self.data_src, min_sup=self.thd_score)
         else:
-            grad = GRAANK(self.data_src, min_sup=self.thd_score)
+            grad = OrigGRAANK(self.data_src, min_sup=self.thd_score)
             grad.discover(target_col=self.target_col)
             # grad.discover(target_col=self.target_col, exclude_target=True)
         self.titles = grad.titles

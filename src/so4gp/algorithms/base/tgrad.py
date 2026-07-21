@@ -5,19 +5,18 @@
 # repository for complete details.
 
 
-import json
 import time
 import numpy as np
 import skfuzzy as fuzzy
 import multiprocessing as mp
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
-from .graank import GRAANK
-from ..data_gp import DataGP
-from ..gradual_patterns import GI, TGP, TimeDelay
+from .graank_alg import OrigGRAANK
+from ...data_gp import DataGP
+from ...gradual_patterns import GI, TGP, TimeDelay
 
 
-class TGrad(GRAANK):
+class TGrad(OrigGRAANK):
 
     def __init__(self, *args, target_col: int, min_rep: float = 0.5, **kwargs):
         """
@@ -29,16 +28,6 @@ class TGrad(GRAANK):
         :param target_col: [required] Target column.
         :param min_rep: [optional] minimum representativity value.
 
-        >>> import so4gp.algorithms import TGrad
-        >>> import pandas
-        >>>
-        >>> dummy_data = [["2021-03", 30, 3, 1, 10], ["2021-04", 35, 2, 2, 8], ["2021-05", 40, 4, 2, 7], ["2021-06", 50, 1, 1, 6], ["2021-07", 52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Date', 'Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = TGrad(dummy_df, min_sup=0.5, target_col=1, min_rep=0.5)
-        >>> result_json = mine_obj.discover_tgp(parallel=True)
-        >>> # print(result['Patterns'])
-        >>> print(result_json)
         """
 
         super(TGrad, self).__init__(*args, **kwargs)
@@ -75,31 +64,23 @@ class TGrad(GRAANK):
         if 0 < value <= 1:
             self._min_rep = value
 
-    def discover_tgp(self, parallel: bool = False, num_cores: int = 1, save_results: bool = True) -> str:
+    def discover_tgp(self, num_cores: int = 1) -> dict:
         """
-        Applies fuzzy-logic, data transformation, and gradual pattern mining to mine for Fuzzy Temporal Gradual Patterns.
+        Applies fuzzy-logic, data transformation, and gradual pattern mining to mine for Fuzzy Temporal Gradual
+        Patterns. It uses multiprocessing to achieve the highest performance.
 
-        :param parallel: Allow multiprocessing.
+
         :param num_cores: Number of CPU cores for the algorithm to use.
-        :param save_results: [optional] Save results to a csv file.
 
-        :return: List of FTGPs as JSON string object
+        :return: List of FTGPs as a dict object
         """
 
         start = time.time()
         self.clear_gradual_patterns()
-        # 1. Mine FTGPs
-        if parallel:
-            # implement parallel multi-processing
-            with mp.Pool(num_cores) as pool:
-                steps = range(self._max_step)
-                pattern_data = pool.map(self._safe_transform_and_mine, steps)
-        else:
-            pattern_data: list = []
-            for step in range(self._max_step):
-                t_gps = self._safe_transform_and_mine(
-                    step + 1)  # because for-loop it is not inclusive from range: 0 - max_step
-                pattern_data.append(t_gps)
+        # 1. Mine FTGPs (using parallel multi-processing)
+        with mp.Pool(num_cores) as pool:
+            steps = range(self._max_step)
+            pattern_data = pool.map(self._safe_transform_and_mine, steps)
 
         # 2. Organize FTGPs into a single list
         for item in pattern_data:
@@ -120,12 +101,7 @@ class TGrad(GRAANK):
             "Minimum Representation": f"{self.min_rep:.2f}",
             "Target Column": f"{self._target_col}",
             "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict, target_col=self.target_col)
-
-        out_dict.update({"Patterns": self.display_patterns})
-        out: str = json.dumps(out_dict, indent=4)
-        return out
+        return out_dict
 
     def transform_and_mine(self, step: int, return_patterns: bool = True):
         """

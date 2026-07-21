@@ -5,46 +5,35 @@
 # repository for complete details.
 
 import gc
-import json
 import time
 import numpy as np
 from typing import cast
-from ..data_gp import DataGP
-from ..gradual_patterns import GI, GP, PairwiseMatrix
+
+from .graank_base import BaseGrad
+from ...gradual_patterns import GI, GP, PairwiseMatrix
 
 
-class AntGRAANK(DataGP):
+class AntGRAANK(BaseGrad):
 
     def __init__(self, *args, max_iter: int = 1, e_factor: float = 0.5, **kwargs):
-        """Extract gradual patterns (GPs) from a numeric data source using the Ant Colony Optimization approach
-    (proposed in a published paper by Dickson Owuor). A GP is a set of gradual items (GI), and its quality is
-    measured by its computed support value. For example, given a data set with 3 columns (age, salary, cars) and 10
-    objects. A GP may take the form: {age+, salary-} with a support of 0.8. This implies that 8 out of 10 objects
-    have the values of column age 'increasing' and column 'salary' decreasing.
+        """
+        Extract gradual patterns (GPs) from a numeric data source using the Ant Colony Optimization approach
+        (proposed in a published paper by Dickson Owuor). A GP is a set of gradual items (GI), and its quality is
+        measured by its computed support value. For example, given a data set with 3 columns (age, salary, cars) and 10
+        objects. A GP may take the form: {age+, salary-} with a support of 0.8. This implies that 8 out of 10 objects
+        have the values of column age 'increasing' and column 'salary' decreasing.
 
-    In this approach, it is assumed that every column can be converted into a gradual item (GI). If the GI is valid
-    (i.e., its computed support is greater than the minimum support threshold), then it is either increasing or
-    decreasing (+ or -), otherwise it is irrelevant (x). Therefore, a pheromone matrix is built using the number of
-    columns and the possible variations (increasing, decreasing, irrelevant) or (+, -, x). The algorithm starts by
-    randomly generating GP candidates using the pheromone matrix, each candidate is validated by confirming that
-    its computed support is greater or equal to the minimum support threshold. The valid GPs are used to update the
-    pheromone levels and better candidates are generated.
+        In this approach, it is assumed that every column can be converted into a gradual item (GI). If the GI is valid
+        (i.e., its computed support is greater than the minimum support threshold), then it is either increasing or
+        decreasing (+ or -), otherwise it is irrelevant (x). Therefore, a pheromone matrix is built using the number of
+        columns and the possible variations (increasing, decreasing, irrelevant) or (+, -, x). The algorithm starts by
+        randomly generating GP candidates using the pheromone matrix, each candidate is validated by confirming that
+        its computed support is greater or equal to the minimum support threshold. The valid GPs are used to update the
+        pheromone levels and better candidates are generated.
 
-    :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
-    :param max_iter: [optional] maximum_iteration, default is 1
-    :param e_factor: [optional] evaporation factor, default is 0.5
-
-        >>> from so4gp.algorithms import AntGRAANK
-        >>> import pandas
-        >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = AntGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3, e_factor=0.5)
-        >>> result_json = mine_obj.discover()
-        >>> # print(result['Patterns'])
-        >>> print(result_json) # doctest: +SKIP
-        {"Algorithm": "ACO-GRAANK", "Best Patterns": [[["Expenses-", "Age+"], 1.0]], "Invalid Count": 1, "Iterations":3}
+        :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
+        :param max_iter: [optional] maximum_iteration, default is 1
+        :param e_factor: [optional] evaporation factor, default is 0.5
 
         """
         super(AntGRAANK, self).__init__(*args, **kwargs)
@@ -59,7 +48,7 @@ class AntGRAANK(DataGP):
         :return: distance matrix (d) and attribute keys
         """
 
-        self.fit_bitmap()
+        # Get valid GI bitmaps
         gi_dict = self.valid_bins
 
         # 1. Fetch valid bins group
@@ -85,12 +74,14 @@ class AntGRAANK(DataGP):
         self._attribute_keys: list[str] = attr_keys
         gc.collect()
 
-    def _gen_aco_candidates(self, p_matrix):
+    def _gen_aco_candidates(self, p_matrix: np.ndarray, target_col: int | None = None, exclude_target: bool = True):
         """
-        Generates GP candidates based on the pheromone levels.
+        Generates GP candidates based on the pheromone levels
 
         :param p_matrix: The pheromone matrix
-        :type p_matrix: np.ndarray
+        :param target_col: Target feature's column index
+        :param exclude_target: Only accepts GP candidates that do not contain the target feature
+
         :return: pheromone matrix (ndarray)
         """
         v_matrix = self._distance_matrix
@@ -116,7 +107,12 @@ class AntGRAANK(DataGP):
             except IndexError:
                 continue
 
-        # 2. Evaporate pheromones by factor e
+        # 2. Apply target-feature search
+        target_col_ok = BaseGrad.apply_target_feature(pattern, target_col=target_col, exclude_target=exclude_target)
+        if not target_col_ok:
+            return GP(), p_matrix
+
+        # 3. Evaporate pheromones by factor e
         p_matrix = (1 - self._evaporation_factor) * p_matrix
         return pattern, p_matrix
 
@@ -140,26 +136,27 @@ class AntGRAANK(DataGP):
                 p_matrix[j][i] += 1
         return p_matrix
 
-    def discover(self, save_results: bool = True) -> str:
+    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False) -> dict:
         """
         Applies ant-colony optimization algorithm and uses pheromone levels to find GP candidates. The candidates are
         validated if their computed support is greater than or equal to the minimum support threshold specified by the
         user.
 
-        :param save_results: [optional] Save results to a csv file.
+        :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
+        :param target_col: Target feature's column index.
+        :param exclude_target: Only accept GP candidates that do not contain the target feature.
 
-        :return: JSON string object
+        :return: A dict object
         """
 
         start = time.time()
+        self.init_search_space(0, 0)
         self._fit()  # distance matrix (d) & attributes corresponding to d
-        self.clear_gradual_patterns()
+
         d = self._distance_matrix
         if d is None:
-            out = json.dumps(
-                {"Algorithm": "ACO-GRAANK", "Best Patterns": self.display_patterns, "Invalid Count": 0, "Iterations": 0})
-            """:type str: object"""
-            return out
+            out_dict = {"Algorithm": "ACO-GRAANK", "Best Patterns": self.display_patterns, "Invalid Count": 0, "Iterations": 0}
+            return out_dict
 
         a = self.attr_size
         loser_gps = list()  # supersets
@@ -168,7 +165,7 @@ class AntGRAANK(DataGP):
         counter = 0
 
         if self.valid_bins is None:
-            return "Pairwise matrices not available!"
+            return {"Error": "Pairwise matrices not available!"}
 
         # 1. Remove d[i][j] < frequency-count of min_supp
         fr_count = ((self.thd_supp * a * (a - 1)) / 2)
@@ -181,7 +178,7 @@ class AntGRAANK(DataGP):
         # 4. Iterations for ACO
         # while repeated < 1:
         while counter < self._max_iteration:
-            rand_gp, pheromones = self._gen_aco_candidates(pheromones)
+            rand_gp, pheromones = self._gen_aco_candidates(pheromones, target_col, exclude_target)
             if len(rand_gp.gradual_items) > 1:
                 # print(rand_gp.get_pattern())
                 exits = rand_gp.is_duplicate(self.gradual_patterns, loser_gps)
@@ -198,7 +195,7 @@ class AntGRAANK(DataGP):
                     if is_present or is_sub:
                         repeated += 1
                     else:
-                        if gen_gp.support >= self.thd_supp:
+                        if gen_gp.support >= self.thd_supp or ignore_support:
                             pheromones = self._update_pheromones(gen_gp, pheromones)
                             self.add_gradual_pattern(gen_gp)
                         else:
@@ -222,10 +219,6 @@ class AntGRAANK(DataGP):
             # "Memory Usage (MiB)": f{mem_use)}"
             "Evaporation factor": f"{self._evaporation_factor}",
             "Number of iterations": f"{it_count}",
-            "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict)
-
-        out_dict.update({"Best Patterns": self.display_patterns, "Invalid Count": str(invalid_count)})
-        out: str = json.dumps(out_dict, indent=4)
-        return out
+            "Run-time": f"{duration:.6f} seconds",
+            "Invalid Count": f"{invalid_count}"}
+        return out_dict
