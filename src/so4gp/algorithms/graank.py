@@ -19,8 +19,8 @@ class GRAANK:
 
     A gradual item consists of an attribute and a direction:
 
-    * ``Age+``  : attribute values increase
-    * ``Salary-`` : attribute values decrease
+    * ``Age+``: attribute values increase
+    * ``Salary-``: attribute values decrease
 
     A gradual pattern is a collection of gradual items, for example::
 
@@ -39,9 +39,17 @@ class GRAANK:
     * ``random`` — Random Search.
 
     References:
-        Anne Laurent, et al.
-        "Mining Gradual Patterns."
-        https://link.springer.com/chapter/10.1007/978-3-642-04957-6_33
+        * GRAANK: https://link.springer.com/chapter/10.1007/978-3-642-04957-6_33
+
+        * ACO-GRAANK: https://link.springer.com/article/10.1007/s13042-021-01390-w
+
+        * GA-GRAANK: https://www.sciencedirect.com/science/article/abs/pii/S2210650222001717
+
+        * PSO-GRAANK: https://www.sciencedirect.com/science/article/abs/pii/S2210650222001717
+
+        * Random-GRAANK: https://www.sciencedirect.com/science/article/abs/pii/S2210650222001717
+
+        * Hill Climbing-GRAANK: https://www.sciencedirect.com/science/article/abs/pii/S2210650222001717
     """
 
     def __init__(self, data_source, min_sup: float = 0.5, eq: bool = False) -> None:
