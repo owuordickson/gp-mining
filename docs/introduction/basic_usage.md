@@ -53,7 +53,7 @@ The ```sgp``` namespace contains all necessary classes, functions, and algorithm
 To use the algorithms, import them via:
 
 ```{code-block python}
-from so4gp.algorithms import GRAANK, AntGRAANK, GeneticGRAANK, ClusterGP, TGradAMI
+from so4gp.algorithms import GRAANK, TGRAANK
 ```
 
 The ```so4gp``` algorithms require a numeric dataset provided as either a ```pandas.DataFrame``` or a path to a ```CSV``` file.
