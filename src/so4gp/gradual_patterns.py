@@ -449,7 +449,7 @@ class GP:
 
         1. Density (ρ_g):
             Proportion of concordant index pairs relative to all possible pairs
-            ρ_g = |``W_g``| / C(n, 2)
+            ρ_g = ``|W_g|`` / C(n, 2)
 
         2. Average Deviation from Diagonal (μ_g):
             Mean absolute distance ``|i - j|`` across all pairs in ``W_g``.
@@ -488,7 +488,7 @@ class GP:
             """
             Warping set density
 
-            ρ_g = |``W_g``| / C(n, 2)
+            ρ_g = ``|W_g|`` / C(n, 2)
             """
             return float(pair_count) / float(total_pairs)
 
@@ -496,7 +496,7 @@ class GP:
             """
             Average Deviation from Diagonal
 
-            μ_g = (1 / |``W_g``|) * Σ ``|i - j|``
+            μ_g = (1 / ``|W_g|``) * Σ ``|i - j|``
             """
             deviations = np.abs(i_vals - j_vals)
             return float(np.mean(deviations))
@@ -505,7 +505,7 @@ class GP:
             """
             Rank Dispersion
 
-            σ_g = sqrt((1 / |``W_g``|) * Σ (``|i - j|`` - μ_g)^2)
+            σ_g = sqrt((1 / ``|W_g|``) * Σ (``|i - j|`` - μ_g)^2)
             """
             deviations = np.abs(i_vals - j_vals)
             return float(np.std(deviations))
