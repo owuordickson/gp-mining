@@ -27,17 +27,6 @@ class TGradAMI(TGrad):
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
         :param kwargs: [required] target-column or attribute or feature, [optional] minimum representativity
 
-        >>> from so4gp.algorithms import TGradAMI
-        >>> import pandas
-        >>>
-        >>> dummy_data = [["2021-03", 30, 3, 1, 10], ["2021-04", 35, 2, 2, 8], ["2021-05", 40, 4, 2, 7], ["2021-06", 50, 1, 1, 6], ["2021-07", 52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Date', 'Age', 'Salary', 'Cars', 'Expenses'])
-        >>>
-        >>> mine_obj = TGradAMI(dummy_df, min_sup=0.5, target_col=1, min_rep=0.5)
-        >>> result_dict = mine_obj.discover_tgp(use_clustering=True, error_margin=0.1, eval_mode=False)
-        >>>
-        >>> # print(result['Patterns'])
-        >>> print(result_dict)
         """
         super(TGradAMI, self).__init__(*args, **kwargs)
         self._feature_cols: np.ndarray = np.setdiff1d(self.attr_cols, self.target_col)
@@ -161,7 +150,7 @@ class TGradAMI(TGrad):
 
     def discover_tgp(self, use_clustering: bool = False, transformation_steps: dict|None = None,
                      error_margin: float = 0.0001,
-                     eval_mode: bool = False, save_results: bool = True) -> dict:
+                     eval_mode: bool = False) -> dict:
         """
         A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
         transformation that maintains MI and estimate the best time-delay value of the mined Fuzzy Temporal Gradual
@@ -171,7 +160,6 @@ class TGradAMI(TGrad):
         :param transformation_steps: Data transformation steps (used to override the computed transformation steps).
         :param error_margin: [optional] minimum Mutual Information error margin.
         :param eval_mode: Run algorithm in evaluation mode.
-        :param save_results: [optional] Save results to a csv file.
 
         :return: List of (FTGPs as DICT object) or (FTGPs and evaluation data as a Python dict) when executed in evaluation mode.
         """
@@ -225,8 +213,5 @@ class TGradAMI(TGrad):
             "MI Error": f"{self.mi_error:.2f}",
             "Target Column": f"{self._target_col}",
             "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict, target_col=self.target_col)
-
         out_dict.update(add_dict)
         return out_dict

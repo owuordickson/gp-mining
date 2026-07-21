@@ -247,8 +247,7 @@ class GRAANK:
             from .base.graank_rand import RandomGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
             self._mine_obj = RandomGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
-
-        if self._mine_obj is None:
+        else:
             raise ValueError("Invalid search type!")
 
         if isinstance(self._mine_obj, OrigGRAANK):
