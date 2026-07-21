@@ -99,14 +99,16 @@ class GRAANKN:
             raise ValueError("Invalid search type!")
 
         if isinstance(mine_obj, GRAANK):
-            res_dict = mine_obj.discover(ignore_support=ignore_support, apriori_level=max_iteration,target_col=target_col,exclude_target=exclude_target)
+            res_dict = mine_obj.discover(ignore_support=ignore_support, target_col=target_col, exclude_target=exclude_target, apriori_level=max_iteration, compute_descriptors=compute_descriptors)
         else:
             res_dict = mine_obj.discover(ignore_support=ignore_support, target_col=target_col, exclude_target=exclude_target)
 
-        if save_results:
-            mine_obj.generate_output_files(res_dict, target_col=target_col)
-
-        res_dict.update({"Patterns": mine_obj.display_patterns, "Invalid Count": str(invalid_count)})
+        try:
+            if save_results:
+                mine_obj.generate_output_files(res_dict, target_col=target_col)
+            res_dict.update({"Patterns": mine_obj.display_patterns})
+        except Exception as e:
+            res_dict.update({"Error": str(e)})
         out:str = json.dumps(res_dict,indent=4)
         return out
 

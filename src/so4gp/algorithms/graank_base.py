@@ -211,6 +211,9 @@ class BaseGrad(DataGP):
         bin_sum = int(np.sum(pw_mat.bin_mat)) if pw_mat is not None else 0
         if bin_sum > 0:
             cost = (1 / bin_sum)
+            # if compute_descriptors:
+            #    warping_set_arr: np.ndarray = np.array(DataGP.gen_gradual_warping_set(pw_mat.bin_mat, as_array=True))
+            #    gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
         return cost
 
     @staticmethod
