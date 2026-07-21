@@ -5,7 +5,6 @@
 # repository for complete details.
 
 import gc
-import json
 import time
 import numpy as np
 from typing import cast
@@ -42,9 +41,9 @@ class AntGRAANK(BaseGrad):
         >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
         >>>
         >>> mine_obj = AntGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3, e_factor=0.5)
-        >>> result_json = mine_obj.discover()
+        >>> result_dict = mine_obj.discover()
         >>> # print(result['Patterns'])
-        >>> print(result_json) # doctest: +SKIP
+        >>> print(result_dict) # doctest: +SKIP
         {"Algorithm": "ACO-GRAANK", "Best Patterns": [[["Expenses-", "Age+"], 1.0]], "Invalid Count": 1, "Iterations":3}
 
         """
@@ -148,7 +147,7 @@ class AntGRAANK(BaseGrad):
                 p_matrix[j][i] += 1
         return p_matrix
 
-    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False, save_results: bool = True) -> str:
+    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False) -> dict:
         """
         Applies ant-colony optimization algorithm and uses pheromone levels to find GP candidates. The candidates are
         validated if their computed support is greater than or equal to the minimum support threshold specified by the
@@ -157,9 +156,8 @@ class AntGRAANK(BaseGrad):
         :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
         :param target_col: Target feature's column index.
         :param exclude_target: Only accept GP candidates that do not contain the target feature.
-        :param save_results: [optional] Save results to a csv file.
 
-        :return: JSON string object
+        :return: A dict object
         """
 
         start = time.time()
@@ -168,10 +166,8 @@ class AntGRAANK(BaseGrad):
 
         d = self._distance_matrix
         if d is None:
-            out = json.dumps(
-                {"Algorithm": "ACO-GRAANK", "Best Patterns": self.display_patterns, "Invalid Count": 0, "Iterations": 0})
-            """:type str: object"""
-            return out
+            out_dict = {"Algorithm": "ACO-GRAANK", "Best Patterns": self.display_patterns, "Invalid Count": 0, "Iterations": 0}
+            return out_dict
 
         a = self.attr_size
         loser_gps = list()  # supersets
@@ -180,7 +176,7 @@ class AntGRAANK(BaseGrad):
         counter = 0
 
         if self.valid_bins is None:
-            return "Pairwise matrices not available!"
+            return {"Error": "Pairwise matrices not available!"}
 
         # 1. Remove d[i][j] < frequency-count of min_supp
         fr_count = ((self.thd_supp * a * (a - 1)) / 2)
@@ -234,10 +230,6 @@ class AntGRAANK(BaseGrad):
             # "Memory Usage (MiB)": f{mem_use)}"
             "Evaporation factor": f"{self._evaporation_factor}",
             "Number of iterations": f"{it_count}",
-            "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict)
-
-        out_dict.update({"Best Patterns": self.display_patterns, "Invalid Count": str(invalid_count)})
-        out: str = json.dumps(out_dict, indent=4)
-        return out
+            "Run-time": f"{duration:.6f} seconds",
+            "Invalid Count": f"{invalid_count}"}
+        return out_dict

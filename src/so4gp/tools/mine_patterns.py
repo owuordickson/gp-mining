@@ -47,7 +47,7 @@ def mine_gps(
             Example 1: [["Age", "Salary"], [30, 3.5], [35, 2.6]].
             Example 2: [["Date", "Age", "Salary"], ["2021-03", 30, 3.5], ["2021-04", 35, 2.6]].
         min_support: Minimum frequency threshold for a pattern (range: 0.0 to 1.0).
-        target_column: Zero-based index of the target variable column (only if the algorithm is 'graank').
+        target_column: Zero-based index of the target variable column.
         algorithm: A string name of the mining algorithm to execute.
             Allowed values: 'graank', 'graank-ga', 'graank-aco', 'cluster-gp'.
         max_iteration: Maximum optimization loops for evolutionary or heuristic
@@ -117,14 +117,14 @@ def mine_gps(
             mine_obj = AntGRAANK(data_df, min_sup=min_support, max_iter=max_iteration)
         else:
             mine_obj = AntGRAANK(data_df, min_sup=min_support)
-        return mine_obj.discover(save_results=False)
+        return mine_obj.discover(target_col=target_column, save_results=False)
     elif algorithm == 'graank-ga':
         from ..algorithms.graank_ga import GeneticGRAANK
         if max_iteration is not None:
             mine_obj = GeneticGRAANK(data_df, min_sup=min_support, max_iter=max_iteration)
         else:
             mine_obj = GeneticGRAANK(data_df, min_sup=min_support)
-        return mine_obj.discover(save_results=False)
+        return mine_obj.discover(target_col=target_column, save_results=False)
     elif algorithm == 'graank':
         from ..algorithms.graank import GRAANK
         mine_obj = GRAANK(data_df, min_sup=min_support)

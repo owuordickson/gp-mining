@@ -5,7 +5,6 @@
 # repository for complete details.
 
 import gc
-import json
 import copy
 import time
 import numpy as np
@@ -39,9 +38,9 @@ class GRAANK(BaseGrad):
         >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
         >>>
         >>> mine_obj = GRAANK(data_source=dummy_df, min_sup=0.5, eq=False)
-        >>> result_json = str(mine_obj.discover())
+        >>> result_dict = str(mine_obj.discover())
         >>> # print(result['Patterns'])
-        >>> print(result_json) # doctest: +SKIP
+        >>> print(result_dict) # doctest: +SKIP
         """
         super(GRAANK, self).__init__(*args, **kwargs)
 
@@ -149,8 +148,7 @@ class GRAANK(BaseGrad):
         return res_dict, invalid_count
 
     def discover(self, ignore_support: bool = False, apriori_level: int | None = None,
-                 target_col: int | None = None, exclude_target: bool = False, compute_descriptors: bool = True,
-                 save_results: bool = True) -> str:
+                 target_col: int | None = None, exclude_target: bool = False, compute_descriptors: bool = True) -> dict:
         """
         Uses apriori algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
@@ -160,9 +158,8 @@ class GRAANK(BaseGrad):
         :param target_col: Target feature's column index.
         :param exclude_target: Only accept GP candidates that do not contain the target feature.
         :param compute_descriptors: [optional] compute descriptors for each GP candidate.
-        :param save_results: [optional] Save results to a csv file.
 
-        :return: JSON string
+        :return: A dict object
         """
 
         start = time.time()
@@ -170,7 +167,7 @@ class GRAANK(BaseGrad):
         valid_bins_dict: dict|None = copy.deepcopy(self.valid_bins)
 
         if valid_bins_dict is None:
-            return "Pairwise matrices not available!"
+            return {"Error": "Pairwise matrices not available!"}
 
         invalid_count = 0
         candidate_level = 1
@@ -199,10 +196,6 @@ class GRAANK(BaseGrad):
         out_dict: dict[str, str|list]= {
             "Algorithm": "GRAANK",
             # "Memory Usage (MiB)": f{mem_use)}"
-            "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict, target_col=target_col)
-
-        out_dict.update({"Patterns": self.display_patterns, "Invalid Count": str(invalid_count)})
-        out:str = json.dumps(out_dict,indent=4)
-        return out
+            "Run-time": f"{duration:.6f} seconds",
+            "Invalid Count": f"{invalid_count}"}
+        return out_dict

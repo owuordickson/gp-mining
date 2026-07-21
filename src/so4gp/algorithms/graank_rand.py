@@ -5,7 +5,6 @@
 # repository for complete details.
 
 
-import json
 import time
 import random
 from .graank_base import BaseGrad
@@ -36,9 +35,9 @@ class RandomGRAANK(BaseGrad):
         >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
         >>>
         >>> mine_obj = RandomGRAANK(data_source=dummy_df, min_sup=0.5, max_iter=3)
-        >>> result_json = mine_obj.discover()
+        >>> result_dict = mine_obj.discover()
         >>> # print(result['Patterns'])
-        >>> print(result_json) # doctest: +SKIP
+        >>> print(result_dict) # doctest: +SKIP
         {"Algorithm": "RS-GRAANK", "Best Patterns": [[["Age+", "Salary+", "Expenses-"], 0.6]], "Invalid Count": 1,
             "Iterations": 3}
         """
@@ -46,7 +45,7 @@ class RandomGRAANK(BaseGrad):
         self._max_iteration: int = max_iter
         self._n_var: int = 1
 
-    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False, save_results: bool = True) -> str:
+    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False) -> dict:
         """
         Uses random search to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
@@ -54,15 +53,14 @@ class RandomGRAANK(BaseGrad):
         :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
         :param target_col: Target feature's column index.
         :param exclude_target: Only accept GP candidates that do not contain the target feature.
-        :param save_results: [optional] Save results to a csv file.
 
-        :return: JSON str object
+        :return: A dict object
         """
 
         start = time.time()
         s_space = self.init_search_space(1, self._max_iteration)
         if isinstance(s_space, str):
-            return s_space
+            return {"Error": s_space}
 
         repeated, candidate = 0, BaseGrad.Candidate()
         while s_space.counter < self._max_iteration:
@@ -83,10 +81,6 @@ class RandomGRAANK(BaseGrad):
             "Algorithm": "RS-GRAANK",
             # "Memory Usage (MiB)": f{mem_use)}"
             "Number of iterations": f"{s_space.iter_count}",
-            "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict)
-
-        out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
-        out: str = json.dumps(out_dict, indent=4)
-        return out
+            "Run-time": f"{duration:.6f} seconds",
+            "Invalid Count": f"{s_space.invalid_count}"}
+        return out_dict

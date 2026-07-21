@@ -5,7 +5,6 @@
 # repository for complete details.
 
 
-import json
 import time
 import random
 import numpy as np
@@ -53,9 +52,9 @@ class GeneticGRAANK(BaseGrad):
         >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
         >>>
         >>> mine_obj = GeneticGRAANK(dummy_df, 0.5, max_iter=3, n_pop=10)
-        >>> result_json = mine_obj.discover()
+        >>> result_dict = mine_obj.discover()
         >>> # print(result['Patterns'])
-        >>> print(result_json) # doctest: +SKIP
+        >>> print(result_dict) # doctest: +SKIP
         {"Algorithm": "GA-GRAANK", "Best Patterns": [[["Age+", "Salary+", "Expenses-"], 0.6]], "Invalid Count": 12,
             "Iterations": 2}
         """
@@ -107,7 +106,7 @@ class GeneticGRAANK(BaseGrad):
         y.position = int(str_y)
         return y
 
-    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False, save_results: bool = True) -> str:
+    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False) -> dict:
         """
         Uses genetic algorithm to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
@@ -115,15 +114,14 @@ class GeneticGRAANK(BaseGrad):
         :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
         :param target_col: Target feature's column index.
         :param exclude_target: Only accept GP candidates that do not contain the target feature.
-        :param save_results: [optional] Save results to a csv file.
 
-        :return: JSON string object
+        :return: A dict object
         """
 
         start = time.time()
         s_space = self.init_search_space(self._parent_pop, self._max_iteration)
         if isinstance(s_space, str):
-            return s_space
+            return {"Error": s_space}
 
         num_children = int(np.round(self._children_pop * self._parent_pop / 2) * 2)  # Number of children np.round is used to get an even number
         repeated = 0
@@ -172,10 +170,6 @@ class GeneticGRAANK(BaseGrad):
             "Mutation Mu": f"{self._mu}",
             "Mutation Sigma": f"{self._sigma}",
             "Number of iterations": f"{s_space.iter_count}",
-            "Run-time": f"{duration:.6f} seconds"}
-        if save_results:
-            self.generate_output_files(out_dict)
-
-        out_dict.update({"Best Patterns": s_space.str_best_gps, "Invalid Count": str(s_space.invalid_count)})
-        out: str = json.dumps(out_dict, indent=4)
-        return out
+            "Run-time": f"{duration:.6f} seconds",
+            "Invalid Count": f"{s_space.invalid_count}"}
+        return out_dict

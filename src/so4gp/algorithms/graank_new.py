@@ -4,7 +4,11 @@
 # repository for complete details.
 
 
-class GRAANK:
+import json
+from .graank import GRAANK
+
+
+class GRAANKN:
 
     def __init__(self, data_source, min_sup=0.5, eq=False) -> None:
         """
@@ -44,15 +48,21 @@ class GRAANK:
         self._min_supp: float = min_sup
         self._eq: bool = eq
 
-    def discover(self, ignore_support: bool = False, apriori_level: int | None = None,
-                 target_col: int | None = None, exclude_target: bool = False, compute_descriptors: bool = True,
-                 save_results: bool = True) -> str:
+    def discover(self,
+                 search_type: str = "apriori",
+                 ignore_support: bool = False, max_iteration: int | None = None,
+                 target_col: int | None = None, exclude_target: bool = False,
+                 compute_descriptors: bool = True, save_results: bool = True) -> str:
         """
-        Uses apriori algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
-        support is greater than or equal to the minimum support threshold specified by the user.
+        Uses a search algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
+        support is greater than or equal to the minimum support threshold specified by the user. The search algorithm
+        can either be: 'apriori', 'genetic algorithm (ga)', 'ant-colony-search (aco)', 'random-search (random)',
+        'hill-climbing-search (hc)', 'particle-swarm-search (pso)'
 
+        :param search_type: search algorithm to use [default: 'apriori'].
+            Allowed values: ['apriori', 'ga', 'aco', 'random', 'hc', 'pso']
         :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
-        :param apriori_level: Maximum APRIORI level for generating candidates.
+        :param max_iteration: Maximum APRIORI/iteration level for generating candidates.
         :param target_col: Target feature's column index.
         :param exclude_target: Only accept GP candidates that do not contain the target feature.
         :param compute_descriptors: [optional] compute descriptors for each GP candidate.
@@ -60,4 +70,43 @@ class GRAANK:
 
         :return: JSON string
         """
-        pass
+
+        mine_obj = None
+        if search_type == "apriori":
+            mine_obj = GRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq)
+        elif search_type == "ga":
+            from .graank_ga import GeneticGRAANK
+            max_iteration = max_iteration if max_iteration is not None else 1
+            mine_obj = GeneticGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+        elif search_type == "aco":
+            from .graank_aco import AntGRAANK
+            max_iteration = max_iteration if max_iteration is not None else 1
+            mine_obj = AntGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+        elif search_type == "pso":
+            from .graank_pso import ParticleGRAANK
+            max_iteration = max_iteration if max_iteration is not None else 1
+            mine_obj = ParticleGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+        elif search_type == "hc":
+            from .graank_hc import HillClimbingGRAANK
+            max_iteration = max_iteration if max_iteration is not None else 1
+            mine_obj = HillClimbingGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+        elif search_type == "random":
+            from .graank_rand import RandomGRAANK
+            max_iteration = max_iteration if max_iteration is not None else 1
+            mine_obj = RandomGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+
+        if mine_obj is None:
+            raise ValueError("Invalid search type!")
+
+        if isinstance(mine_obj, GRAANK):
+            res_dict = mine_obj.discover(ignore_support=ignore_support, apriori_level=max_iteration,target_col=target_col,exclude_target=exclude_target)
+        else:
+            res_dict = mine_obj.discover(ignore_support=ignore_support, target_col=target_col, exclude_target=exclude_target)
+
+        if save_results:
+            mine_obj.generate_output_files(res_dict, target_col=target_col)
+
+        res_dict.update({"Patterns": mine_obj.display_patterns, "Invalid Count": str(invalid_count)})
+        out:str = json.dumps(res_dict,indent=4)
+        return out
+
