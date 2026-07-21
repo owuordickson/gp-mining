@@ -21,7 +21,7 @@ def save_pairwise_data(data_src: pd.DataFrame|str, min_sup: float = 0.5, out_dir
     return DataGP.save_pairwise_data(data_src=data_src, min_sup=min_sup, out_dir=out_dir)
 
 # Project Details
-__version__ = "0.9.3"
+__version__ = "0.9.4"
 __title__ = f"so4gp (v{__version__})"
 __author__ = "Dickson Owuor"
 __credits__ = "Montpellier University"

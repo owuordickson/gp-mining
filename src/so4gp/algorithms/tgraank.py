@@ -3,3 +3,11 @@
 # See the LICENSE file at the root of this
 # repository for complete details.
 
+
+class TGRAANK:
+    """
+
+    """
+
+    def __init__(self):
+        pass
