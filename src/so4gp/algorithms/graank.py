@@ -118,14 +118,9 @@ class GRAANK(BaseGrad):
                 inv_gp_cand = {invert_symbol(x) for x in gp_cand}
 
                 # 3. Apply target-feature search
-                if target_col is not None:
-                    has_tgt_col = np.any(np.array([(GI.from_string(gi_str).attribute_col == target_col) for gi_str in gp_cand], dtype=bool))
-                    # (ONLY proceed if target-feature is NOT part of the GP candidate - exclude_target is True)
-                    if exclude_target and has_tgt_col:
-                        continue
-                    # (ONLY proceed if target-feature is part of the GP candidate - exclude_target is False)
-                    elif (not exclude_target) and (not has_tgt_col):
-                        continue
+                target_col_ok = BaseGrad.apply_target_feature(gp_cand, target_col=target_col, exclude_target=exclude_target)
+                if not target_col_ok:
+                    continue
 
                 # 4. Verify the validity of the GP candidate through the following conditions
                 is_length_valid = (len(gp_cand) == len(gi_o) + 1)

@@ -106,6 +106,44 @@ class BaseGrad(DataGP):
         return search_space
 
     @staticmethod
+    def apply_target_feature(gp_cand, target_col=None, exclude_target=False):
+        """
+        Applies the target-feature constraint to a gradual pattern candidate.
+
+        Parameters
+        ----------
+        gp_cand : iterable
+            Candidate gradual pattern.
+        target_col : int, optional
+            Target feature column. If None, no target filtering is applied.
+        exclude_target : bool, default=False
+            If True, candidates containing the target feature are rejected.
+            If False, candidates must contain the target feature.
+
+        Returns
+        -------
+        bool
+            True if the candidate passes the target-feature constraint,
+            otherwise False.
+        """
+        if target_col is None:
+            return True
+
+        has_target = np.any(
+            np.array(
+                [GI.from_string(gi_str).attribute_col == target_col for gi_str in gp_cand],
+                dtype=bool,
+            )
+        )
+
+        # Reject candidates containing the target feature.
+        if exclude_target:
+            return not has_target
+
+        # Accept only candidates containing the target feature.
+        return has_target
+
+    @staticmethod
     def decode_gp(position: float|None, valid_bins_dict: dict|None) -> GP:
         """Description
 
