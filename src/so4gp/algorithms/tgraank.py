@@ -46,34 +46,16 @@ class TGRAANK:
         """"""
 
         if transformation_algorithm == 'all':
-            """TGrad is an algorithm used to extract temporal gradual patterns from numeric datasets. An algorithm for mining
-        temporal gradual patterns using fuzzy membership functions. It uses a technique
-        published in: https://ieeexplore.ieee.org/abstract/document/8858883."""
             pass
         elif transformation_algorithm == 'ami':
-            """Algorithm for estimating time-lag using Average Mutual Information (AMI) and KMeans clustering which is
-        extended to mining gradual patterns. The average mutual information I(X; Y) is a measure of the “information”
-        amount that the random variables X and Y provide about one another.
-
-        This algorithm extends the work published in: https://ieeexplore.ieee.org/abstract/document/8858883. TGradAMI
-        is an algorithm that improves the classical TGrad algorithm for extracting more accurate temporal gradual
-        patterns.  It computes Mutual Information (MI) with respect to target-column with original dataset to get
-        the actual relationship between variables: by computing MI for every possible time-delay and if the transformed
-        dataset has the same almost identical MI to the original dataset, then it selects that as the best time-delay.
-        Instead of min-representativity value, the algorithm relies on the error-margin between MIs."""
             from .base.tgrad_ami import TGradAMI
             self._mine_obj = TGradAMI(self._data_src, target_col=self._target_col, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq)
         else:
             raise ValueError("Invalid transformation algorithm")
 
         if isinstance(self._mine_obj, TGrad):
-            """Applies fuzzy-logic, data transformation, and gradual pattern mining to mine for Fuzzy Temporal Gradual 
-        Patterns. It uses multiprocessing to achieve the highest performance."""
             res_dict = self._mine_obj.discover_tgp(num_cores=num_cores)
         else:
-            """A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
-        transformation that maintains MI and estimate the best time-delay value of the mined Fuzzy Temporal Gradual
-        Patterns (FTGPs)."""
             res_dict = self._mine_obj.discover_tgp(use_clustering=use_clustering, transformation_steps=transformation_steps, error_margin=error_margin, eval_mode=eval_mode)
 
         try:
