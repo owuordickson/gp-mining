@@ -86,12 +86,14 @@ class AntGRAANK(BaseGrad):
         self._attribute_keys: list[str] = attr_keys
         gc.collect()
 
-    def _gen_aco_candidates(self, p_matrix):
+    def _gen_aco_candidates(self, p_matrix: np.ndarray, target_col: int | None = None, exclude_target: bool = True):
         """
-        Generates GP candidates based on the pheromone levels.
+        Generates GP candidates based on the pheromone levels
 
         :param p_matrix: The pheromone matrix
-        :type p_matrix: np.ndarray
+        :param target_col: Target feature's column index
+        :param exclude_target: Only accepts GP candidates that do not contain the target feature
+
         :return: pheromone matrix (ndarray)
         """
         v_matrix = self._distance_matrix
@@ -117,7 +119,12 @@ class AntGRAANK(BaseGrad):
             except IndexError:
                 continue
 
-        # 2. Evaporate pheromones by factor e
+        # 2. Apply target-feature search
+        target_col_ok = BaseGrad.apply_target_feature(pattern, target_col=target_col, exclude_target=exclude_target)
+        if not target_col_ok:
+            return GP(), p_matrix
+
+        # 3. Evaporate pheromones by factor e
         p_matrix = (1 - self._evaporation_factor) * p_matrix
         return pattern, p_matrix
 
@@ -141,12 +148,15 @@ class AntGRAANK(BaseGrad):
                 p_matrix[j][i] += 1
         return p_matrix
 
-    def discover(self, save_results: bool = True) -> str:
+    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False, save_results: bool = True) -> str:
         """
         Applies ant-colony optimization algorithm and uses pheromone levels to find GP candidates. The candidates are
         validated if their computed support is greater than or equal to the minimum support threshold specified by the
         user.
 
+        :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
+        :param target_col: Target feature's column index.
+        :param exclude_target: Only accept GP candidates that do not contain the target feature.
         :param save_results: [optional] Save results to a csv file.
 
         :return: JSON string object
@@ -183,7 +193,7 @@ class AntGRAANK(BaseGrad):
         # 4. Iterations for ACO
         # while repeated < 1:
         while counter < self._max_iteration:
-            rand_gp, pheromones = self._gen_aco_candidates(pheromones)
+            rand_gp, pheromones = self._gen_aco_candidates(pheromones, target_col, exclude_target)
             if len(rand_gp.gradual_items) > 1:
                 # print(rand_gp.get_pattern())
                 exits = rand_gp.is_duplicate(self.gradual_patterns, loser_gps)
@@ -200,7 +210,7 @@ class AntGRAANK(BaseGrad):
                     if is_present or is_sub:
                         repeated += 1
                     else:
-                        if gen_gp.support >= self.thd_supp:
+                        if gen_gp.support >= self.thd_supp or ignore_support:
                             pheromones = self._update_pheromones(gen_gp, pheromones)
                             self.add_gradual_pattern(gen_gp)
                         else:

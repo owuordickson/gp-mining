@@ -106,13 +106,13 @@ class BaseGrad(DataGP):
         return search_space
 
     @staticmethod
-    def apply_target_feature(gp_cand, target_col=None, exclude_target=False):
+    def apply_target_feature(gp_cand:set|GP, target_col:int|None=None, exclude_target:bool=False):
         """
         Applies the target-feature constraint to a gradual pattern candidate.
 
         Parameters
         ----------
-        gp_cand : iterable
+        gp_cand : set
             Candidate gradual pattern.
         target_col : int, optional
             Target feature column. If None, no target filtering is applied.
@@ -129,12 +129,21 @@ class BaseGrad(DataGP):
         if target_col is None:
             return True
 
-        has_target = np.any(
-            np.array(
-                [GI.from_string(gi_str).attribute_col == target_col for gi_str in gp_cand],
-                dtype=bool,
+        has_target = True
+        if isinstance(gp_cand, set):
+            has_target = np.any(
+                np.array(
+                    [GI.from_string(gi_str).attribute_col == target_col for gi_str in gp_cand],
+                    dtype=bool,
+                )
             )
-        )
+        elif isinstance(gp_cand, GP):
+            has_target = np.any(
+                np.array(
+                    [gi.attribute_col == target_col for gi in gp_cand.gradual_items],
+                    dtype=bool,
+                )
+            )
 
         # Reject candidates containing the target feature.
         if exclude_target:
@@ -232,20 +241,28 @@ class BaseGrad(DataGP):
         return s_space
 
     @staticmethod
-    def evaluate_gradual_pattern(repeat_count: int, s_space: "BaseGrad.SearchSpace", data_gp: DataGP) -> tuple[
-        "BaseGrad.SearchSpace", int]:
+    def evaluate_gradual_pattern(repeat_count: int, s_space: "BaseGrad.SearchSpace", base_grad: BaseGrad,
+                                 ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False) -> tuple["BaseGrad.SearchSpace", int]:
         """"""
-        dim = data_gp.attr_size
-        best_gp: GP = BaseGrad.decode_gp(s_space.best_sol.position, data_gp.valid_bins)
+
+        dim = base_grad.attr_size
+        best_gp: GP = BaseGrad.decode_gp(s_space.best_sol.position, base_grad.valid_bins)
         best_gp.support = float(1 / s_space.best_sol.cost) / float(dim * (dim - 1.0) / 2.0)
+
         is_present = best_gp.is_duplicate(s_space.best_patterns)
         is_sub = best_gp.check_am(s_space.best_patterns, subset=True)
+
         if is_present or is_sub:
             repeat_count += 1
         else:
-            if best_gp.support >= data_gp.thd_supp:
+            # Apply target-feature search
+            target_col_ok = BaseGrad.apply_target_feature(best_gp, target_col=target_col, exclude_target=exclude_target)
+            if not target_col_ok:
+                return s_space, repeat_count
+
+            if best_gp.support >= base_grad.thd_supp or ignore_support:
                 s_space.best_patterns.append(best_gp)
-                s_space.str_best_gps.append(best_gp.print(data_gp.titles))
+                s_space.str_best_gps.append(best_gp.print(base_grad.titles))
 
         try:
             # Show Iteration Information (store Best Cost)

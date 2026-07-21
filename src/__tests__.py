@@ -24,7 +24,8 @@ if __name__ == "__main__":
     # mine_obj1 = TGrad(dummy_df, target_col=1, min_sup=0.2, min_rep=0.1)
     # mine_obj2 = TGradAMI(dummy_df, min_sup=0.5, target_col=1, min_rep=0.5, min_error=0.1)
     # result_json = mine_obj.discover(target_col=2, compute_descriptors=True)  # GRAANK
-    result_json = mine_obj.discover()
+    # result_json = mine_obj.discover(target_col=1, exclude_target=False)  # OTHERS
+    #result_json = mine_obj.discover()
     # result_json = mine_obj1.discover_tgp(parallel=False)  # TGrad
     # result_json = mine_obj2.discover_tgp(use_clustering=False, eval_mode=True)  # TGradAMI
     print(f"{result_json}\n")

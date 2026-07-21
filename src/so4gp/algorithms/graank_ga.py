@@ -107,11 +107,14 @@ class GeneticGRAANK(BaseGrad):
         y.position = int(str_y)
         return y
 
-    def discover(self, save_results: bool = True) -> str:
+    def discover(self, ignore_support: bool = False, target_col: int | None = None, exclude_target: bool = False, save_results: bool = True) -> str:
         """
         Uses genetic algorithm to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
 
+        :param ignore_support: Do not filter extracted GPs using a user-defined minimum support threshold.
+        :param target_col: Target feature's column index.
+        :param exclude_target: Only accept GP candidates that do not contain the target feature.
         :param save_results: [optional] Save results to a csv file.
 
         :return: JSON string object
@@ -154,7 +157,7 @@ class GeneticGRAANK(BaseGrad):
             s_space.pop = s_space.pop[0:self._parent_pop]
 
             # Evaluate GP
-            _, repeated = BaseGrad.evaluate_gradual_pattern(repeated, s_space, self)
+            _, repeated = BaseGrad.evaluate_gradual_pattern(repeated, s_space, self, ignore_support, target_col, exclude_target)
 
         for gp in s_space.best_patterns:
             self.add_gradual_pattern(gp)
