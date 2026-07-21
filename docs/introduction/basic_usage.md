@@ -7,7 +7,7 @@ firstpage:
 
 A **Gradual Pattern (GP)** is a co-occurring set of gradual items (GI) that captures covariations between attributes. A pattern's quality is measured quantitatively by its computed **support value**.
 
-### Illustrative Example
+## Illustrative Example
 Consider a dataset containing 6 objects across 3 features (`Age`, `Salary`, and `Cars`):
 
 | Object | Age | Salary | Cars |
@@ -25,7 +25,7 @@ An extracted GP might take the following form:
 
 This expression reveals that in **83.3% of the dataset** (5 out of 6 objects), a strict increase in `Age` (<sup>+</sup>) strongly correlates with a simultaneous decrease in `Salary` (<sup>-</sup>). 
 
-#### Step-by-Step Validation:
+### Step-by-Step Validation:
 * Comparing o<sub>1</sub> → o<sub>2</sub>: Age increases (23 → 27), Salary decreases (52k → 51k). **(Valid)**
 * Comparing o<sub>2</sub> → o<sub>3</sub>: Age increases (27 → 31), Salary decreases (51k → 50k). **(Valid)**
 * Comparing o<sub>3</sub> → o<sub>4</sub>: Age increases (31 → 36), Salary decreases (50k → 48k). **(Valid)**
@@ -54,7 +54,9 @@ import so4gp
 
 ---
 
-## Importing Algorithms
+## Basic Usage
+
+### Importing Algorithms
 
 The `so4gp` package exposes its public algorithms through the
 `so4gp.algorithms` module.
@@ -71,7 +73,7 @@ import so4gp as sgp
 
 ---
 
-## Input Data
+### Input Data
 
 Most `so4gp` algorithms accept either:
 
@@ -84,7 +86,7 @@ ordered temporal attribute.
 
 ---
 
-## Example: Gradual Pattern Mining
+#### Example: Gradual Pattern Mining
 
 The example below extracts gradual patterns using the classical APRIORI-based
 GRAANK algorithm.
@@ -119,7 +121,7 @@ gradual patterns, their support values, and additional metadata.
 
 ---
 
-## Example: Temporal Gradual Pattern Mining
+#### Example: Temporal Gradual Pattern Mining
 
 The following example discovers fuzzy temporal gradual patterns using the
 default Mutual Information (AMI) transformation algorithm.

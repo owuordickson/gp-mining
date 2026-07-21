@@ -2,10 +2,8 @@ Function Reference
 ==================
 
 
-.. autosummary::
-   :toctree: generated
-   :nosignatures:
+.. toctree::
+   :maxdepth: 1
 
-   so4gp.utils.analyze_gps
-   so4gp.utils.gradual_decompose
-
+   base/analyzegps
+   base/savedata

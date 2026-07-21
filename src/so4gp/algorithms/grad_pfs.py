@@ -117,17 +117,47 @@ class GradPFS:
 
     def multivariate_fs(self, algorithm: str = 'GRAANK') -> pd.DataFrame | None:
         """
-        A method that runs the multivariate GradPFS feature selection algorithm. First, this method mines for Gradual
-        Patterns (GPs) that contain the target feature. These GPs are considered to be relevant to the target variable.
-        Second, the algorithm identifies the features associated with the mined GPs and extracts them; the remaining
-        features are considered to be the most irrelevant to the target feature.
+        Run the multivariate GradPFS feature selection algorithm.
 
-        This method raises a ValueError exception if the user does not specify the target feature column index.
+        GradPFS performs gradual pattern-based feature selection in two stages:
 
-        :param algorithm: [optional] the algorithm to use: 'GRAANK', 'ACO' - Ant Colony GRAANK,
-        'CLU' - Clustering GRAANK, 'GEA' - Genetic Algorithm GRAANK. (default = 'GRAANK')
+        1. Gradual Pattern Mining:
+           Mine gradual patterns that contain the specified target feature. These
+           patterns represent gradual relationships that are relevant to the target
+           variable.
 
-        :return: A list of the correlated attributes as a Pandas dataframe.
+        2. Feature Selection:
+           Identify all features participating in the discovered gradual patterns.
+           These features are returned as the selected (relevant) feature subset,
+           while features that never participate in any target-related gradual pattern
+           are considered irrelevant to the target variable.
+
+        Args:
+            algorithm:
+                Gradual pattern mining algorithm used during feature selection.
+
+                Supported values are:
+
+                * ``"GRAANK"`` – Classical APRIORI-based gradual pattern mining.
+                * ``"ACO"`` – Ant Colony Optimization.
+                * ``"CLU"`` – Cluster-based gradual pattern mining.
+                * ``"GA"`` – Genetic Algorithm.
+
+                Defaults to ``"GRAANK"``.
+
+        Returns:
+            pandas.DataFrame:
+                A DataFrame containing the selected features that are gradually
+                associated with the target feature.
+
+        Raises:
+            ValueError:
+                If no target feature has been specified before running the algorithm.
+
+        Notes:
+            GradPFS is a filter-based feature selection algorithm that exploits
+            gradual dependencies between variables rather than conventional linear or
+            statistical correlation measures.
         """
 
         if self.target_col is None:
