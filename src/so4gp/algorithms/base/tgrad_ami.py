@@ -31,6 +31,7 @@ class TGradAMI(TGrad):
         super(TGradAMI, self).__init__(*args, **kwargs)
         self._feature_cols: np.ndarray = np.setdiff1d(self.attr_cols, self.target_col)
         self._mi_error: float = 0
+        self._transformation_data: dict = {}
 
     @property
     def mi_error(self):
@@ -39,6 +40,10 @@ class TGradAMI(TGrad):
     @property
     def feature_cols(self):
         return self._feature_cols
+
+    @property
+    def transformation_data(self):
+        return self._transformation_data
 
     def find_best_mutual_info(self, error_margin):
         """
@@ -195,14 +200,12 @@ class TGradAMI(TGrad):
                 title_row.append(txt)
                 if (col != self.target_col) and (col not in self.time_cols):
                     time_title.append(txt)
-            add_dict = {
+            self._transformation_data = {
                 'Patterns': self.display_patterns,
                 'Transformation Steps': optimal_dict,
                 'Time Data': np.vstack((np.array(time_title), time_data.T)),
                 'Transformed Data': np.vstack((np.array(title_row), delayed_data.T if delayed_data is not None else np.array([]))),
             }
-        else:
-            add_dict = {"Patterns": self.display_patterns}
 
         duration = time.time() - start
         out_dict: dict[str, str | list | np.ndarray | None | dict] = {
@@ -213,5 +216,4 @@ class TGradAMI(TGrad):
             "MI Error": f"{self.mi_error:.2f}",
             "Target Column": f"{self._target_col}",
             "Run-time": f"{duration:.6f} seconds"}
-        out_dict.update(add_dict)
         return out_dict

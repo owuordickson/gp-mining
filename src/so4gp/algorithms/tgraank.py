@@ -189,24 +189,22 @@ class TGRAANK:
             attribute, typically producing more accurate temporal transformations.
         """
 
-        if transformation_algorithm == 'all':
-            pass
-        elif transformation_algorithm == 'ami':
-            from .base.tgrad_ami import TGradAMI
-            self._mine_obj = TGradAMI(self._data_src, target_col=self._target_col, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq)
-        else:
-            raise ValueError("Invalid transformation algorithm")
-
-        if isinstance(self._mine_obj, TGrad):
-            res_dict = self._mine_obj.discover_tgp(num_cores=num_cores)
-        else:
-            res_dict = self._mine_obj.discover_tgp(use_clustering=use_clustering, transformation_steps=transformation_steps, error_margin=error_margin, eval_mode=eval_mode)
-
         try:
+
+            if transformation_algorithm == 'all':
+                res_dict = self._mine_obj.discover_tgp(num_cores=num_cores)
+            elif transformation_algorithm == 'ami':
+                from .base.tgrad_ami import TGradAMI
+                self._mine_obj = TGradAMI(self._data_src, target_col=self._target_col, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq)
+                res_dict = self._mine_obj.discover_tgp(use_clustering=use_clustering, transformation_steps=transformation_steps, error_margin=error_margin, eval_mode=eval_mode)
+            else:
+                raise ValueError("Invalid transformation algorithm")
+
             if save_results:
                 self._mine_obj.generate_output_files(res_dict, target_col=self._target_col)
             res_dict.update({"Patterns": self._mine_obj.display_patterns})
         except Exception as e:
-            res_dict.update({"Error": str(e)})
-        out:str = json.dumps(res_dict,indent=4)
+            res_dict = {"Error": str(e)}
+
+        out:str = json.dumps(res_dict, indent=4)
         return out
