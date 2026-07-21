@@ -53,6 +53,7 @@ class GeneticGRAANK(BaseGrad):
         self._gamma: float = gamma
         self._mu: float = mu
         self._sigma: float = sigma
+        print(f"GA Population: {n_pop}")
 
     def _crossover(self, p1: BaseGrad.Candidate, p2: BaseGrad.Candidate) -> tuple[BaseGrad.Candidate, BaseGrad.Candidate]:
         """

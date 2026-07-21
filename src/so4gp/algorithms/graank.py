@@ -127,7 +127,8 @@ class GRAANK:
                  search_type: str = "apriori",
                  ignore_support: bool = False, max_iteration: int | None = None,
                  target_col: int | None = None, exclude_target: bool = False,
-                 compute_descriptors: bool = True, save_results: bool = True) -> str:
+                 compute_descriptors: bool = True, save_results: bool = True,
+                 **kwargs) -> str:
         """
         Discover gradual patterns using the selected search strategy.
 
@@ -218,6 +219,53 @@ class GRAANK:
             save_results:
                 Generate CSV output files after mining.
 
+            **kwargs:
+                Additional algorithm-specific hyperparameters.
+
+                These parameters are only used by the corresponding search
+                algorithm. Unused parameters are ignored.
+
+                **Genetic Algorithm (`search_type="ga"`):**
+
+                * **n_pop** (*int*, default=5):
+                  Population size.
+
+                * **pc** (*float*, default=0.5):
+                  Crossover probability.
+
+                * **gamma** (*float*, default=1.0):
+                  Crossover expansion factor.
+
+                * **mu** (*float*, default=0.9):
+                  Mutation probability.
+
+                * **sigma** (*float*, default=0.9):
+                  Mutation step size (standard deviation).
+
+                **Ant Colony Optimization (`search_type="aco"`):**
+
+                * **e_factor** (*float*, default=0.5):
+                  Pheromone evaporation factor.
+
+                **Hill Climbing (`search_type="hc"`):**
+
+                * **step_size** (*float*, default=0.5):
+                  Neighborhood search step size.
+
+                **Particle Swarm Optimization (`search_type="pso"`):**
+
+                * **n_particle** (*int*, default=5):
+                  Number of particles.
+
+                * **vel** (*float*, default=0.9):
+                  Initial particle velocity.
+
+                * **coeff_p** (*float*, default=0.01):
+                  Cognitive (personal best) acceleration coefficient.
+
+                * **coeff_g** (*float*, default=0.9):
+                  Social (global best) acceleration coefficient.
+
         Returns:
             JSON-formatted string containing the mining results, including the
             discovered gradual patterns, statistics, descriptors, and metadata.
@@ -238,19 +286,19 @@ class GRAANK:
         elif search_type == "ga":
             from .base.graank_ga import GeneticGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = GeneticGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+            self._mine_obj = GeneticGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
         elif search_type == "aco":
             from .base.graank_aco import AntGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = AntGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+            self._mine_obj = AntGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
         elif search_type == "pso":
             from .base.graank_pso import ParticleGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = ParticleGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+            self._mine_obj = ParticleGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
         elif search_type == "hc":
             from .base.graank_hc import HillClimbingGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = HillClimbingGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+            self._mine_obj = HillClimbingGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
         elif search_type == "random":
             from .base.graank_rand import RandomGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
