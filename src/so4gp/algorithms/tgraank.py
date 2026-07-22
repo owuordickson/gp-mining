@@ -104,10 +104,8 @@ class TGRAANK:
     def mining_engine(self):
         return self._mine_obj
 
-    def discover(self, transformation_algorithm: str='ami', transformation_steps: dict|None = None,
-                 use_clustering: bool = False, error_margin: float = 0.0001,
-                 num_cores: int = 1,
-                 eval_mode: bool = False, save_results: bool = True) -> str:
+    def discover(self, transformations: str= 'ami', transformation_steps: dict | None = None,
+                 eval_mode: bool = False, save_results: bool = True, **kwargs) -> str:
         """
         Discover fuzzy temporal gradual patterns.
 
@@ -115,15 +113,16 @@ class TGRAANK:
         between observations and then performs gradual pattern mining on the
         transformed dataset.
 
-        Transformation Algorithms:
+        Data Transformations:
             ``all``:
-                Classical TGrad algorithm.
+                Classical TGRAANK algorithm generating all possible transformations.
 
-                Applies fuzzy membership functions to estimate temporal lags using
-                representativity before mining temporal gradual patterns.
+                Performs a full transformation of the dataset yielding all possible transformations up to the maximum
+                transformation step specified by `min_rep`. Then it applies fuzzy membership functions to estimate
+                temporal lags before mining temporal gradual patterns.
 
             ``ami``:
-                Mutual Information (AMI) temporal transformation.
+                TGRAANK-AMI algorithm with improved AMI-based data transformation.
 
                 Extends TGrad by estimating temporal delays using Average Mutual
                 Information (AMI). Candidate transformations are evaluated by
@@ -135,8 +134,8 @@ class TGRAANK:
                 candidate transformations that must be evaluated.
 
         Args:
-            transformation_algorithm:
-                Temporal transformation algorithm.
+            transformations:
+                Type of data transformations to be performed.
 
                 Supported values:
 
@@ -146,22 +145,7 @@ class TGRAANK:
             transformation_steps:
                 User-defined transformation steps.
 
-                If omitted, all feasible transformations are considered.
-
-            use_clustering:
-                Whether clustering should be used to reduce the search space
-                before evaluating candidate transformations.
-
-            error_margin:
-                Maximum acceptable mutual information difference between the
-                transformed and original datasets.
-
-                Only used by the AMI algorithm.
-
-            num_cores:
-                Number of CPU cores used for multiprocessing.
-
-                Only applies to the classical TGrad algorithm.
+                If omitted, all possible transformations are considered.
 
             eval_mode:
                 Enables evaluation mode.
@@ -170,6 +154,25 @@ class TGRAANK:
 
             save_results:
                 Whether to generate CSV output files.
+
+            **kwargs:
+                Additional transformation-specific hyperparameters.
+
+                These parameters are only used by the corresponding data
+                transformation. Unused parameters are ignored.
+
+                **TGRAANK (`transformations="all"`):**
+
+                * **num_cores** (*int*, default=1):
+                  Number of CPU cores to be used for multiprocessing.
+
+                **TGRAANK-AMI (`transformations="ami"`):**
+
+                * **use_clustering** (*bool*, default=False):
+                  Use a clustering algorithm (KMeans) to estimate the best time-delay value.
+
+                * **error_margin** (*float*, default=0.0001):
+                  Maximum acceptable mutual information difference between the transformed and original datasets.
 
         Returns:
             JSON-formatted string containing the discovered temporal gradual
@@ -191,12 +194,12 @@ class TGRAANK:
 
         try:
 
-            if transformation_algorithm == 'all':
-                res_dict = self._mine_obj.discover_tgp(num_cores=num_cores)
-            elif transformation_algorithm == 'ami':
+            if transformations == 'all':
+                res_dict = self._mine_obj.discover_tgp(**kwargs)
+            elif transformations == 'ami':
                 from .base.tgrad_ami import TGradAMI
                 self._mine_obj = TGradAMI(self._data_src, target_col=self._target_col, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq)
-                res_dict = self._mine_obj.discover_tgp(use_clustering=use_clustering, transformation_steps=transformation_steps, error_margin=error_margin, eval_mode=eval_mode)
+                res_dict = self._mine_obj.discover_tgp(transformation_steps=transformation_steps, eval_mode=eval_mode, **kwargs)
             else:
                 raise ValueError("Invalid transformation algorithm")
 

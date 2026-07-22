@@ -177,7 +177,7 @@ Supported search algorithms include:
 Similarly, `TGRAANK` supports multiple temporal transformation algorithms.
 
 ```python
-results = miner.discover(transformation_algorithm="ami")
+results = miner.discover(transformations="ami")
 ```
 
 Supported transformation algorithms include:

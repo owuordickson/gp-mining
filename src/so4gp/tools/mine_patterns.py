@@ -227,4 +227,4 @@ def mine_tgps(
     # Run the mining algorithm
     from ..algorithms.tgraank import TGRAANK
     mine_obj = TGRAANK(data_df, min_sup=min_support, target_col=target_column, min_rep=min_rep)
-    return mine_obj.discover(transformation_algorithm='ami', save_results=False)
+    return mine_obj.discover(transformations='ami', save_results=False)
