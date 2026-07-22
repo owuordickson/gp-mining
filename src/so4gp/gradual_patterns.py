@@ -873,18 +873,59 @@ class TGP(GP):
         # All checks passed, patterns are similar
         return True
 
-    def get_causal_relations(self) -> list:
-        """"""
-        relations = []
-        target_gi = self.target_gradual_item
-        for tgi in self.temporal_gradual_items:
-            t_lag = tgi.time_delay
-            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {t_lag.formatted_time['duration']}"
-            relation = {
-                "causality": [target_gi.attribute_col, tgi.gradual_item.attribute_col],
-                "direction": "+" if target_gi.symbol == tgi.gradual_item.symbol else "-",
-                "time lag": str_time,
-                "support": self.support
-            }
-            relations.append(relation)
+    def get_causal_relations(self) -> list[dict[str, object]]:
+        """
+        Return the causal relationships represented by this temporal gradual pattern.
+
+        Each temporal gradual item is interpreted as having a causal relationship
+        with the target gradual item. The returned metadata includes the causal
+        direction, estimated time lag, and the support of the temporal gradual
+        pattern.
+
+        Returns:
+            A list of dictionaries, where each dictionary contains:
+
+            - ``causality``: A pair of attribute indices in the form
+              ``[target_attribute, related_attribute]``.
+            - ``direction``: ``"+"`` if both gradual items have the same trend
+              (increasing/increasing or decreasing/decreasing), otherwise ``"-"``.
+            - ``time_lag``: Human-readable estimated time lag.
+            - ``support``: Support value of the temporal gradual pattern.
+
+        Notes:
+            The returned relationships describe inferred temporal associations.
+            They should not be interpreted as proof of statistical or causal
+            inference without additional domain validation.
+        """
+        relations: list[dict[str, object]] = []
+
+        target = self.target_gradual_item
+
+        for temporal_item in self.temporal_gradual_items:
+            lag = temporal_item.time_delay
+
+            time_lag = None
+            if lag is not None:
+                time_lag = (
+                    f"{lag.sign}"
+                    f"{lag.formatted_time['value']} "
+                    f"{lag.formatted_time['duration']}"
+                )
+
+            relations.append(
+                {
+                    "causality": [
+                        target.attribute_col,
+                        temporal_item.gradual_item.attribute_col,
+                    ],
+                    "direction": (
+                        "+"
+                        if target.symbol == temporal_item.gradual_item.symbol
+                        else "-"
+                    ),
+                    "time_lag": time_lag,
+                    "support": self.support,
+                }
+            )
+
         return relations
