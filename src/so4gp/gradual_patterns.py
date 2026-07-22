@@ -872,3 +872,19 @@ class TGP(GP):
 
         # All checks passed, patterns are similar
         return True
+
+    def get_causal_relations(self) -> list:
+        """"""
+        relations = []
+        target_gi = self.target_gradual_item
+        for tgi in self.temporal_gradual_items:
+            t_lag = tgi.time_delay
+            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {t_lag.formatted_time['duration']}"
+            relation = {
+                "causality": [target_gi.attribute_col, tgi.gradual_item.attribute_col],
+                "direction": "+" if target_gi.symbol == tgi.gradual_item.symbol else "-",
+                "time lag": str_time,
+                "support": self.support
+            }
+            relations.append(relation)
+        return relations

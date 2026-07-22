@@ -6,6 +6,8 @@
 
 import json
 from .base.tgrad import TGrad
+from .. import TGP
+
 
 class TGRAANK:
     """
@@ -203,9 +205,16 @@ class TGRAANK:
             else:
                 raise ValueError("Invalid transformation algorithm")
 
+            # Causal Inference
+            causal_relations = []
+            for tgp in self._mine_obj.gradual_patterns or []:
+                res = tgp.get_causal_relations()
+                causal_relations.extend(res)
+
             if save_results:
                 self._mine_obj.generate_output_files(res_dict, target_col=self._target_col)
             res_dict.update({"Patterns": self._mine_obj.display_patterns})
+            res_dict.update({"Causality": causal_relations})
         except Exception as e:
             res_dict = {"Error": str(e)}
 
