@@ -6,7 +6,7 @@
 
 import json
 from .base.tgrad import TGrad
-from .. import TGP
+from .. import TGP, GP
 
 
 class TGRAANK:
