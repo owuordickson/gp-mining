@@ -30,7 +30,7 @@ from .gradual_patterns import GI, GP, TGP, PairwiseMatrix
 
 class DataGP:
 
-    def __init__(self, data_source, min_sup=0.5, eq=False) -> None:
+    def __init__(self, data_source, min_sup=0.5, eq=False, add_time: bool = False) -> None:
         """
         A class for creating data-gp objects. A data-gp object is meant to store all the parameters required by GP
         algorithms to extract gradual patterns (GP). It takes a numeric file (in CSV format) as input and converts it
@@ -44,6 +44,8 @@ class DataGP:
 
         :param eq: [optional] encode equal values as gradual, the default is False
         :type eq: bool
+
+        :param add_time: [optional] add a dummy time column if the dataset is not a time-series
 
         """
         self._data_src = data_source
@@ -61,7 +63,7 @@ class DataGP:
         self._attr_size: int = 0
         self._gradual_patterns = None
         """:type _gradual_patterns: list[GP] | None"""
-        self._init_attributes()
+        self._init_attributes(create_time_index=add_time)
 
     @property
     def thd_supp(self) -> float:
@@ -132,8 +134,13 @@ class DataGP:
             all_rows.append(row_data)
         return pd.DataFrame(all_rows)
 
-    def _init_attributes(self) -> None:
-        """Initializes the attributes of the data-gp object."""
+    def _init_attributes(self, create_time_index: bool) -> None:
+        """
+        Initializes the attributes of the data-gp object.
+
+        :param create_time_index: adds a time index column if none exists.
+
+        """
 
         def get_attr_cols() -> np.ndarray:
             """
@@ -152,7 +159,7 @@ class DataGP:
             :return: A ndarray object containing the indices of the time columns.
             """
             # Retrieve the first column only
-            time_cols = list()
+            time_cols = []
             n = self._col_count
             for i in range(n):  # check every column/attribute for time format
                 row_data = str(self._data[0][i])
@@ -166,7 +173,16 @@ class DataGP:
 
         self._row_count, self._col_count = self._data.shape
         self._time_cols = get_time_cols()
+
+        # Add Dummy Time
+        if self._time_cols.size == 0 and create_time_index:
+            self._titles.append("NoTime")
+            no_time = np.arange(self._data.shape[0])
+            self._data = np.column_stack((self._data, no_time))
+            self._time_cols = np.append(self._time_cols, [len(self._titles)-1])
+            self._row_count, self._col_count = self._data.shape
         self._attr_cols = get_attr_cols()
+        print(f"Time columns: {self._time_cols}")
 
     def add_gradual_pattern(self, pattern) -> None:
         """

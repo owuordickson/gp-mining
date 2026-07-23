@@ -99,7 +99,7 @@ class TGRAANK:
         self._min_supp: float = min_sup
         self._min_rep: float = min_rep
         self._eq: bool = eq
-        self._mine_obj = TGrad(data_source, target_col=target_col, min_sup=min_sup, min_rep=min_rep, eq=eq)
+        self._mine_obj = TGrad(data_source, target_col=target_col, min_sup=min_sup, min_rep=min_rep, eq=eq, add_time=True)
 
     @property
     def mining_engine(self):
@@ -199,7 +199,7 @@ class TGRAANK:
                 res_dict = self._mine_obj.discover_tgp(**kwargs)
             elif transformations == 'ami':
                 from .base.tgrad_ami import TGradAMI
-                self._mine_obj = TGradAMI(self._data_src, target_col=self._target_col, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq)
+                self._mine_obj = TGradAMI(self._data_src, target_col=self._target_col, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq, add_time=True)
                 res_dict = self._mine_obj.discover_tgp(transformation_steps=transformation_steps, eval_mode=eval_mode, **kwargs)
             else:
                 raise ValueError("Invalid transformation algorithm")
