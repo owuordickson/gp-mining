@@ -25,7 +25,7 @@ import pandas as pd
 from tabulate import tabulate
 from dateutil.parser import parse
 from .utils import write_file
-from .gradual_patterns import GI, GP, TGP, PairwiseMatrix
+from .gradual_patterns import GI, GP, TGP, PairwiseMatrix, NO_TIME_LABEL
 
 
 class DataGP:
@@ -175,14 +175,13 @@ class DataGP:
         self._time_cols = get_time_cols()
 
         # Add Dummy Time
-        if self._time_cols.size >= 0 and create_time_index:
-            self._titles.append("NoTime")
+        if self._time_cols.size == 0 and create_time_index:
+            self._titles.append(NO_TIME_LABEL)
             no_time = np.arange(self._data.shape[0])
             self._data = np.column_stack((self._data, no_time))
-            self._time_cols = np.append(self._time_cols, [len(self._titles)-1])
+            self._time_cols = np.append(self._time_cols, [len(self._titles)-1]).astype(int)
             self._row_count, self._col_count = self._data.shape
         self._attr_cols = get_attr_cols()
-        print(f"Time columns: {self._time_cols}")
 
     def add_gradual_pattern(self, pattern) -> None:
         """

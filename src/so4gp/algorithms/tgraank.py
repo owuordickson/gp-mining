@@ -207,7 +207,7 @@ class TGRAANK:
             # Causal Inference
             causal_relations = []
             for tgp in self._mine_obj.gradual_patterns or []:
-                res = tgp.get_causal_relations()
+                res = tgp.get_causal_relations(self._mine_obj.titles)
                 causal_relations.extend(res)
 
             if save_results:

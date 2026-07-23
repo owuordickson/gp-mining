@@ -18,6 +18,8 @@ import numpy as np
 from dataclasses import dataclass
 
 
+NO_TIME_LABEL = "NoTime"
+
 @dataclass
 class PairwiseMatrix:
     """A data-class for storing pairwise (bitmap) matrix and its support value."""
@@ -800,7 +802,7 @@ class TGP(GP):
         """
         A method that returns a fuzzy temporal gradual pattern (TGP) with actual column names
 
-        :param columns: Column names
+        :param columns: Column names of the dataset
         :param descriptor_title: If True, prints the descriptor title
 
         :return: TGP with actual column names
@@ -809,12 +811,13 @@ class TGP(GP):
         target_gi = self._target_gradual_item
         col_title = columns[target_gi.attribute_col if target_gi else -1]
         pattern = f"{col_title}{target_gi.symbol if target_gi else ''}, "
+        has_no_time = True if NO_TIME_LABEL in columns else False
 
         i = 0
         for temp_gi in self._temporal_gradual_items:
             gi = temp_gi.gradual_item
             t_lag = temp_gi.time_delay
-            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {t_lag.formatted_time['duration']}"
+            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {"lag" if has_no_time else t_lag.formatted_time['duration']}"
             col_title = columns[gi.attribute_col]
             pat = f"({col_title}{gi.symbol}) {str_time}"
             # pattern.append(pat)
@@ -874,7 +877,7 @@ class TGP(GP):
         # All checks passed, patterns are similar
         return True
 
-    def get_causal_relations(self) -> list[dict[str, object]]:
+    def get_causal_relations(self, columns: list) -> list[dict[str, object]]:
         """
         Return the causal relationships represented by this temporal gradual pattern.
 
@@ -882,6 +885,8 @@ class TGP(GP):
         with the target gradual item. The returned metadata includes the causal
         direction, estimated time lag, and the support of the temporal gradual
         pattern.
+
+        :param columns: Column names of the dataset
 
         Returns:
             A list of dictionaries, where each dictionary contains:
@@ -899,6 +904,7 @@ class TGP(GP):
             inference without additional domain validation.
         """
         relations: list[dict[str, object]] = []
+        has_no_time = True if NO_TIME_LABEL in columns else False
 
         target = self.target_gradual_item
         if target is None:
@@ -912,7 +918,7 @@ class TGP(GP):
                 time_lag = (
                     f"{lag.sign}"
                     f"{lag.formatted_time['value']} "
-                    f"{lag.formatted_time['duration']}"
+                    f"{"lag" if has_no_time else lag.formatted_time['duration']}"
                 )
 
             relations.append(
@@ -926,7 +932,7 @@ class TGP(GP):
                         if target.symbol == temporal_item.gradual_item.symbol
                         else "-"
                     ),
-                    "time_lag": time_lag,
+                    "time lag": time_lag,
                     "support": self.support,
                 }
             )

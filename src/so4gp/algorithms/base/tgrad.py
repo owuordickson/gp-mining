@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
 from .graank_alg import OrigGRAANK
 from ...data_gp import DataGP
-from ...gradual_patterns import GI, TGP, TimeDelay
+from ...gradual_patterns import GI, TGP, TimeDelay, NO_TIME_LABEL
 
 
 class TGrad(OrigGRAANK):
@@ -234,6 +234,12 @@ class TGrad(OrigGRAANK):
                 stamp_1 = 0
                 stamp_2 = 0
                 for col in self.time_cols:  # sum timestamps from all time-columns
+                    time_col_title = self.titles[col]
+                    if time_col_title == NO_TIME_LABEL:
+                        stamp_1 += int(self.data[i][int(col)])
+                        stamp_2 += int(self.data[i + step][int(col)])
+                        continue
+
                     temp_1 = str(self.data[i][int(col)])
                     temp_2 = str(self.data[i + step][int(col)])
                     temp_stamp_1 = TGrad.get_timestamp(temp_1)
