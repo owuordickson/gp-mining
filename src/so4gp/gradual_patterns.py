@@ -923,7 +923,7 @@ class TGP(GP):
 
             relations.append(
                 {
-                    "causality": [
+                    "correlation": [
                         target.attribute_col,
                         temporal_item.gradual_item.attribute_col,
                     ],
