@@ -175,7 +175,7 @@ class DataGP:
         self._time_cols = get_time_cols()
 
         # Add Dummy Time
-        if self._time_cols.size == 0 and create_time_index:
+        if self._time_cols.size >= 0 and create_time_index:
             self._titles.append("NoTime")
             no_time = np.arange(self._data.shape[0])
             self._data = np.column_stack((self._data, no_time))
