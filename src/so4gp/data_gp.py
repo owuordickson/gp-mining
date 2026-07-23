@@ -157,7 +157,7 @@ class DataGP:
             for i in range(n):  # check every column/attribute for time format
                 row_data = str(self._data[0][i])
                 try:
-                    time_ok, t_stamp = DataGP.test_time(row_data)
+                    time_ok, _ = DataGP.test_time(row_data)
                     if time_ok:
                         time_cols.append(i)
                 except ValueError:
@@ -514,69 +514,87 @@ class DataGP:
                 raise Exception("Error: " + str(error))
 
     @staticmethod
-    def test_time(date_str) -> None | tuple[bool, float] | tuple[bool, bool]:
+    def test_time(date_str: str) -> tuple[bool, float| None] :
         """
         Tests if a str represents a date-time variable.
 
         :param date_str: A string
-        :type date_str: str
         :return: bool (True if it is a date-time variable, False otherwise)
         """
         # add all the possible formats
+        # Exclude numeric values
         try:
-            if type(int(date_str)):
-                return False, False
+            int(date_str)
+            return False, None
         except ValueError:
-            try:
-                if type(float(date_str)):
-                    return False, False
-            except ValueError:
-                try:
-                    date_time = parse(date_str)
-                    t_stamp = time.mktime(date_time.timetuple())
-                    return True, t_stamp
-                except ValueError:
-                    raise ValueError('no valid date-time format found')
+            pass
+
+        try:
+            float(date_str)
+            return False, None
+        except ValueError:
+            pass
+
+        try:
+            dt = parse(date_str)
+            return True, time.mktime(dt.timetuple())
+        except ValueError as exc:
+            raise ValueError("No valid date-time format found.") from exc
 
     @staticmethod
     def clean_data(df) -> tuple[list, np.ndarray]:
         """
-        Cleans a data-frame (i.e., missing values, outliers) before extraction of GPs
+        Cleans a data frame by removing missing values and non-numeric columns,
+        while preserving valid time columns.
 
-        :param df: data-frame
-        :type df: pd.DataFrame
-        :return: list (column titles), numpy (cleaned data)
+        Args:
+            df: Input pandas DataFrame.
+
+        Returns:
+            A tuple containing:
+
+            - List of column names.
+            - NumPy array of the cleaned data.
+
+        Raises:
+            Exception:
+                If the cleaned dataset contains no remaining columns or rows.
         """
-        # 1. Remove objects with Null values
+        # 1. Remove rows containing missing values
         df = df.dropna()
 
-        # 2. Remove columns with Strings
+        # 2. Remove non-numeric columns (except valid time columns)
         cols_to_remove = []
+
         for col in df.columns:
+            series = df[col]
+
             try:
-                _ = df[col].astype(float)
+                series.astype(float)
             except ValueError:
-                # Keep time columns
-                first_valid_idx = df[col].first_valid_index()
+                # Preserve valid time columns
+                first_valid_idx = series.first_valid_index()
                 if first_valid_idx is None:
-                    cols_to_remove.append(col)  # Entirely empty column
+                    cols_to_remove.append(col)
                     continue
-                sample_val = str(df[col].loc[first_valid_idx])
+
+                sample_val = str(series.at[first_valid_idx])
 
                 try:
-                    ok, stamp = DataGP.test_time(sample_val)
-                    if not ok:
+                    is_time, _ = DataGP.test_time(sample_val)
+                    if not is_time:
                         cols_to_remove.append(col)
                 except ValueError:
                     cols_to_remove.append(col)
-                pass
+
             except TypeError:
                 cols_to_remove.append(col)
-                pass
-        # keep only the columns in df that do not contain string
-        df = df[[col for col in df.columns if col not in cols_to_remove]]
+
+        # Keep only numeric and valid time columns
+        df = df.drop(columns=cols_to_remove)
 
         # 3. Return titles and data
         if df.empty:
-            raise Exception("Data set is empty after cleaning.")
-        return list(df.columns), df.values
+            raise ValueError("Dataset is empty after cleaning.")
+
+        return list(df.columns), df.to_numpy()
