@@ -263,7 +263,7 @@ class GP:
             syms.append(gi[1])
         return attrs, syms
 
-    def contains_attr(self, gi: GI) -> bool:
+    def contains_attr(self, gi: GI|None) -> bool:
         """
         Checks if any gradual item (GI) in the gradual pattern (GP) is composed of the column
         :param gi: gradual item
@@ -273,6 +273,7 @@ class GP:
         """
         if gi is None:
             return False
+
         for gi_obj in self._gradual_items:
             if gi.attribute_col == gi_obj.attribute_col:
                 return True
@@ -377,7 +378,7 @@ class GP:
                         temp_tids = set(gi_tids)
                         gen_pattern.add_gradual_item(gi)
                     else:
-                        temp = (temp_tids or {}).copy()
+                        temp = set((temp_tids or {}).copy())
                         temp = temp.intersection(set(gi_tids))
                         supp = float(len(temp)) / float(n * (n - 1.0) / 2.0)
                         if supp >= min_supp:
@@ -575,7 +576,7 @@ class GP:
                 degree[int(v)] += 1
 
             mean_deg = np.mean(degree)
-            if mean_deg == 0:
+            if mean_deg == 0.0:
                 return 0.0
 
             return float(np.var(degree) / mean_deg)
@@ -900,6 +901,8 @@ class TGP(GP):
         relations: list[dict[str, object]] = []
 
         target = self.target_gradual_item
+        if target is None:
+            return relations
 
         for temporal_item in self.temporal_gradual_items:
             lag = temporal_item.time_delay
