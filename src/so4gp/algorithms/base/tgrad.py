@@ -252,7 +252,7 @@ class TGrad(OrigGRAANK):
                 time_diffs[int(i)] = float(abs(time_diff))
         return True, time_diffs
 
-    def get_fuzzy_time_lag(self, bin_data: np.ndarray, time_data: np.ndarray | dict, gi_arr: set|None = None,
+    def get_fuzzy_time_lag(self, bin_data: np.ndarray, time_data: np.ndarray | dict | None, gi_arr: set|None = None,
                            tri_mf_data: np.ndarray | None = None) -> TimeDelay:
         """
         A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
