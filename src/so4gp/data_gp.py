@@ -14,7 +14,6 @@ A collection of classes for pre-processing data for mining gradual patterns.
 """
 
 import os
-import gc
 import csv
 import time
 import statistics
@@ -59,8 +58,7 @@ class DataGP:
         self._valid_bins: dict | None = None
         self._warping_set: dict | None = None
         self._attr_size: int = 0
-        self._gradual_patterns = None
-        """:type _gradual_patterns: list[GP|TGP] | None"""
+        self._gradual_patterns: list[GP | TGP] | None = None
         self._init_attributes(create_time_index=add_time)
 
     @property
@@ -104,7 +102,7 @@ class DataGP:
         return self._attr_size
 
     @property
-    def gradual_patterns(self) -> list[GP|TGP] | None:
+    def gradual_patterns(self) -> list[GP | TGP] | None:
         return self._gradual_patterns
 
     @property
@@ -179,9 +177,56 @@ class DataGP:
             # d.index = pd.DatetimeIndex(d.index.values, freq=d.index.inferred_freq)
 
             self._data = np.column_stack((self._data, no_time))
-            self._time_cols = np.append(self._time_cols, [len(self._titles)-1]).astype(int)
+            self._time_cols = np.append(self._time_cols, [len(self._titles) - 1]).astype(int)
             self._row_count, self._col_count = self._data.shape
         self._attr_cols = get_attr_cols()
+
+    def _compute_pairwise_bitmap( self, attr_values: np.ndarray) -> tuple[np.ndarray, float]:
+        """Compute a pairwise bitmap and its support for one attribute.
+
+        Args:
+            attr_values:
+                One-dimensional numeric array containing the values of a single
+                attribute.
+
+        Returns:
+            A tuple containing:
+
+            - ``bitmap``: Boolean pairwise comparison matrix with shape
+              ``(n_samples, n_samples)``.
+            - ``support``: Proportion of valid object pairs satisfying the
+              gradual relationship.
+
+        Notes:
+            The bitmap requires O(n²) memory, where n is the number of samples.
+            Only one attribute bitmap is generated at a time to avoid the
+            O(n² × m) memory requirement of constructing a bitmap tensor for all
+            m attributes simultaneously.
+        """
+        n_samples = len(attr_values)
+        pair_cnt = GP.pair_count(n_samples)
+
+        # Pairwise comparison:
+        #
+        #   bitmap[i, j] = True
+        #       when attr_values[j] > attr_values[i]
+        #
+        # This represents the positive gradual item (attribute+).
+        lhs = attr_values[:, None]
+        rhs = attr_values[None, :]
+
+        with np.errstate(invalid="ignore"):
+            if self._include_equal_values:
+                bitmap = rhs >= lhs
+
+                # Exclude self-comparisons.
+                indices = np.arange(n_samples)
+                bitmap[indices, indices] = False
+            else:
+                bitmap = rhs > lhs
+
+        support = float(bitmap.sum() / pair_cnt)
+        return bitmap, support
 
     def add_gradual_pattern(self, pattern) -> None:
         """
@@ -189,18 +234,19 @@ class DataGP:
 
         :param pattern: A gradual pattern
         """
-        if self._gradual_patterns is None:
-            self._gradual_patterns = list()
-
         if not isinstance(pattern, (GP, TGP)):
             raise Exception("Pattern must be of type GP, ExtGP, or TGP")
-        self._gradual_patterns.append(pattern)
+
+        if self._gradual_patterns is None:
+            self._gradual_patterns = [pattern]
+        else:
+            self._gradual_patterns.append(pattern)
 
     def clear_gradual_patterns(self) -> None:
         """Clears the list of gradual patterns."""
         self._gradual_patterns = list()
 
-    def remove_subsets(self, gi_arr:set, gradual_patterns: list[GP]|None=None) -> None:
+    def remove_subsets(self, gi_arr: set, gradual_patterns: list[GP] | None = None) -> None:
         """
         Remove subset GPs from the list.
 
@@ -218,46 +264,80 @@ class DataGP:
             if result1 or result2:
                 gps.remove(gp)
 
-    def fit_bitmap(self, attr_data=None) -> None:
-        """
-        Generates bitmaps for columns with numeric objects. It stores the bitmaps in attribute valid_bins (those bitmaps
-        whose computed support values are greater or equal to the minimum support threshold value).
+    def fit_bitmap(self, attr_data: np.ndarray | None = None) -> None:
+        """Generate valid gradual-item bitmaps one attribute at a time.
 
-        :param attr_data: Stepped attribute objects
-        :type attr_data: np.ndarray | None
-        :return: void
+        For each selected attribute, a pairwise comparison matrix is generated
+        independently. Its support is evaluated against the minimum support
+        threshold. Valid positive and negative gradual items are then stored in
+        ``self._valid_bins``.
+
+        Generating attributes independently limits peak bitmap memory to a single
+        ``(n_samples, n_samples)`` matrix rather than a
+        ``(n_samples, n_samples, n_attributes)`` tensor.
+
+        Args:
+            attr_data:
+                Optional stepped/transformed attribute data. If ``None``, the
+                original dataset is transposed and used. When stepped data is
+                provided, its first selected attribute determines ``_attr_size``.
+
+        Returns:
+            None.
+
+        Notes:
+            Bitmap generation has O(n²) time and memory complexity per attribute.
+            Only attributes satisfying ``self._thd_supp`` are retained.
         """
-        # (check) implement parallel multiprocessing
-        # 1. Transpose csv array data
+        # ------------------------------------------------------------------
+        # 1. Prepare attribute data
+        # ------------------------------------------------------------------
         if attr_data is None:
             attr_data = self._data.T
             self._attr_size = self._row_count
         else:
             self._attr_size = len(attr_data[self._attr_cols[0]])
-
-        # 2. Construct and store 1-item_set valid bins: execute binary rank to calculate support of a pattern
-        n = self._attr_size
         self._valid_bins = {}
-        for col in self._attr_cols:
-            # 2a. Generate 1-itemset gradual-items
-            col_data = np.array(attr_data[col], dtype=float)
-            with np.errstate(invalid='ignore'):
-                if not self._include_equal_values:
-                    temp_pos = np.array(col_data > col_data[:, np.newaxis])
-                else:
-                    temp_pos = np.array(col_data >= col_data[:, np.newaxis])
-                    np.fill_diagonal(temp_pos, False)
 
-                # 2b. Check support of each generated item set
-                supp = float(np.sum(temp_pos)) / GP.pair_count(n)
-                if (supp >= self._thd_supp )and (self._valid_bins is not None):
-                    self._valid_bins[f"{col}+"] = PairwiseMatrix(bin_mat=temp_pos, support=supp, pattern={f"{col}+"})
-                    self._valid_bins[f"{col}-"] = PairwiseMatrix(bin_mat=temp_pos.T, support=supp, pattern={f"{col}-"})
-        # print(self._valid_bins)
+        # ------------------------------------------------------------------
+        # 2. Generate one bitmap at a time
+        # ------------------------------------------------------------------
+        for col in self._attr_cols:
+            # Convert only the current attribute to a numeric NumPy array.
+            attr_values = np.asarray(attr_data[col], dtype=np.float64,)
+
+            # Generate the bitmap and calculate its support.
+            bin_mat, support = self._compute_pairwise_bitmap(attr_values)
+
+            # Discard unsupported attributes immediately.
+            if support < self._thd_supp or self._valid_bins is None:
+                del bin_mat
+                continue
+
+            # --------------------------------------------------------------
+            # Positive gradual item
+            # --------------------------------------------------------------
+            self._valid_bins[f"{col}+"] = PairwiseMatrix(
+                bin_mat=bin_mat,
+                support=support,
+                pattern={f"{col}+"},
+            )
+
+            # --------------------------------------------------------------
+            # Negative gradual item
+            # --------------------------------------------------------------
+            self._valid_bins[f"{col}-"] = PairwiseMatrix(
+                bin_mat=bin_mat.T,
+                support=support,
+                pattern={f"{col}-"},
+            )
+
+        # ------------------------------------------------------------------
+        # 3. Require a minimum number of valid gradual items
+        # ------------------------------------------------------------------
         valid_bins_len = len(self._valid_bins) if self._valid_bins is not None else 0
         if valid_bins_len < 3:
             self._valid_bins = None
-        gc.collect()
 
     def fit_warpingset(self) -> None:
         """
@@ -282,11 +362,11 @@ class DataGP:
             lst_ij: list = list(DataGP.gen_gradual_warping_set(gi_data.bin_mat))
             # set_ij = set(sorted(list(lst_ij), key=lambda x: x[0])) ## Messes with the order of the items in the set
             tids_len = len(lst_ij)
-            supp = float((tids_len*0.5) * (tids_len - 1)) / GP.pair_count(n)
+            supp = float((tids_len * 0.5) * (tids_len - 1)) / GP.pair_count(n)
             if (supp >= self._thd_supp) and self._warping_set is not None:
                 self._warping_set[gi_str] = lst_ij
 
-    def generate_output_files(self, alg_data: dict, target_col: int|None = None, save_to_file: bool = True):
+    def generate_output_files(self, alg_data: dict, target_col: int | None = None, save_to_file: bool = True):
         """
         Generates output of results (as files) for the GP mining algorithm.
 
@@ -335,8 +415,8 @@ class DataGP:
 
         if save_to_file:
             gp_df = self.display_patterns_as_df
-            gp_df.to_csv(str(f_name+'.csv'), index=False)
-            write_file(out_txt, str(f_name+'.txt'), wr=True)
+            gp_df.to_csv(str(f_name + '.csv'), index=False)
+            write_file(out_txt, str(f_name + '.txt'), wr=True)
 
     @classmethod
     def save_pairwise_data(cls, data_src: pd.DataFrame | str, min_sup: float = 0.5, out_dir: str = "") -> bool:
@@ -378,7 +458,7 @@ class DataGP:
         return True
 
     @classmethod
-    def analyze_gps(cls, data_src: pd.DataFrame|str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
+    def analyze_gps(cls, data_src: pd.DataFrame | str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
         """
         For each estimated GP, computes its true support using the GRAANK approach and returns the statistics (% error,
         and standard deviation).
@@ -439,7 +519,8 @@ class DataGP:
 
             if len(true_gp.gradual_items) == len(est_gp.gradual_items):
                 data.append(
-                    [est_gp.to_string(), round(float(est_sup), 3), round(float(true_sup), 3), str(round(float(percentage_error), 3)) + '%',
+                    [est_gp.to_string(), round(float(est_sup), 3), round(float(true_sup), 3),
+                     str(round(float(percentage_error), 3)) + '%',
                      round(float(st_dev), 3)])
             else:
                 data.append([est_gp.to_string(), round(est_sup, 3), -1, np.inf, np.inf])
@@ -458,7 +539,8 @@ class DataGP:
         :return: A list array of the warping path (as an edge list).
         """
 
-        edge_lst: list[tuple[int, int]] = [(i, j) for i, row in enumerate(pairwise_mat) for j, val in enumerate(row) if val]
+        edge_lst: list[tuple[int, int]] = [(i, j) for i, row in enumerate(pairwise_mat) for j, val in enumerate(row) if
+                                           val]
         edge_lst = sorted(list(edge_lst), key=lambda x: x[0])
         if as_array:
             return np.array(edge_lst)
@@ -528,7 +610,7 @@ class DataGP:
                 raise Exception("Error: " + str(error))
 
     @staticmethod
-    def test_time(date_str: str) -> tuple[bool, float| None] :
+    def test_time(date_str: str) -> tuple[bool, float | None]:
         """
         Tests if a str represents a date-time variable.
 

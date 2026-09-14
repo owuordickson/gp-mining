@@ -4,6 +4,7 @@
 
 
 import json
+#import torch
 import numpy as np
 from .base.graank_alg import OrigGRAANK
 
@@ -118,6 +119,8 @@ class GRAANK:
         self._min_supp: float = min_sup
         self._eq: bool = eq
         self._mine_obj = OrigGRAANK(data_source, min_sup=min_sup, eq=eq)
+        #device = "cuda" if torch.cuda.is_available() else "cpu"
+        #print(f"🚀 Running execution pipeline on device: {device.upper()}")
 
     @property
     def mining_engine(self):

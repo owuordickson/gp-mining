@@ -15,11 +15,11 @@ if __name__ == "__main__":
     # dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
 
     ## Test Algorithms
-    #mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False)
+    mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False)
     # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0)
-    mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1)
+    #mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1)
     # result_json = mine_obj.discover(target_col=1, compute_descriptors=True)  # GRAANK
-    # result_json = mine_obj.discover()                                          # GRAANK/ClusterGP
+    result_json = mine_obj.discover()                                          # GRAANK/ClusterGP
     # result_json = mine_obj.discover(search_type='aco', target_col=1, exclude_target=False, max_iteration=10)    # ACO
     # result_json = mine_obj.discover(search_type='ga', target_col=1, exclude_target=False, n_pop=10, max_iteration=10)     # GA
     # result_json = mine_obj.discover(search_type='pso', target_col=1, exclude_target=False, max_iteration=10)    # PSO
@@ -28,10 +28,10 @@ if __name__ == "__main__":
     #result_json = mine_obj.discover(search_type='clustergp', target_col=1, exclude_target=False, max_iteration=10, e_prob=0.0) # ClusterGP
 
     # result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=5)                                      # TGRAANK
-    #result_json = mine_obj1.discover(target_col=1, transformations='ami', search_algorithm='clustergp', max_iteration=10, use_clustering=False, eval_mode=True, compute_causality=False)  # TGRAANK-AMI
-    #print(f"{result_json}\n")
-    corr_df = mine_obj1.get_lagged_dependencies(max_lag=3)
-    print(corr_df)
+    #result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=10, use_clustering=False, eval_mode=True, compute_causality=False)  # TGRAANK-AMI
+    print(f"{result_json}\n")
+    # corr_df = mine_obj1.get_lagged_dependencies(max_lag=3)
+    # print(corr_df)
 
     ## Test Time
     #print(sgp.DataGP.test_time("09-01-2005"))
@@ -101,5 +101,50 @@ if __name__ == "__main__":
     estimated_gps.append(temp_gp)
     res = sgp.analyze_gps(dummy_df, min_sup=0.4, est_gps=estimated_gps, approach='bfs')
     print(res)
+    """
+
+    """"
+    import numpy as np
+
+    # Simulate 1,000 samples, each with 500 rows of data across 10 variables
+    # Shape: (1000, 500, 10)
+    all_samples = np.random.randn(1000, 500, 10)
+    predictions = []
+
+    # --- NESTED LOOP ENGINE ---
+    # Loop 1: Iterates through every single sample sequentially
+    for sample in all_samples:
+        # Loop 2 & 3: Hidden inside np.cov and np.linalg.inv calculating element-by-element
+        cov_matrix = np.cov(sample, rowvar=False)
+        inv_matrix = np.linalg.inv(cov_matrix)
+
+        predictions.append(inv_matrix)
+
+    # Convert list back to an array
+    final_output = np.array(predictions)
+    """
+
+    """
+    import torch
+
+    # 1. Send your entire dataset block straight to the GPU memory
+    # Shape: (1000, 500, 10) -> (Batch, Time_Steps, Variables)
+    gpu_samples = torch.tensor(all_samples, device="cuda")
+
+    # --- VECTORIZED ENGINE ---
+    # Step A: Transpose data to calculate covariance across all batches at once
+    # We compute the mean across the time dimension (dim=1)
+    centered_data = gpu_samples - gpu_samples.mean(dim=1, keepdim=True)
+
+    # Step B: Vectorized batch matrix multiplication (BMM) replaces the loop!
+    # This calculates 1,000 covariance matrices at the exact same millisecond
+    batch_cov = torch.bmm(centered_data.transpose(1, 2), centered_data) / (500 - 1)
+
+    # Step C: Vectorized linear inversion 
+    # PyTorch natively computes inversions for a whole batch of matrices at once
+    gpu_predictions = torch.linalg.inv(batch_cov)
+
+    # 2. Move final outputs back to CPU for scoring/saving
+    final_output = gpu_predictions.cpu().numpy()
     """
 

@@ -5,6 +5,7 @@
 
 import json
 import pandas
+import torch
 import numpy as np
 from .base.tgrad import TGrad
 
@@ -95,6 +96,8 @@ class TGRAANK:
         self._min_rep: float = min_rep
         self._eq: bool = eq
         self._mine_obj = TGrad(data_source, min_sup=min_sup, min_rep=min_rep, eq=eq, add_time=True)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"🚀 Running execution pipeline on device: {device.upper()}")
 
     @property
     def mining_engine(self):
@@ -246,8 +249,9 @@ class TGRAANK:
             if transformations == 'all':
                 self._mine_obj = TGrad(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
                                        add_time=True)
+                num_cores = kwargs.get("num_cores", 1)
                 res_dict = self._mine_obj.discover_tgp(target_col=target_col, search_algorithm=search_algorithm,
-                                                       max_iteration=max_iteration, **kwargs)
+                                                       max_iteration=max_iteration, num_cores=num_cores)
             elif transformations == 'ami':
                 from .base.tgrad_ami import TGradAMI
                 self._mine_obj = TGradAMI(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
