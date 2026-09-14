@@ -1,4 +1,3 @@
-import numpy as np
 from hydra import compose, initialize
 from omegaconf import DictConfig
 import datetime
