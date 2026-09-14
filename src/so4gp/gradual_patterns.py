@@ -28,7 +28,7 @@ class PairwiseMatrix:
     bin_mat: np.ndarray
     support: float
     pattern: set[str]
-    time_lag: TimeDelay|None=None
+    time_lag: "TimeDelay|None"=None
 
 
 class GI:
@@ -628,7 +628,7 @@ class GP:
         return float(n * (n - 1.0) / 2.0)
 
     @staticmethod
-    def add_gradual_item_strict(gp: GP|TGP, gi: GI, target_col: int|None = None, time_lag: TimeDelay|None = None) -> GP|TGP:
+    def add_gradual_item_strict(gp: "GP|TGP", gi: GI, target_col: int|None = None, time_lag: "TimeDelay|None" = None) -> "GP|TGP":
         """
         Add a gradual item to a gradual pattern using pattern-aware placement.
 
