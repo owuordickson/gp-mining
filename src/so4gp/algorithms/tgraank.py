@@ -8,6 +8,7 @@ import pandas
 import torch
 import numpy as np
 from .base.tgrad import TGrad
+from .. import get_num_cores
 
 
 class TGRAANK:
@@ -250,6 +251,8 @@ class TGRAANK:
                 self._mine_obj = TGrad(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
                                        add_time=True)
                 num_cores = kwargs.get("num_cores", 1)
+                #if num_cores <= 1:
+                #    num_cores = get_num_cores()
                 res_dict = self._mine_obj.discover_tgp(target_col=target_col, search_algorithm=search_algorithm,
                                                        max_iteration=max_iteration, num_cores=num_cores)
             elif transformations == 'ami':

@@ -16,6 +16,7 @@ A collection of classes for pre-processing data for mining gradual patterns.
 import os
 import csv
 import time
+import torch
 import statistics
 import numpy as np
 import pandas as pd
@@ -228,6 +229,34 @@ class DataGP:
         support = float(bitmap.sum() / pair_cnt)
         return bitmap, support
 
+    def _compute_pairwise_bitmap_gpu(self, attr_values: np.ndarray, chunk_size: int = 2048,) -> tuple[np.ndarray, float]:
+
+        values = torch.as_tensor(attr_values, dtype=torch.float32, device="cuda",)
+        n = len(values)
+        bitmap = np.empty((n, n), dtype=np.bool_,)
+        total_true = 0
+
+        for start in range(0, n, chunk_size):
+            end = min(start + chunk_size, n)
+
+            lhs = values[start:end, None]
+            rhs = values[None, :]
+
+            if self._include_equal_values:
+                chunk = lhs <= rhs
+                rows = torch.arange(start, end, device="cuda",)
+                # cols = torch.arange(n,device="cuda",)
+                # Remove diagonal.
+                chunk[torch.arange(end - start, device="cuda"), rows] = False
+            else:
+                chunk = rhs > lhs
+
+            total_true += int(chunk.sum().item())
+            bitmap[start:end] = chunk.cpu().numpy()
+
+        support = total_true / GP.pair_count(n)
+        return bitmap, support
+
     def add_gradual_pattern(self, pattern) -> None:
         """
         Adds a gradual pattern to the list of gradual patterns.
@@ -307,7 +336,10 @@ class DataGP:
             attr_values = np.asarray(attr_data[col], dtype=np.float64,)
 
             # Generate the bitmap and calculate its support.
-            bin_mat, support = self._compute_pairwise_bitmap(attr_values)
+            if torch.cuda.is_available():
+                bin_mat, support = self._compute_pairwise_bitmap_gpu(attr_values)
+            else:
+                bin_mat, support = self._compute_pairwise_bitmap(attr_values)
 
             # Discard unsupported attributes immediately.
             if support < self._thd_supp or self._valid_bins is None:
@@ -318,7 +350,7 @@ class DataGP:
             # Positive gradual item
             # --------------------------------------------------------------
             self._valid_bins[f"{col}+"] = PairwiseMatrix(
-                bin_mat=bin_mat,
+                bin_mat=np.packbits(bin_mat.ravel()),
                 support=support,
                 pattern={f"{col}+"},
             )
@@ -327,7 +359,7 @@ class DataGP:
             # Negative gradual item
             # --------------------------------------------------------------
             self._valid_bins[f"{col}-"] = PairwiseMatrix(
-                bin_mat=bin_mat.T,
+                bin_mat=np.packbits(bin_mat.T.ravel()),
                 support=support,
                 pattern={f"{col}-"},
             )
@@ -359,7 +391,8 @@ class DataGP:
         n = self._row_count
         self._warping_set = {}
         for gi_str, gi_data in self._valid_bins.items():
-            lst_ij: list = list(DataGP.gen_gradual_warping_set(gi_data.bin_mat))
+            bin_mat = np.unpackbits(gi_data.bin_mat, count=n * n).reshape(n, n).astype(bool)
+            lst_ij: list = list(DataGP.gen_gradual_warping_set(bin_mat))
             # set_ij = set(sorted(list(lst_ij), key=lambda x: x[0])) ## Messes with the order of the items in the set
             tids_len = len(lst_ij)
             supp = float((tids_len * 0.5) * (tids_len - 1)) / GP.pair_count(n)

@@ -15,6 +15,7 @@ A collection of Gradual Pattern classes and methods.
 
 
 import copy
+import torch
 import numpy as np
 import skfuzzy as fuzzy
 from dataclasses import dataclass
@@ -708,9 +709,17 @@ class GP:
         """
         if bin_data_1 is None or bin_data_2 is None:
             return PairwiseMatrix(bin_mat=np.zeros((dim, dim)), support=0, pattern=set())
-        bin_mat = bin_data_1.bin_mat * bin_data_2.bin_mat
+
+        get_bin_counts = np.array(
+            [bin(i).count("1") for i in range(256)],
+            dtype=np.uint8,
+        )
+
+        #bin_mat = bin_data_1.bin_mat * bin_data_2.bin_mat
+        bin_mat = np.bitwise_and(bin_data_1.bin_mat, bin_data_2.bin_mat)
         gp = bin_data_1.pattern | bin_data_2.pattern  # union of both sets to create a GP with only unique GIs
-        sup = float(np.sum(bin_mat)) / GP.pair_count(n=dim)
+        # sup = float(np.sum(bin_mat)) / GP.pair_count(n=dim)
+        sup = get_bin_counts[bin_mat].sum() / GP.pair_count(n=dim)
         if time_data is not None:
             t_data = time_data["time_data"]
             use_gp = time_data["use_gp"]

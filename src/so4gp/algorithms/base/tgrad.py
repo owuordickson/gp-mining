@@ -144,7 +144,7 @@ class TGrad(OrigGRAANK):
             datasets, particularly during the temporal transformation and
             evaluation stages.
         """
-
+        print(num_cores)
         start = time.time()
         self._target_col = target_col
         self._search_algorithm = search_algorithm
