@@ -5,10 +5,10 @@
 
 import json
 import pandas
-import torch
+#import torch
 import numpy as np
 from .base.tgrad import TGrad
-from .. import get_num_cores
+#from .. import get_num_cores
 
 
 class TGRAANK:
@@ -97,8 +97,8 @@ class TGRAANK:
         self._min_rep: float = min_rep
         self._eq: bool = eq
         self._mine_obj = TGrad(data_source, min_sup=min_sup, min_rep=min_rep, eq=eq, add_time=True)
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"🚀 Running execution pipeline on device: {device.upper()}")
+        #device = "cuda" if torch.cuda.is_available() else "cpu"
+        #print(f"🚀 Running execution pipeline on device: {device.upper()}")
 
     @property
     def mining_engine(self):

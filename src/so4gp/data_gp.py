@@ -350,7 +350,7 @@ class DataGP:
             # Positive gradual item
             # --------------------------------------------------------------
             self._valid_bins[f"{col}+"] = PairwiseMatrix(
-                bin_mat=np.packbits(bin_mat.ravel()),
+                packed_bin_mat=np.packbits(bin_mat.ravel()),
                 support=support,
                 pattern={f"{col}+"},
             )
@@ -359,7 +359,7 @@ class DataGP:
             # Negative gradual item
             # --------------------------------------------------------------
             self._valid_bins[f"{col}-"] = PairwiseMatrix(
-                bin_mat=np.packbits(bin_mat.T.ravel()),
+                packed_bin_mat=np.packbits(bin_mat.T.ravel()),
                 support=support,
                 pattern={f"{col}-"},
             )
@@ -391,7 +391,7 @@ class DataGP:
         n = self._row_count
         self._warping_set = {}
         for gi_str, gi_data in self._valid_bins.items():
-            bin_mat = np.unpackbits(gi_data.bin_mat, count=n * n).reshape(n, n).astype(bool)
+            bin_mat = np.unpackbits(gi_data.packed_bin_mat, count=n * n).reshape(n, n).astype(bool)
             lst_ij: list = list(DataGP.gen_gradual_warping_set(bin_mat))
             # set_ij = set(sorted(list(lst_ij), key=lambda x: x[0])) ## Messes with the order of the items in the set
             tids_len = len(lst_ij)
@@ -487,7 +487,7 @@ class DataGP:
             file = os.path.join(out_dir, file_name)
 
             # Note: Changed fmt to '%.0f' to support floats without decimal places safely
-            np.savetxt(file, gp_data.bin_mat, delimiter=',', fmt='%.0f')
+            np.savetxt(file, gp_data.packed_bin_mat, delimiter=',', fmt='%.0f')
         return True
 
     @classmethod

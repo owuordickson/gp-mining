@@ -144,7 +144,7 @@ class TGrad(OrigGRAANK):
             datasets, particularly during the temporal transformation and
             evaluation stages.
         """
-        print(num_cores)
+
         start = time.time()
         self._target_col = target_col
         self._search_algorithm = search_algorithm
@@ -152,9 +152,12 @@ class TGrad(OrigGRAANK):
         self.clear_gradual_patterns()
 
         # 1. Mine FTGPs (using parallel multi-processing)
-        with mp.Pool(num_cores) as pool:
-            steps = range(1, self._max_step)
-            pattern_data = pool.map(self._safe_transform_and_mine, steps)
+        #with mp.Pool(num_cores) as pool:
+        #    steps = range(1, self._max_step)
+        #    pattern_data = pool.map(self._safe_transform_and_mine, steps)
+        pattern_data = []
+        for step in (1, self._max_step):
+            pattern_data.append(self._safe_transform_and_mine(step))
 
         # 2. Organize FTGPs into a single list
         for item in pattern_data:

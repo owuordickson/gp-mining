@@ -67,7 +67,7 @@ class AntGRAANK(BaseGrad):
                         continue
                     res_pw_mat: PairwiseMatrix = GP.perform_and(gi_dict[attr_keys[i]], gi_dict[attr_keys[j]], n)
                     # Cumulative sum of all segments for 2x2 (all attributes) gradual items
-                    d[i][j] += np.sum(res_pw_mat.bin_mat)
+                    d[i][j] += np.sum(res_pw_mat.packed_bin_mat)
         # print(d)
         self._distance_matrix = d
         self._attribute_keys: list[str] = attr_keys

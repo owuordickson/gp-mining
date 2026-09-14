@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import pandas
 
@@ -15,11 +17,11 @@ if __name__ == "__main__":
     # dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
 
     ## Test Algorithms
-    mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False)
+    #mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False)
     # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0)
-    #mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1)
+    mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1)
     # result_json = mine_obj.discover(target_col=1, compute_descriptors=True)  # GRAANK
-    result_json = mine_obj.discover()                                          # GRAANK/ClusterGP
+    #result_json = mine_obj.discover()                                          # GRAANK/ClusterGP
     # result_json = mine_obj.discover(search_type='aco', target_col=1, exclude_target=False, max_iteration=10)    # ACO
     # result_json = mine_obj.discover(search_type='ga', target_col=1, exclude_target=False, n_pop=10, max_iteration=10)     # GA
     # result_json = mine_obj.discover(search_type='pso', target_col=1, exclude_target=False, max_iteration=10)    # PSO
@@ -28,10 +30,13 @@ if __name__ == "__main__":
     #result_json = mine_obj.discover(search_type='clustergp', target_col=1, exclude_target=False, max_iteration=10, e_prob=0.0) # ClusterGP
 
     # result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=5)                                      # TGRAANK
-    #result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=10, use_clustering=False, eval_mode=True, compute_causality=False)  # TGRAANK-AMI
+    result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=10, use_clustering=False, eval_mode=True, compute_causality=False)  # TGRAANK-AMI
     print(f"{result_json}\n")
-    # corr_df = mine_obj1.get_lagged_dependencies(max_lag=3)
-    # print(corr_df)
+    start = time.time()
+    #corr_df = mine_obj1.get_lagged_dependencies(max_lag=3)
+    #print(corr_df)
+    end = time.time() - start
+    print(f"Time: {end}")
 
     ## Test Time
     #print(sgp.DataGP.test_time("09-01-2005"))

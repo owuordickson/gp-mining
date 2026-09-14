@@ -125,7 +125,7 @@ class OrigGRAANK(BaseGrad):
                 gp.support = gi_data.support
                 if compute_descriptors:
                     n = self._attr_size
-                    bin_mat = np.unpackbits(gi_data.bin_mat, count=n*n).reshape(n, n).astype(bool)
+                    bin_mat = np.unpackbits(gi_data.packed_bin_mat, count=n * n).reshape(n, n).astype(bool)
                     warping_set_arr: np.ndarray = np.array(DataGP.gen_gradual_warping_set(bin_mat, as_array=True))
                     gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
                 self.add_gradual_pattern(gp)

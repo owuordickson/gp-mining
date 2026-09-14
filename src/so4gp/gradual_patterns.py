@@ -25,8 +25,8 @@ NO_TIME_LABEL = "NoTime"
 
 @dataclass
 class PairwiseMatrix:
-    """A data-class for storing pairwise (bitmap) matrix and its support value."""
-    bin_mat: np.ndarray
+    """A data-class for storing pairwise (bitmap) matrix as packed-bits and its support value."""
+    packed_bin_mat: np.ndarray
     support: float
     pattern: set[str]
     time_lag: "TimeDelay|None"=None
@@ -708,26 +708,26 @@ class GP:
         :param time_data: (optional) time data for estimating time lag
         """
         if bin_data_1 is None or bin_data_2 is None:
-            return PairwiseMatrix(bin_mat=np.zeros((dim, dim)), support=0, pattern=set())
+            return PairwiseMatrix(packed_bin_mat=np.zeros((dim, dim)), support=0, pattern=set())
 
         get_bin_counts = np.array(
             [bin(i).count("1") for i in range(256)],
             dtype=np.uint8,
         )
 
-        #bin_mat = bin_data_1.bin_mat * bin_data_2.bin_mat
-        bin_mat = np.bitwise_and(bin_data_1.bin_mat, bin_data_2.bin_mat)
+        packed_bit_mat = np.bitwise_and(bin_data_1.packed_bin_mat, bin_data_2.packed_bin_mat)
         gp = bin_data_1.pattern | bin_data_2.pattern  # union of both sets to create a GP with only unique GIs
-        # sup = float(np.sum(bin_mat)) / GP.pair_count(n=dim)
-        sup = get_bin_counts[bin_mat].sum() / GP.pair_count(n=dim)
+        sup = get_bin_counts[packed_bit_mat].sum() / GP.pair_count(n=dim)
+
         if time_data is not None:
             t_data = time_data["time_data"]
             use_gp = time_data["use_gp"]
             fuzzy_mf = time_data["tri_mf"]
             gp_set = gp if use_gp else None
+            bin_mat = np.unpackbits(packed_bit_mat, count=dim * dim).reshape(dim, dim).astype(bool)
             t_lag = TimeDelay.approx_time_lag(bin_mat, t_data, gi_arr=gp_set, tri_mf_data=fuzzy_mf)
-            return PairwiseMatrix(bin_mat=bin_mat, support=sup, time_lag=t_lag, pattern=gp)
-        return PairwiseMatrix(bin_mat=bin_mat, support=sup, pattern=gp)
+            return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup, time_lag=t_lag, pattern=gp)
+        return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup, pattern=gp)
 
 
 class TimeDelay:
