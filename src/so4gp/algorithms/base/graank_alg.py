@@ -10,7 +10,6 @@ import numpy as np
 from itertools import combinations
 
 from .graank_base import BaseGrad
-from ...data_gp import DataGP
 from ...gradual_patterns import GI, GP, TGP
 
 
@@ -126,7 +125,7 @@ class OrigGRAANK(BaseGrad):
                 gp.support = gi_data.support
                 if compute_descriptors:
                     n = self._attr_size
-                    warping_set_arr: np.ndarray|torch.Tensor = DataGP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
+                    warping_set_arr: np.ndarray|torch.Tensor = GP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
                     gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
                 self.add_gradual_pattern(gp)
             candidate_level += 1

@@ -339,7 +339,7 @@ class DataGP:
             attr_values = np.asarray(attr_data[col], dtype=np.float64,)
 
             # Generate the bitmap and calculate its support.
-            if torch.cuda.is_available():
+            if self._device is "cuda":
                 bin_mat, support = self._compute_pairwise_bitmap_gpu(attr_values)
             else:
                 bin_mat, support = self._compute_pairwise_bitmap(attr_values)
@@ -353,7 +353,7 @@ class DataGP:
             # Positive gradual item
             # --------------------------------------------------------------
             conv_bits = np.packbits(bin_mat.ravel())
-            packed_bits = torch.from_numpy(conv_bits).cuda() if torch.cuda.is_available() else conv_bits
+            packed_bits = torch.from_numpy(conv_bits).cuda() if self._device is "cuda" else conv_bits
             self._valid_bins[f"{col}+"] = PairwiseMatrix(
                 packed_bin_mat=packed_bits,
                 support=support,
@@ -364,7 +364,7 @@ class DataGP:
             # Negative gradual item
             # --------------------------------------------------------------
             conv_bits_t = np.packbits(bin_mat.T.ravel())
-            packed_bits_t = torch.from_numpy(conv_bits_t).cuda() if torch.cuda.is_available() else conv_bits_t
+            packed_bits_t = torch.from_numpy(conv_bits_t).cuda() if self._device is "cuda" else conv_bits_t
             self._valid_bins[f"{col}-"] = PairwiseMatrix(
                 packed_bin_mat=packed_bits_t,
                 support=support,
@@ -398,7 +398,7 @@ class DataGP:
         n = self._row_count
         self._warping_set = {}
         for gi_str, gi_data in self._valid_bins.items():
-            edge_list: np.ndarray|torch.Tensor = DataGP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
+            edge_list: np.ndarray|torch.Tensor = GP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
 
             tids_len = edge_list.shape[0]
             supp = ((tids_len * 0.5) * (tids_len - 1) / GP.pair_count(n))
@@ -565,61 +565,6 @@ class DataGP:
             else:
                 data.append([est_gp.to_string(), round(est_sup, 3), -1, np.inf, np.inf])
         return tabulate(data, headers=headers)
-
-    @staticmethod
-    def gen_gradual_warping_set(packed_pairwise_mat: np.ndarray|torch.Tensor, n: int) -> np.ndarray|torch.Tensor:
-        """
-        A method that decomposes the pairwise matrix of a gradual item/pattern into a warping set. Attributes that have
-        strong correlation will produce a warping set with dense zigzag patterns when plotted as a graph. Those with weak
-        correlation will produce a warping set with sparse zigzag patterns.
-
-        :param packed_pairwise_mat: The pairwise matrix of a gradual item/pattern, reduced to packed bits.
-        :param n: Number of rows/columns in the unpacked pairwise matrix.
-
-        :return: A list array of the warping path (as an edge list) as a numpy array.
-        """
-
-        if isinstance(packed_pairwise_mat, torch.Tensor):
-            return DataGP.gen_gradual_warping_set_gpu(packed_pairwise_mat, n)
-
-        pairwise_mat = np.unpackbits(packed_pairwise_mat, count=n * n).reshape(n, n).astype(bool)
-        edge_lst: list[tuple[int, int]] = [(i, j) for i, row in enumerate(pairwise_mat) for j, val in enumerate(row) if
-                                           val]
-        edge_lst = sorted(list(edge_lst), key=lambda x: x[0])
-        return np.array(edge_lst)
-
-    @staticmethod
-    def gen_gradual_warping_set_gpu(packed: torch.Tensor, n: int,) -> torch.Tensor:
-        """Convert a packed CUDA bitmap directly to edge indices.
-
-        Args:
-            packed: 1-D uint8 CUDA tensor containing the packed bitmap.
-            n: Number of rows/columns in the original pairwise matrix.
-
-        Returns:
-            CUDA tensor of shape (E, 2), where each row is ``(i, j)``.
-        """
-
-        bit_masks = torch.tensor(
-            [128, 64, 32, 16, 8, 4, 2, 1],
-            dtype=torch.uint8,
-            device=packed.device,
-        )
-
-        # Determine which bits are set.
-        bits = (packed[:, None] & bit_masks).flatten()
-
-        # Remove np.packbits() padding.
-        bits = bits[:n * n]
-
-        # Get flattened positions of set bits.
-        positions = torch.nonzero(bits, as_tuple=False).flatten()
-
-        # Convert flattened indices to (row, column).
-        rows = positions // n
-        cols = positions % n
-
-        return torch.stack((rows, cols), dim=1)
 
     @staticmethod
     def read(data_src) -> tuple[list, np.ndarray]:

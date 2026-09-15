@@ -526,12 +526,12 @@ class GP:
         w_set_gpu = None
 
         if is_tensor:
-            w_set_gpu = torch.tensor(warping_set)
+            w_set_gpu = warping_set
             if w_set_gpu.ndim != 2 or w_set_gpu.shape[1] != 2:
                 return False
 
             # Edge indices must be integers.
-            w_set_gpu = w_set_gpu.long()
+            # w_set_gpu = w_set_gpu.long()
 
             i_vals = w_set_gpu[:, 0]
             j_vals = w_set_gpu[:, 1]
@@ -580,7 +580,7 @@ class GP:
             """
             Compute standard deviation of index distances.
             """
-            if is_tensor:
+            if isinstance(i_vals, torch.Tensor) and isinstance(j_vals, torch.Tensor):
                 deviations = torch.abs(i_vals - j_vals).float()
                 # correction=0 gives population standard deviation,
                 # equivalent to np.std(..., ddof=0).
@@ -738,7 +738,7 @@ class GP:
             """
             Compute graph connectivity using the appropriate backend.
             """
-            if is_tensor:
+            if isinstance(w_set_gpu, torch.Tensor):
                 return compute_graph_connectivity_gpu(w_set_gpu, active_only=active_only,)
             else:
                 return compute_graph_connectivity_cpu(w_set_cpu, active_only=active_only,)
@@ -876,6 +876,61 @@ class GP:
         return new_gp
 
     @staticmethod
+    def gen_gradual_warping_set(packed_pairwise_mat: np.ndarray | torch.Tensor, n: int) -> np.ndarray | torch.Tensor:
+        """
+        A method that decomposes the pairwise matrix of a gradual item/pattern into a warping set. Attributes that have
+        strong correlation will produce a warping set with dense zigzag patterns when plotted as a graph. Those with weak
+        correlation will produce a warping set with sparse zigzag patterns.
+
+        :param packed_pairwise_mat: The pairwise matrix of a gradual item/pattern, reduced to packed bits.
+        :param n: Number of rows/columns in the unpacked pairwise matrix.
+
+        :return: A list array of the warping path (as an edge list) as a numpy array.
+        """
+
+        if isinstance(packed_pairwise_mat, torch.Tensor):
+            return GP.gen_gradual_warping_set_gpu(packed_pairwise_mat, n)
+
+        pairwise_mat = np.unpackbits(packed_pairwise_mat, count=n * n).reshape(n, n).astype(bool)
+        edge_lst: list[tuple[int, int]] = [(i, j) for i, row in enumerate(pairwise_mat) for j, val in enumerate(row) if
+                                           val]
+        edge_lst = sorted(list(edge_lst), key=lambda x: x[0])
+        return np.array(edge_lst)
+
+    @staticmethod
+    def gen_gradual_warping_set_gpu(packed: torch.Tensor, n: int, ) -> torch.Tensor:
+        """Convert a packed CUDA bitmap directly to edge indices.
+
+        Args:
+            packed: 1-D uint8 CUDA tensor containing the packed bitmap.
+            n: Number of rows/columns in the original pairwise matrix.
+
+        Returns:
+            CUDA tensor of shape (E, 2), where each row is ``(i, j)``.
+        """
+
+        bit_masks = torch.tensor(
+            [128, 64, 32, 16, 8, 4, 2, 1],
+            dtype=torch.uint8,
+            device=packed.device,
+        )
+
+        # Determine which bits are set.
+        bits = (packed[:, None] & bit_masks).flatten()
+
+        # Remove np.packbits() padding.
+        bits = bits[:n * n]
+
+        # Get flattened positions of set bits.
+        positions = torch.nonzero(bits, as_tuple=False).flatten()
+
+        # Convert flattened indices to (row, column).
+        rows = positions // n
+        cols = positions % n
+
+        return torch.stack((rows, cols), dim=1)
+
+    @staticmethod
     def perform_and(bin_data_1: "PairwiseMatrix|None", bin_data_2: "PairwiseMatrix|None", dim: int, time_data: dict|None=None) -> "PairwiseMatrix":
         """
         Perform logical AND operation on two bitmaps.
@@ -885,27 +940,66 @@ class GP:
         :param dim: dimension of the bitmaps
         :param time_data: (optional) time data for estimating time lag
         """
+
+        def get_selected_rows() -> np.ndarray | torch.Tensor:
+            """
+            Get objects participating in at least one active warping relation.
+
+            Returns:
+                Unique object indices.
+            """
+
+            edge_list = GP.gen_gradual_warping_set(packed_bit_mat, dim, )
+            if isinstance(edge_list, torch.Tensor):
+                return torch.unique(edge_list.flatten())
+            return np.unique(edge_list.flatten())
+
         if bin_data_1 is None or bin_data_2 is None:
             return PairwiseMatrix(packed_bin_mat=np.zeros((dim, dim)), support=0, pattern=set())
 
-        get_bin_counts = np.array(
-            [bin(i).count("1") for i in range(256)],
-            dtype=np.uint8,
-        )
+        # --------------------------------------------------------------
+        # Intersection of packed bitmaps
+        # Supports NumPy arrays and PyTorch tensors (CPU or CUDA)
+        # --------------------------------------------------------------
+        packed_1 = bin_data_1.packed_bin_mat
+        packed_2 = bin_data_2.packed_bin_mat
 
-        packed_bit_mat = np.bitwise_and(bin_data_1.packed_bin_mat, bin_data_2.packed_bin_mat)
-        gp = bin_data_1.pattern | bin_data_2.pattern  # union of both sets to create a GP with only unique GIs
-        sup = get_bin_counts[packed_bit_mat].sum() / GP.pair_count(n=dim)
+        if isinstance(packed_1, torch.Tensor):
+            if not isinstance(packed_2, torch.Tensor):
+                raise TypeError("Both packed bitmaps must be either NumPy arrays or PyTorch tensors.")
 
+            if packed_1.device != packed_2.device:
+                raise ValueError("Packed tensors must be on the same device.")
+
+            packed_bit_mat = torch.bitwise_and(packed_1, packed_2)
+            bit_counts = torch.tensor([bin(i).count("1") for i in range(256)], dtype=torch.int64, device=packed_bit_mat.device,)
+            sup = (bit_counts[packed_bit_mat.long()].sum().item() / GP.pair_count(n=dim))
+        else:
+            if isinstance(packed_2, torch.Tensor):
+                raise TypeError("Both packed bitmaps must be either NumPy arrays or PyTorch tensors.")
+
+            packed_bit_mat = np.bitwise_and(packed_1, packed_2)
+            bit_counts = np.array([bin(i).count("1") for i in range(256)], dtype=np.uint8,)
+            sup = (bit_counts[packed_bit_mat].sum() / GP.pair_count(n=dim))
+
+        # --------------------------------------------------------------
+        # Combine gradual items
+        # --------------------------------------------------------------
+        gp = bin_data_1.pattern | bin_data_2.pattern
+
+        # --------------------------------------------------------------
+        # Time-delay computation
+        # --------------------------------------------------------------
         if time_data is not None:
             t_data = time_data["time_data"]
             use_gp = time_data["use_gp"]
             fuzzy_mf = time_data["tri_mf"]
             gp_set = gp if use_gp else None
-            bin_mat = np.unpackbits(packed_bit_mat, count=dim * dim).reshape(dim, dim).astype(bool)
-            t_lag = TimeDelay.approx_time_lag(bin_mat, t_data, gi_arr=gp_set, tri_mf_data=fuzzy_mf)
-            return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup, time_lag=t_lag, pattern=gp)
-        return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup, pattern=gp)
+            selected_rows = get_selected_rows()
+            t_lag = TimeDelay.approx_time_lag(selected_rows, t_data, gi_arr=gp_set, tri_mf_data=fuzzy_mf,)
+            return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup, time_lag=t_lag, pattern=gp,)
+
+        return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup,pattern=gp,)
 
 
 class TimeDelay:
@@ -1019,13 +1113,13 @@ class TimeDelay:
         return txt
 
     @classmethod
-    def approx_time_lag(cls, bin_data: np.ndarray, time_data: dict|np.ndarray|None, gi_arr: set|None = None, tri_mf_data: np.ndarray|None = None) -> "TimeDelay":
+    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|np.ndarray|None, gi_arr: set|None = None, tri_mf_data: np.ndarray|None = None) -> "TimeDelay":
         """
         A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
         methods: (1) uses classical slide and re-calculate dynamic programming to find the best time-delay value and,
         (2) uses metaheuristic hill-climbing to find the best time-delay value.
 
-        :param bin_data: Gradual item pairwise matrix.
+        :param selected_rows: Only the rows where the GP is respected.
         :param time_data: Time-delay values.
         :param gi_arr: Gradual item object.
         :param tri_mf_data: The 'a,b,c' values of the triangular MF. Used to find and approximate the best time-delay value
@@ -1139,11 +1233,8 @@ class TimeDelay:
             # Make predictions using the optimal bias
             return bias, best_mse
 
-        # 1. Get Indices
-        indices = np.argwhere(bin_data == 1)
-
         # 2. Get TimeDelay Array
-        selected_rows = np.unique(indices.flatten())
+        lst_rows = selected_rows.cpu().tolist() if isinstance(selected_rows, torch.Tensor) else selected_rows.tolist()
         if gi_arr is not None and isinstance(time_data, dict):
             ## time_data = {col1: [row time-lags], col2: [row time-lags]}
             t_lag_lst = []
@@ -1153,10 +1244,10 @@ class TimeDelay:
                 if col in sel_cols:
                     t_lag_lst.append(time_data[col])
             t_lag_arr = np.array(t_lag_lst)
-            t_lag_arr = t_lag_arr[:, selected_rows]
+            t_lag_arr = t_lag_arr[:, lst_rows]
         else:
             ## time_data = [row time-lags]
-            t_lag_arr = [time_data[selected_rows]]
+            t_lag_arr = [time_data[lst_rows]]
 
         # 3. Approximate TimeDelay value
         best_time_lag: TimeDelay = cls(-1, 0)
