@@ -324,132 +324,217 @@ class TGrad(OrigGRAANK):
                 time_diffs_arr.append(time_diff_abs)
         return True, time_diffs, np.array(time_diffs_arr)
 
-    # self.n_clusters = None
-    # self.centroids = []
-    # self.spreads = []
-    # self.mf_params = []
-    # Define universe of discourse based on data footprint
-    # self.universe = np.linspace(max(0, np.min(time_data) - 5), np.max(time_data) + 5, 2000)
-
     # --- STEP 1: Membership Function Construction ---
-    def build_membership_functions(self, time_data: np.ndarray | None) -> list[dict]:
+    def build_membership_functions(self, time_data: np.ndarray | None,) -> list[dict]:
+        """Build membership-function parameters from time-delay data.
+
+        The number of membership functions is estimated from the dominant
+        singular-value energy of a trajectory (Hankel) matrix. The time-delay
+        values are then clustered using either 1-D K-Means or Fuzzy C-Means
+        (FCM), and the resulting cluster centers and spreads are used to
+        construct triangular, trapezoidal, or Gaussian membership functions.
+
+        This method intentionally uses NumPy rather than a separate GPU
+        implementation. The computations operate on one-dimensional time-delay
+        data, so keeping them on the CPU avoids unnecessary CPU-GPU transfers
+        and additional memory overhead.
+
+        Args:
+            time_data: One-dimensional array containing time-delay values.
+                ``None`` returns an empty list.
+
+        Returns:
+            A list of membership-function specifications. Each specification
+            contains ``shape`` and ``params`` keys.
+
+        Raises:
+            ValueError: If no finite values are available or an unsupported
+                membership-function shape is specified.
         """
-        Dynamically extracts parameter frameworks to build Triangular,
-        Trapezoidal, or Gaussian Membership Functions.
-
-        :param time_data: Time-delay values as an array.
-        """
-
-        def estimate_n_clusters( threshold=0.90):
-            """
-            Embeds 1D time series data into a trajectory Hankel matrix and analyzes
-            singular values to estimate dominant latent clusters.
-            """
-            n_clusters = 0
-            if time_data is None:
-                return n_clusters
-
-            total_count = len(time_data)
-            if total_count < 3:
-                n_clusters = 2
-                return n_clusters
-
-            # Build a 2D trajectory Hankel matrix
-            window_len = total_count // 2  # Window length
-            k_cols = total_count - window_len + 1
-            hankel_mat = np.array([time_data[p: p + k_cols] for p in range(window_len)])
-
-            # Compute Singular Value Decomposition
-            u_val, s_val, vt_val = np.linalg.svd(hankel_mat, full_matrices=False)
-
-            # Calculate cumulative energy contribution
-            cumulative_energy = np.cumsum(s_val ** 2) / np.sum(s_val ** 2)
-
-            # Determine number of components meeting the energy threshold
-            estimated = np.argmax(cumulative_energy >= threshold) + 1
-            n_clusters = max(2, int(estimated))  # Guarantee at least 2 clusters
-            return n_clusters
-
-        # --- STEP 1b: Clustering Execution ---
-        def compute_clusters():
-            """
-            Groups the unlabelled 1D data into the calculated number of clusters.
-            Supports both K-Means and Fuzzy C-Means (FCM) tracking logic.
-            """
-            if time_data is None:
-                return None, None
-
-            t_data = time_data.reshape(-1, 1)
-
-            if self.clustering_method == 'kmeans':
-                # Simplified explicit 1D K-Means implementation
-                centers = np.linspace(np.min(t_data), np.max(t_data), num_clusters)
-                for _ in range(100):
-                    distances = np.abs(t_data - centers)
-                    labels = np.argmin(distances, axis=1)
-                    new_centers = np.array([t_data[labels == n].mean() if len(t_data[labels == n]) > 0 else centers[n] for n in
-                                            range(num_clusters)])
-                    if np.allclose(centers, new_centers):
-                        break
-                    centers = new_centers
-                centroids = sorted(centers)
-                spreads = [np.std(t_data[labels == n]) if len(t_data[labels == n]) > 0 else np.std(t_data) for n in
-                                range(num_clusters)]
-
-            else:  # Fuzzy C-Means (FCM)
-                # Explicit Vectorized FCM Routine
-                centers = np.linspace(np.min(t_data), np.max(t_data), num_clusters)
-                m = 2.0  # Fuzziness exponent
-                for _ in range(100):
-                    # Calculate Euclidean distances
-                    dist = np.abs(t_data - centers.reshape(1, -1))
-                    dist = np.fmax(dist, 1e-10)  # Avoid zero divisions
-
-                    # Update membership matrix U
-                    inv_dist = 1.0 / dist
-                    power = 2.0 / (m - 1)
-                    denom = np.sum(inv_dist ** power, axis=1, keepdims=True)
-                    u_mat = (inv_dist ** power) / denom
-
-                    # Update centers
-                    new_centers = np.sum((u_mat ** m) * t_data, axis=0) / np.sum(u_mat ** m, axis=0)
-                    if np.allclose(centers, new_centers):
-                        break
-                    centers = new_centers
-
-                centroids = sorted(centers)
-                # Calculate weighted deviations per cluster for spreads
-                spreads = [
-                    np.sqrt(np.sum(u_mat[:, n] ** m * (t_data.flatten() - centroids[n]) ** 2) / np.sum(u_mat[:, n] ** m)) for n
-                    in range(num_clusters)]
-            return centroids, spreads
-
-        mf_params = []
         if time_data is None:
-            return mf_params
+            return []
 
-        # --- STEP 1a: SVD Estimation for Number of MFs ---
+        values = np.asarray(time_data, dtype=np.float64).ravel()
+        values = values[np.isfinite(values)]
+
+        if values.size == 0:
+            raise ValueError("time_data must contain at least one finite value.")
+
+        def estimate_n_clusters(threshold: float = 0.90) -> int:
+            """Estimate the number of latent temporal components."""
+            total_count = values.size
+
+            if total_count < 3:
+                return 2
+
+            threshold = float(np.clip(threshold, 0.0, 1.0))
+            window_len = total_count // 2
+            hankel_mat = np.lib.stride_tricks.sliding_window_view(values, window_len,).T
+
+            singular_values = np.linalg.svd(hankel_mat, compute_uv=False,)
+            energy = singular_values ** 2
+            total_energy = energy.sum()
+
+            if total_energy <= np.finfo(float).eps:
+                return 2
+
+            cumulative_energy = np.cumsum(energy) / total_energy
+            estimated = (
+                    np.searchsorted(cumulative_energy, threshold, side="left",)
+                    + 1)
+
+            return max(2, int(estimated))
+
+        def compute_kmeans(data: np.ndarray, n_clusters: int, max_iter: int = 100, tolerance: float = 1e-6,) -> tuple[np.ndarray, np.ndarray]:
+            """Perform vectorized one-dimensional K-Means clustering."""
+            minimum, maximum = data.min(), data.max()
+            centers = np.linspace(minimum, maximum, n_clusters, dtype=np.float64,)
+            for _ in range(max_iter):
+                distances = np.abs(data[:, None] - centers[None, :])
+                labels = np.argmin(distances, axis=1,)
+                counts = np.bincount(labels, minlength=n_clusters,).astype(np.float64)
+                sums = np.bincount(labels, weights=data, minlength=n_clusters,)
+
+                new_centers = centers.copy()
+                non_empty = counts > 0
+                new_centers[non_empty] = (sums[non_empty] / counts[non_empty])
+                if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance,):
+                    centers = new_centers
+                    break
+                centers = new_centers
+
+            order = np.argsort(centers)
+            centers = centers[order]
+
+            # Reassign after sorting to obtain correctly matched spreads.
+            labels = np.argmin(np.abs(data[:, None] - centers[None, :]), axis=1,)
+            counts = np.bincount(labels, minlength=n_clusters,).astype(np.float64)
+            sums = np.bincount(labels, weights=data,  minlength=n_clusters,)
+            squared_sums = np.bincount(labels, weights=data ** 2, minlength=n_clusters,)
+            spreads = np.zeros(n_clusters, dtype=np.float64,)
+
+            non_empty = counts > 0
+            means = np.zeros(n_clusters, dtype=np.float64,)
+            means[non_empty] = (sums[non_empty] / counts[non_empty])
+
+            variances = np.zeros(n_clusters, dtype=np.float64,)
+            variances[non_empty] = (squared_sums[non_empty] / counts[non_empty] - means[non_empty] ** 2)
+            spreads[non_empty] = np.sqrt( np.maximum(variances[non_empty], 0.0, ))
+
+            fallback_spread = max(float(np.std(data)), 0.1,)
+            spreads[~non_empty] = fallback_spread
+            return centers, spreads
+
+        def compute_fcm(data: np.ndarray, n_clusters: int, fuzziness: float = 2.0, max_iter: int = 100, tolerance: float = 1e-6,) -> tuple[np.ndarray, np.ndarray]:
+            """Perform vectorized one-dimensional Fuzzy C-Means clustering."""
+            minimum, maximum = data.min(), data.max()
+            centers = np.linspace(minimum, maximum, n_clusters, dtype=np.float64, )
+            exponent = 2.0 / (fuzziness - 1.0)
+            eps = np.finfo(np.float64).eps
+            membership_m = np.array([])
+            for _ in range(max_iter):
+                distances = np.abs(data[:, None] - centers[None, :])
+                zero_distance = distances <= eps
+                safe_distances = np.maximum(distances, eps,)
+                weights = safe_distances ** (-exponent)
+
+                zero_rows = zero_distance.any(axis=1)
+                if np.any(zero_rows):
+                    weights[zero_rows] = zero_distance[zero_rows]
+
+                membership = (weights / weights.sum(axis=1, keepdims=True,))
+                membership_m = membership ** fuzziness
+                denominator = membership_m.sum(axis=0)
+
+                new_centers = ((membership_m * data[:, None]).sum(axis=0) / np.maximum(denominator, eps))
+                if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance,):
+                    centers = new_centers
+                    break
+                centers = new_centers
+
+            order = np.argsort(centers)
+            centers = centers[order]
+            membership_m = membership_m[:, order]
+            denominator = membership_m.sum(axis=0)
+
+            spreads = np.sqrt(
+                np.maximum(
+                    (membership_m * (data[:, None] - centers[None, :]) ** 2
+                    ).sum(axis=0)
+                    / np.maximum(denominator, eps),0.0,
+                )
+            )
+
+            fallback_spread = max(float(np.std(data)), 0.1,)
+            spreads = np.where(
+                np.isfinite(spreads) & (spreads > 0.0),
+                spreads,
+                fallback_spread,
+            )
+
+            return centers, spreads
+
+        # --------------------------------------------------------------
+        # Estimate number of membership functions.
+        # --------------------------------------------------------------
         num_clusters = estimate_n_clusters()
 
-        # --- STEP 1b: Clustering Execution ---
-        peaks, bounds = compute_clusters()
+        # Avoid requesting more clusters than distinct values.
+        num_clusters = min(num_clusters, max(2, np.unique(values).size),)
 
-        for i in range(num_clusters):
-            c = peaks[i]
-            s = max(bounds[i], 0.1)  # Bound lower spread to avoid dividing by zero
+        # --------------------------------------------------------------
+        # Cluster time-delay data.
+        # --------------------------------------------------------------
+        min_val, max_val = values.min(), values.max()
+        if np.isclose(min_val, max_val):
+            peaks = np.full(num_clusters, min_val, dtype=np.float64, )
+            bounds = np.full(num_clusters, 0.1, dtype=np.float64, )
+        elif self.clustering_method.lower() == "kmeans":
+            peaks, bounds = compute_kmeans(values, num_clusters,)
+        else:
+            peaks, bounds = compute_fcm(values, num_clusters,)
 
-            if self.mf_shape == 'triangular':
-                left = peaks[i - 1] if i > 0 else c - 3 * s
-                right = peaks[i + 1] if i < num_clusters - 1 else c + 3 * s
-                mf_params.append({'shape': 'triangular', 'params': [left, c, right]})
+        # --------------------------------------------------------------
+        # Build membership functions.
+        # --------------------------------------------------------------
+        shape = self.mf_shape.lower()
 
-            elif self.mf_shape == 'trapezoidal':
-                left = peaks[i - 1] if i > 0 else c - 4 * s
-                right = peaks[i + 1] if i < num_clusters - 1 else c + 4 * s
-                mf_params.append({'shape': 'trapezoidal', 'params': [left, c - 0.5 * s, c + 0.5 * s, right]})
+        if shape not in {"triangular", "trapezoidal", "gaussian",}:
+            raise ValueError(
+                f"Unsupported membership-function shape: {self.mf_shape!r}. Expected 'triangular', "
+                "'trapezoidal', or 'gaussian'."
+            )
 
-            else:  # Default to Gaussian
-                mf_params.append({'shape': 'gaussian', 'params': [c, s]})
+        mf_params: list[dict] = []
+
+        for i, (center, spread) in enumerate(zip(peaks, bounds)):
+            center = float(center)
+            spread = max(float(spread), 0.1)
+
+            if shape == "triangular":
+                left = (float(peaks[i - 1]) if i > 0 else center - 3.0 * spread)
+                right = (float(peaks[i + 1]) if i < num_clusters - 1 else center + 3.0 * spread)
+
+                mf_params.append({
+                    "shape": "triangular",
+                    "params": [left, center, right,],
+                })
+
+            elif shape == "trapezoidal":
+                left = (float(peaks[i - 1]) if i > 0 else center - 4.0 * spread )
+                right = (float(peaks[i + 1]) if i < num_clusters - 1 else center + 4.0 * spread)
+
+                mf_params.append({
+                    "shape": "trapezoidal",
+                    "params": [left, center - 0.5 * spread, center + 0.5 * spread, right, ],
+                })
+
+            else:
+                mf_params.append({
+                    "shape": "gaussian",
+                    "params": [center, spread,],
+                })
+
         return mf_params
 
     # --- STEP 2 & 3: Fuzzification, Inference and Defuzzification ---
