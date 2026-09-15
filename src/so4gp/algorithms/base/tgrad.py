@@ -17,7 +17,7 @@ from ...gradual_patterns import TGP, NO_TIME_LABEL
 
 class TGrad(OrigGRAANK):
 
-    def __init__(self, *args, min_rep: float=0.5, mf_shape: str='triangular', clustering_method: str='fcm', inference_method: str='mamdani', **kwargs):
+    def __init__(self, *args, min_rep: float=0.5, mf_shape: str='triangular', clustering_algorithm: str='fcm', inference_method: str='mamdani', **kwargs):
         """
         TGrad is an algorithm used to extract temporal gradual patterns from numeric datasets. An algorithm for mining
         temporal gradual patterns using fuzzy membership functions. It uses a technique
@@ -26,7 +26,7 @@ class TGrad(OrigGRAANK):
         :param args: [required] a data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
         :param min_rep: [optional] minimum representativity value.
         :param mf_shape: [optional] shape of the fuzzy membership function. Options are: 'triangular', 'trapezoidal', 'gaussian'.
-        :param clustering_method: [optional] clustering algorithm for estimating the MFs. Options are: 'kmeans', 'fcm'.
+        :param clustering_algorithm: [optional] clustering algorithm for estimating the MFs. Options are: 'kmeans', 'fcm'.
         :param inference_method: [optional] inference method for estimating the MFs. Options: 'mamdani', larsen'.
 
         """
@@ -37,7 +37,7 @@ class TGrad(OrigGRAANK):
         self._min_rep: float = min_rep
         self._max_step: int = self.row_count - int(min_rep * self.row_count)
         self.mf_shape = mf_shape.lower()
-        self.clustering_method = clustering_method.lower()
+        self.clustering_algorithm = clustering_algorithm.lower()
         self.inference_method = inference_method.lower()
         self._full_attr_data: np.ndarray = copy.deepcopy(self.data).T
         if len(self.time_cols) > 0:
@@ -261,7 +261,7 @@ class TGrad(OrigGRAANK):
             return []
 
         """
-        if clustering_method:
+        if clustering_algorithm:
             if isinstance(time_delay_data, dict):
                 t_lag_arr = np.array(list(time_delay_data.values()))
             else:
@@ -284,6 +284,9 @@ class TGrad(OrigGRAANK):
         else:
             time_data: dict = {"time_data": time_delay_data, "use_gp": True, "fuzzy_mfs": fuzzy_mfs, "inference": self.inference_method}
         data_df = pd.DataFrame(attr_data.T, columns=self.titles)
+        if data_df.empty:
+            return []
+        
         mine_obj = GRAANK(data_df, min_sup=self.thd_supp, eq=self._include_equal_values)
         mine_obj.discover(search_type=self._search_algorithm, target_col=self._target_col, time_data=time_data,
                           compute_descriptors=False, max_iteration=self._algorithm_max_iter, )
@@ -363,7 +366,7 @@ class TGrad(OrigGRAANK):
         values = values[np.isfinite(values)]
 
         if values.size == 0:
-            raise ValueError("time_data must contain at least one finite value.")
+            return []
 
         def estimate_n_clusters(threshold: float = 0.90) -> int:
             """Estimate the number of latent temporal components."""
@@ -494,7 +497,7 @@ class TGrad(OrigGRAANK):
         if np.isclose(min_val, max_val):
             peaks = np.full(num_clusters, min_val, dtype=np.float64, )
             bounds = np.full(num_clusters, 0.1, dtype=np.float64, )
-        elif self.clustering_method.lower() == "kmeans":
+        elif self.clustering_algorithm.lower() == "kmeans":
             peaks, bounds = compute_kmeans(values, num_clusters,)
         else:
             peaks, bounds = compute_fcm(values, num_clusters,)

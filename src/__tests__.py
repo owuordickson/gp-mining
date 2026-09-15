@@ -6,7 +6,6 @@ import pandas
 
 from so4gp import DataGP
 from so4gp.algorithms import GRAANK, TGRAANK, ClusterGP
-from src import so4gp as sgp
 
 if __name__ == "__main__":
 
@@ -34,7 +33,7 @@ if __name__ == "__main__":
     #result_json = mine_obj.discover(search_type='clustergp', target_col=1, exclude_target=False, max_iteration=10, e_prob=0.0) # ClusterGP
 
     # result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=5)                                      # TGRAANK
-    result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=10, use_clustering=False, eval_mode=True, compute_causality=False)  # TGRAANK-AMI
+    result_json = mine_obj1.discover(target_col=1, transformations='ami', search_algorithm='ga', max_iteration=10, eval_mode=True, compute_causality=False)  # TGRAANK-AMI
     print(f"{result_json}\n")
     start = time.time()
     #corr_df = mine_obj1.get_lagged_dependencies(max_lag=3)

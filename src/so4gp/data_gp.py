@@ -339,7 +339,7 @@ class DataGP:
             attr_values = np.asarray(attr_data[col], dtype=np.float64,)
 
             # Generate the bitmap and calculate its support.
-            if self._device is "cuda":
+            if self._device == "cuda":
                 bin_mat, support = self._compute_pairwise_bitmap_gpu(attr_values)
             else:
                 bin_mat, support = self._compute_pairwise_bitmap(attr_values)
@@ -353,7 +353,7 @@ class DataGP:
             # Positive gradual item
             # --------------------------------------------------------------
             conv_bits = np.packbits(bin_mat.ravel())
-            packed_bits = torch.from_numpy(conv_bits).cuda() if self._device is "cuda" else conv_bits
+            packed_bits = torch.from_numpy(conv_bits).cuda() if self._device == "cuda" else conv_bits
             self._valid_bins[f"{col}+"] = PairwiseMatrix(
                 packed_bin_mat=packed_bits,
                 support=support,
@@ -364,7 +364,7 @@ class DataGP:
             # Negative gradual item
             # --------------------------------------------------------------
             conv_bits_t = np.packbits(bin_mat.T.ravel())
-            packed_bits_t = torch.from_numpy(conv_bits_t).cuda() if self._device is "cuda" else conv_bits_t
+            packed_bits_t = torch.from_numpy(conv_bits_t).cuda() if self._device == "cuda" else conv_bits_t
             self._valid_bins[f"{col}-"] = PairwiseMatrix(
                 packed_bin_mat=packed_bits_t,
                 support=support,

@@ -993,7 +993,7 @@ class GP:
 
 class TimeDelay:
 
-    def __init__(self, tstamp=0, supp=0):
+    def __init__(self, tstamp: float=0, supp: float=0):
         """
             TimeDelay (Time Delay). A class used in Fuzzy Temporal Gradual Patterns to create the time-delay object.
 
@@ -1002,10 +1002,8 @@ class TimeDelay:
         >>> t_delay.to_string()
 
         :param tstamp: The time-delay value as a timestamp.
-        :type tstamp: Float
 
         :param supp: The true value of the time-delay value.
-        :type supp: Float
         """
         self._timestamp: float = tstamp
         self._support: float = round(supp, 3)
@@ -1094,7 +1092,7 @@ class TimeDelay:
 
         :return: The time-delay as a string.
         """
-        if not self._formatted_time:
+        if self._formatted_time:
             txt = ("~ " + self._sign + str(self._formatted_time['value']) + " " + str(self._formatted_time['duration'])
                    + " : " + str(self._support))
         else:
@@ -1249,19 +1247,23 @@ class TimeDelay:
         inputs = np.asarray(crisp_inputs, dtype=np.float64, ).ravel()
 
         if inputs.size == 0:
-            raise ValueError( "crisp_inputs must contain at least one value.")
+            # raise ValueError( "crisp_inputs must contain at least one value.")
+            return 0
 
         if not np.all(np.isfinite(inputs)):
-            raise ValueError("crisp_inputs must contain only finite values.")
+            # raise ValueError("crisp_inputs must contain only finite values.")
+            return 0
 
         time_values = np.asarray(time_data, dtype=np.float64,).ravel()
         time_values = time_values[np.isfinite(time_values)]
 
         if time_values.size == 0:
-            raise ValueError("time_data must contain at least one finite value.")
+            # raise ValueError("time_data must contain at least one finite value.")
+            return 0
 
         if not fuzzy_mfs:
-            raise ValueError("fuzzy_mfs must contain at least one membership function.")
+            # raise ValueError("fuzzy_mfs must contain at least one membership function.")
+            return 0
 
         def evaluate_mfs(values: np.ndarray) -> np.ndarray:
             """
@@ -1459,6 +1461,7 @@ class TimeDelay:
 
         # 2. Get TimeDelay Array
         lst_rows = selected_rows.cpu().tolist() if isinstance(selected_rows, torch.Tensor) else selected_rows.tolist()
+        print(f"{type(lst_rows)}: {lst_rows}\n{type(t_data)}: {t_data}")
         if gp_set is not None and isinstance(t_data, dict):
             ## t_data = {col1: [row time-lags], col2: [row time-lags]}
             t_lag_lst = []
@@ -1467,19 +1470,20 @@ class TimeDelay:
                 col = GI.from_string(gi_str).attribute_col
                 if col in sel_cols:
                     t_lag_lst.append(t_data[col])
-            t_lag_arr = np.array(t_lag_lst)
-            t_lag_arr = t_lag_arr[:, lst_rows]
-            print(f"w GPs: {t_lag_arr}")
+            t_lag_mat = np.array(t_lag_lst)
+            t_lag_arr = t_lag_mat[:, lst_rows][0]
+            all_time_arr = t_lag_mat[:, :][0]
+            print(f"w GPs: {t_lag_arr}\n{type(all_time_arr)}: {all_time_arr}\n")
         else:
             ## t_data = [row time-lags]
-            t_lag_arr = np.ndarray([t_data[lst_rows]])
-            print(f"w/o GPs: {t_lag_arr}")
+            t_lag_arr = t_data[lst_rows]
+            all_time_arr = t_data
 
         # 3. Approximate TimeDelay value
-        time_val: float = TimeDelay.predict_time(crisp_inputs=t_lag_arr, time_data=t_data, fuzzy_mfs=mf_data, inference_method=inference)
-        best_time_lag: TimeDelay = cls(time_val, 0.99)
+        time_val: float = TimeDelay.predict_time(crisp_inputs=t_lag_arr, time_data=all_time_arr, fuzzy_mfs=mf_data, inference_method=inference)
+        pred_time_lag: TimeDelay = cls(time_val, 0.99)
 
-        return best_time_lag
+        return pred_time_lag
 
 
 class TGP(GP):
