@@ -502,8 +502,8 @@ class TGrad(OrigGRAANK):
         if shape not in {"triangular", "trapezoidal", "gaussian",}:
             raise ValueError(
                 f"Unsupported membership-function shape: {self.mf_shape!r}. Expected 'triangular', "
-                "'trapezoidal', or 'gaussian'."
-            )
+                "'trapezoidal', or 'gaussian'.")
+
 
         mf_params: list[dict] = []
 
