@@ -36,7 +36,7 @@ class TGRAANK:
           https://ieeexplore.ieee.org/abstract/document/11197674/
     """
 
-    def __init__(self, data_source, min_sup: float = 0.5, min_rep: float = 0.5, eq: bool = False):
+    def __init__(self, data_source, min_sup: float = 0.5, min_rep: float = 0.5, eq: bool = False, device: str = "cpu"):
         """
         Initialize a temporal gradual pattern miner.
 
@@ -70,6 +70,13 @@ class TGRAANK:
                 * ``False`` — strict comparisons.
                 * ``True`` — allow equal values.
 
+            device:
+                The device on which the computation is performed.
+
+                * ``cpu`` (default): will use Numpy operations.
+
+                * ``gpu``: will use GPU (Tensor) operations.
+
         Attributes:
             mining_engine:
                 Active temporal mining engine.
@@ -89,16 +96,16 @@ class TGRAANK:
             ...     columns=["Date","Age","Salary","Cars","Expenses"]
             ... )
             >>>
-            >>> miner = TGRAANK(df, target_col=1)
+            >>> # device = "cuda" if torch.cuda.is_available() else "cpu"
+            >>> miner = TGRAANK(df, target_col=1, device='cpu')
             >>> result = miner.discover()
         """
         self._data_src = data_source
         self._min_supp: float = min_sup
         self._min_rep: float = min_rep
         self._eq: bool = eq
-        self._mine_obj = TGrad(data_source, min_sup=min_sup, min_rep=min_rep, eq=eq, add_time=True)
-        #device = "cuda" if torch.cuda.is_available() else "cpu"
-        #print(f"🚀 Running execution pipeline on device: {device.upper()}")
+        self._device = device
+        self._mine_obj = TGrad(data_source, min_sup=min_sup, min_rep=min_rep, eq=eq, add_time=True, device=device)
 
     @property
     def mining_engine(self):
@@ -249,16 +256,16 @@ class TGRAANK:
 
             if transformations == 'all':
                 self._mine_obj = TGrad(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
-                                       add_time=True)
-                num_cores = kwargs.get("num_cores", 1)
+                                       add_time=True, device=self._device)
+                # num_cores = kwargs.get("num_cores", 1)
                 #if num_cores <= 1:
                 #    num_cores = get_num_cores()
                 res_dict = self._mine_obj.discover_tgp(target_col=target_col, search_algorithm=search_algorithm,
-                                                       max_iteration=max_iteration, num_cores=num_cores)
+                                                       max_iteration=max_iteration)
             elif transformations == 'ami':
                 from .base.tgrad_ami import TGradAMI
                 self._mine_obj = TGradAMI(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
-                                          add_time=True)
+                                          add_time=True, device=self._device,)
                 res_dict = self._mine_obj.discover_tgp_ami(target_col=target_col,
                                                             transformation_steps=transformation_steps,
                                                             max_iteration=max_iteration,

@@ -8,7 +8,7 @@ import time
 import copy
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
+#import multiprocessing as mp
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
 from .graank_alg import OrigGRAANK
@@ -61,7 +61,7 @@ class TGrad(OrigGRAANK):
         if 0 < value <= 1:
             self._min_rep = value
 
-    def discover_tgp(self, target_col: int, search_algorithm: str="apriori", max_iteration: int=3, num_cores: int = 1) -> dict:
+    def discover_tgp(self, target_col: int, search_algorithm: str="apriori", max_iteration: int=3) -> dict:
         """
         Mine Fuzzy Temporal Gradual Patterns (FTGPs) from a temporal dataset.
 
@@ -118,10 +118,6 @@ class TGrad(OrigGRAANK):
             max_iteration:
                 The maximum number of iterations to run the search algorithm.
 
-            num_cores:
-                Number of CPU cores available for parallel computation during
-                temporal transformation and pattern mining.
-
         Returns:
             A list containing the mined Fuzzy Temporal Gradual Patterns.
 
@@ -151,7 +147,7 @@ class TGrad(OrigGRAANK):
         self._algorithm_max_iter = max_iteration
         self.clear_gradual_patterns()
 
-        # 1. Mine FTGPs (using parallel multi-processing)
+        # 1. Mine FTGPs (using parallel multiprocessing)
         #with mp.Pool(num_cores) as pool:
         #    steps = range(1, self._max_step)
         #    pattern_data = pool.map(self._safe_transform_and_mine, steps)

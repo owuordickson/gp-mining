@@ -53,7 +53,7 @@ class GRAANK:
         * Hill Climbing-GRAANK: https://www.sciencedirect.com/science/article/abs/pii/S2210650222001717
     """
 
-    def __init__(self, data_source, min_sup: float = 0.5, eq: bool = False) -> None:
+    def __init__(self, data_source, min_sup: float = 0.5, eq: bool = False, device: str = "cpu") -> None:
         """
         Initialize a gradual pattern mining session.
 
@@ -89,6 +89,13 @@ class GRAANK:
                 * ``True``: equal values are considered gradual
                   (``<=`` and ``>=``).
 
+            device:
+                The device on which the computation is performed.
+
+                * ``cpu`` (default): will use Numpy operations.
+
+                * ``gpu``: will use GPU (Tensor) operations.
+
         Attributes:
             mining_engine:
                 Active mining engine used by discover()`.
@@ -112,15 +119,15 @@ class GRAANK:
             ...     columns=["Age", "Salary", "Cars", "Expenses"],
             ... )
             >>>
-            >>> miner = GRAANK(df, min_sup=0.5)
+            >>> # device = "cuda" if torch.cuda.is_available() else "cpu"
+            >>> miner = GRAANK(df, min_sup=0.5, device='cpu')
             >>> result = miner.discover()
         """
         self._data_src = data_source
         self._min_supp: float = min_sup
         self._eq: bool = eq
-        self._mine_obj = OrigGRAANK(data_source, min_sup=min_sup, eq=eq)
-        #device = "cuda" if torch.cuda.is_available() else "cpu"
-        #print(f"🚀 Running execution pipeline on device: {device.upper()}")
+        self._device = device
+        self._mine_obj = OrigGRAANK(data_source, min_sup=min_sup, eq=eq, device=device)
 
     @property
     def mining_engine(self):
@@ -305,31 +312,31 @@ class GRAANK:
         """
 
         if search_type == "apriori":
-            self._mine_obj = OrigGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_apriori_level=max_iteration, **kwargs)
+            self._mine_obj = OrigGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_apriori_level=max_iteration, **kwargs)
         elif search_type == "ga":
             from .base.graank_ga import GeneticGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = GeneticGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
+            self._mine_obj = GeneticGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
         elif search_type == "aco":
             from .base.graank_aco import AntGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = AntGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
+            self._mine_obj = AntGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
         elif search_type == "pso":
             from .base.graank_pso import ParticleGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = ParticleGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
+            self._mine_obj = ParticleGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
         elif search_type == "hc":
             from .base.graank_hc import HillClimbingGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = HillClimbingGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
+            self._mine_obj = HillClimbingGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
         elif search_type == "random":
             from .base.graank_rand import RandomGRAANK
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = RandomGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration)
+            self._mine_obj = RandomGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration)
         elif search_type == "clustergp":
             from .cluster_gp import ClusterGP
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = ClusterGP(self._data_src, min_sup=self._min_supp, eq=self._eq, max_iter=max_iteration, **kwargs)
+            self._mine_obj = ClusterGP(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
         else:
             raise ValueError("Invalid search type!")
 

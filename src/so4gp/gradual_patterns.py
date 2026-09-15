@@ -26,7 +26,7 @@ NO_TIME_LABEL = "NoTime"
 @dataclass
 class PairwiseMatrix:
     """A data-class for storing pairwise (bitmap) matrix as packed-bits and its support value."""
-    packed_bin_mat: np.ndarray
+    packed_bin_mat: np.ndarray|torch.Tensor
     support: float
     pattern: set[str]
     time_lag: "TimeDelay|None"=None
@@ -468,151 +468,329 @@ class GP:
                 return True
         return False
 
-    def compute_descriptors(self, warping_set: np.ndarray | None, obj_count: int) -> bool:
+    def compute_descriptors(self, warping_set: np.ndarray | torch.Tensor | None, obj_count: int,) -> bool:
         """
-        Computes gradual warping set (GWS) descriptors for a given gradual pattern.
+        Compute gradual warping set (GWS) descriptors.
 
-        The descriptors are defined as follows:
+        The descriptors are defined as:
 
         1. Density (ρ_g):
-            Proportion of concordant index pairs relative to all possible pairs
-            ρ_g = ``|W_g|`` / C(n, 2)
+            Proportion of concordant index pairs relative to all possible pairs::
+
+                ρ_g = |W_g| / C(n, 2)
 
         2. Average Deviation from Diagonal (μ_g):
-            Mean absolute distance ``|i - j|`` across all pairs in ``W_g``.
+            Mean absolute distance between paired indices::
+
+                μ_g = mean(|i - j|)
 
         3. Rank Dispersion (σ_g):
-            Standard deviation of ``|i - j|``, capturing variability of index distances across all pairs in ``W_g``.
+            Standard deviation of the absolute index distances::
+
+                σ_g = std(|i - j|)
 
         4. Graph Connectivity (κ_g):
-            Number of connected components when ``W_g`` is interpreted as an undirected graph.
+            Number of connected components when ``W_g`` is interpreted as
+            an undirected graph.
 
         5. Singularity Score (S_g):
-            Measures concentration of index participation (node degree skewness).
-            High values indicate dominance of certain indices.
+            Normalized variance of node degrees::
 
-        Path-like behavior (DTW-like) is approximated when:
-            κ_g = 1, S_g is low, and σ_g is smooth (low variance).
+                S_g = Var(degree) / mean(degree)
 
-        :param warping_set: np.ndarray of shape (k, 2), containing index pairs (i, j)
-        :param obj_count: Total number of objects (n)
+            Higher values indicate greater concentration of edge participation
+            among a smaller number of nodes.
 
-        :return: True if descriptors are computed successfully, False otherwise
+        When ``warping_set`` is a CUDA tensor, numerical calculations and
+        graph connectivity are performed on the GPU. When it is a NumPy
+        array or CPU tensor, NumPy/Python implementations are used.
+
+        Args:
+            warping_set:
+                Array or tensor of shape ``(k, 2)`` containing index pairs
+                ``(i, j)``.
+            obj_count:
+                Total number of objects.
+
+        Returns:
+            True if descriptors are computed successfully, otherwise False.
         """
-
         if warping_set is None or len(warping_set) == 0 or obj_count < 2:
             return False
 
-        # Ensure numpy array
-        w_set = np.asarray(warping_set)
-        i_vals = w_set[:, 0]
-        j_vals = w_set[:, 1]
+        # ------------------------------------------------------------------
+        # Prepare warping set
+        # ------------------------------------------------------------------
+        is_tensor = isinstance(warping_set, torch.Tensor)
+        w_set_cpu = None
+        w_set_gpu = None
 
-        pair_count = len(w_set)
-        total_pairs = obj_count * (obj_count - 1) / 2.0
+        if is_tensor:
+            w_set_gpu = torch.tensor(warping_set)
+            if w_set_gpu.ndim != 2 or w_set_gpu.shape[1] != 2:
+                return False
 
+            # Edge indices must be integers.
+            w_set_gpu = w_set_gpu.long()
+
+            i_vals = w_set_gpu[:, 0]
+            j_vals = w_set_gpu[:, 1]
+
+            pair_count = len(w_set_gpu)
+        else:
+            w_set_cpu = np.asarray(warping_set)
+            if w_set_cpu.ndim != 2:# or w_set.shape[1] != 2:
+                return False
+
+            i_vals = w_set_cpu[:, 0]
+            j_vals = w_set_cpu[:, 1]
+
+            pair_count = len(w_set_cpu)
+        total_pairs = (obj_count * (obj_count - 1)) / 2.0
+
+        # ------------------------------------------------------------------
+        # Density
+        # ------------------------------------------------------------------
         def compute_density() -> float:
             """
-            Warping set density
+            Compute warping set density.
 
-            ρ_g = ``|W_g|`` / C(n, 2)
+            ρ_g = |W_g| / C(n, 2)
             """
-            return float(pair_count) / float(total_pairs)
+            return float(pair_count) / total_pairs
 
+        # ------------------------------------------------------------------
+        # Average deviation from diagonal
+        # ------------------------------------------------------------------
         def compute_avg_dev_from_diagonal() -> float:
             """
-            Average Deviation from Diagonal
-
-            μ_g = (1 / ``|W_g|``) * Σ ``|i - j|``
+            Compute average absolute distance from the diagonal.
             """
-            deviations = np.abs(i_vals - j_vals)
-            return float(np.mean(deviations))
+            if isinstance(i_vals, torch.Tensor) and isinstance(j_vals, torch.Tensor):
+                deviations = torch.abs(i_vals - j_vals)
+                return deviations.float().mean().item()
+            else:
+                deviations = np.abs(i_vals - j_vals)
+                return float(np.mean(deviations))
 
+        # ------------------------------------------------------------------
+        # Rank dispersion
+        # ------------------------------------------------------------------
         def compute_rank_dispersion() -> float:
             """
-            Rank Dispersion
-
-            σ_g = sqrt((1 / ``|W_g|``) * Σ (``|i - j|`` - μ_g)^2)
+            Compute standard deviation of index distances.
             """
+            if is_tensor:
+                deviations = torch.abs(i_vals - j_vals).float()
+                # correction=0 gives population standard deviation,
+                # equivalent to np.std(..., ddof=0).
+                return deviations.std(correction=0).item()
+
             deviations = np.abs(i_vals - j_vals)
             return float(np.std(deviations))
 
-        def compute_graph_connectivity(active_only: bool = True) -> int:
+        # ------------------------------------------------------------------
+        # Graph connectivity - GPU
+        # ------------------------------------------------------------------
+        def compute_graph_connectivity_gpu(edges: torch.Tensor|None, active_only: bool = True,) -> int:
             """
-            Computes the graph connectivity (number of connected components) of the gradual warping set ``W_g``.
+            Compute connected components using GPU label propagation.
 
-            The warping set ``W_g`` is interpreted as an undirected graph G = (V, E), where:
-                - V is the set of object indices
-                - E = ``W_g`` is the set of edges (i, j)
+            The graph is treated as undirected.
 
-            Two modes of computation are supported:
+            Each node initially receives its own label. During each iteration,
+            the minimum label is propagated across every edge in both
+            directions. The process terminates when labels no longer change.
 
-            1. Global connectivity (active_only = False):
-                - V = {0, 1, ..., n-1}
-                - Includes all dataset objects, even those not present in ``W_g``
-                - Isolated nodes are counted as individual connected components
-                - Captures global fragmentation of the dataset
+            Args:
+                edges:
+                    CUDA tensor of shape ``(k, 2)`` containing graph edges.
+                active_only:
+                    If True, only nodes appearing in ``edges`` are counted.
+                    If False, all ``obj_count`` nodes are counted.
 
-            2. Active connectivity (active_only = True):
-                - V = set of indices appearing in ``W_g``
-                - Ignores isolated nodes not participating in any pair
-                - Captures structural connectivity of the gradual pattern itself
-
-            Interpretation:
-                - κ_g = 1 indicates a fully connected structure
-                - Higher κ_g indicates fragmentation
-                - Path-like behavior is approximated when κ_g = 1
-
-            :param active_only: If True, compute connectivity using only nodes present in ``W_g``;
-                                otherwise, include all dataset nodes.
-            :return: Number of connected components (κ_g)
+            Returns:
+                Number of connected components.
             """
-            nodes = np.unique(w_set) if active_only else range(obj_count)
-            parent = {node: node for node in nodes}
-            count = len(nodes)
+            if edges is None:
+                return 0
 
-            def find(i):
-                if parent[i] == i: return i
-                parent[i] = find(parent[i])
-                return parent[i]
+            device = edges.device
 
-            for u, v in w_set:
-                # Skip edges if nodes aren't in your predefined set
-                if u in parent and v in parent:
-                    root_u, root_v = find(u), find(v)
-                    if root_u != root_v:
-                        parent[root_u] = root_v
-                        count -= 1
+            # --------------------------------------------------------------
+            # Initialize node labels
+            # --------------------------------------------------------------
+            labels = torch.arange(
+                obj_count,
+                device=device,
+                dtype=torch.long,
+            )
+
+            # --------------------------------------------------------------
+            # Active nodes
+            # --------------------------------------------------------------
+            #if active_only:
+            #    active_nodes = torch.unique(edges)
+
+            # --------------------------------------------------------------
+            # Edge endpoints
+            # --------------------------------------------------------------
+            u = edges[:, 0]
+            v = edges[:, 1]
+
+            # --------------------------------------------------------------
+            # Iterative label propagation
+            # --------------------------------------------------------------
+            #
+            # For an undirected edge (u, v):
+            #
+            #     label[u] <- min(label[u], label[v])
+            #     label[v] <- min(label[v], label[u])
+            #
+            # scatter_reduce performs the operation for all edges in
+            # parallel.
+            #
+            for _ in range(obj_count - 1):
+
+                new_labels = labels.clone()
+
+                # Propagate v -> u
+                new_labels.scatter_reduce_(
+                    dim=0,
+                    index=u,
+                    src=labels[v],
+                    reduce="amin",
+                    include_self=True,
+                )
+
+                # Propagate u -> v
+                new_labels.scatter_reduce_(
+                    dim=0,
+                    index=v,
+                    src=labels[u],
+                    reduce="amin",
+                    include_self=True,
+                )
+
+                # Stop when no labels changed.
+                if torch.equal(
+                        new_labels,
+                        labels,
+                ):
+                    labels = new_labels
+                    break
+
+                labels = new_labels
+
+            # --------------------------------------------------------------
+            # Count components
+            # --------------------------------------------------------------
+            if active_only:
+                active_nodes = torch.unique(edges)
+                component_count = torch.unique(labels[active_nodes]).numel()
+            else:
+                component_count = torch.unique(labels).numel()
+            return int(component_count)
+
+        # ------------------------------------------------------------------
+        # Graph connectivity - NumPy
+        # ------------------------------------------------------------------
+        def compute_graph_connectivity_cpu(edges: np.ndarray|None, active_only: bool = True,) -> int:
+            """
+            Compute connected components using CPU union-find.
+            """
+            if edges is None:
+                return 0
+
+            if active_only:
+                nodes = np.unique(edges)
+            else:
+                nodes = range(obj_count)
+
+            parent = {int(node): int(node) for node in nodes}
+            count = len(parent)
+
+            def find(node: int) -> int:
+                while parent[node] != node:
+                    parent[node] = parent[ parent[node]]
+                    node = parent[node]
+                return node
+
+            for u, v in edges:
+                u = int(u)
+                v = int(v)
+
+                if u not in parent or v not in parent:
+                    continue
+
+                root_u = find(u)
+                root_v = find(v)
+
+                if root_u != root_v:
+                    parent[root_u] = root_v
+                    count -= 1
             return count
 
+        # ------------------------------------------------------------------
+        # Select connectivity implementation
+        # ------------------------------------------------------------------
+        def compute_graph_connectivity(active_only: bool = True,) -> int:
+            """
+            Compute graph connectivity using the appropriate backend.
+            """
+            if is_tensor:
+                return compute_graph_connectivity_gpu(w_set_gpu, active_only=active_only,)
+            else:
+                return compute_graph_connectivity_cpu(w_set_cpu, active_only=active_only,)
+
+        # ------------------------------------------------------------------
+        # Singularity score
+        # ------------------------------------------------------------------
         def compute_singularity_score() -> float:
             """
-            Singularity Score
+            Compute normalized variance of node degrees.
 
-            S_g = normalized variance of node degrees
-
-            Steps:
-            - Count degree of each index
-            - Compute variance normalized by mean degree
+            S_g = Var(degree) / mean(degree)
             """
-            degree = np.zeros(obj_count)
+            if isinstance(i_vals, torch.Tensor) and isinstance(j_vals, torch.Tensor):
+                # Each edge contributes one degree to each endpoint.
+                degree = (
+                        torch.bincount(i_vals, minlength=obj_count,)
+                        +
+                        torch.bincount(j_vals, minlength=obj_count,)
+                ).float()
 
-            for u, v in w_set:
-                degree[int(u)] += 1
-                degree[int(v)] += 1
+                mean_deg = degree.mean()
+                if mean_deg.item() == 0.0:
+                    return 0.0
 
-            mean_deg = np.mean(degree)
-            if mean_deg == 0.0:
-                return 0.0
+                variance = degree.var(correction=0)
+                return (variance / mean_deg).item()
+            elif isinstance(i_vals, np.ndarray) and isinstance(j_vals, np.ndarray):
+                # --------------------------------------------------------------
+                # NumPy implementation
+                # --------------------------------------------------------------
+                degree = np.zeros(obj_count, dtype=np.int64,)
 
-            return float(np.var(degree) / mean_deg)
+                np.add.at(degree, i_vals.astype(np.int64),1,)
+                np.add.at(degree, j_vals.astype(np.int64),1,)
 
+                mean_deg = np.mean(degree)
+                if mean_deg == 0.0:
+                    return 0.0
+
+                return float(np.var(degree) / mean_deg)
+            return float(0)
+
+        # ------------------------------------------------------------------
         # Compute descriptors
-        self._density = round(compute_density(), 3)
-        self._avg_dev_from_diag = round(compute_avg_dev_from_diagonal(), 3)
-        self._rank_dispersion = round(compute_rank_dispersion(), 3)
-        self._graph_connectivity = compute_graph_connectivity()
-        self._singularity_score = round(compute_singularity_score(), 3)
+        # ------------------------------------------------------------------
+        self._density = round(compute_density(), 3,)
+        self._avg_dev_from_diag = round(compute_avg_dev_from_diagonal(), 3,)
+        self._rank_dispersion = round(compute_rank_dispersion(), 3,)
+        self._graph_connectivity = compute_graph_connectivity(active_only=True)
+        self._singularity_score = round(compute_singularity_score(), 3,)
+
         return True
 
     @staticmethod

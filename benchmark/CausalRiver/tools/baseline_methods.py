@@ -1,3 +1,4 @@
+import torch
 import pandas as pd
 import numpy as np
 from statsmodels.tsa.api import VAR
@@ -56,6 +57,7 @@ def var_baseline(d,cfg, human_readable=False):
 
 
 def var_tgraank(d, cfg):
-    mine_obj = TGRAANK(d)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    mine_obj = TGRAANK(d, device=device)
     corr_df = mine_obj.get_lagged_dependencies(max_lag=cfg.max_lag)
     return corr_df

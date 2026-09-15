@@ -1,5 +1,6 @@
-import time
 
+import torch
+import time
 import numpy as np
 import pandas
 
@@ -9,6 +10,9 @@ from src import so4gp as sgp
 
 if __name__ == "__main__":
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"🚀 Running execution pipeline on device: {device.upper()}")
+
     # dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 3, 7], [50, 1, 4, 6], [52, 7, 5, 2]]
     dummy_data = [["2021-03", 30, 3, 1, 10], ["2021-04", 35, 2, 2, 8], ["2021-05", 40, 4, 2, 7], ["2021-06", 50, 1, 1, 6], ["2021-07", 52, 7, 1, 2]]
     # dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
@@ -17,9 +21,9 @@ if __name__ == "__main__":
     # dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
 
     ## Test Algorithms
-    #mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False)
-    # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0)
-    mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1)
+    #mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False, device=device)
+    # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0, device=device)
+    mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1, device=device)
     # result_json = mine_obj.discover(target_col=1, compute_descriptors=True)  # GRAANK
     #result_json = mine_obj.discover()                                          # GRAANK/ClusterGP
     # result_json = mine_obj.discover(search_type='aco', target_col=1, exclude_target=False, max_iteration=10)    # ACO
