@@ -24,7 +24,8 @@ class TGradAMI(TGrad):
         Instead of min-representativity value, the algorithm relies on the error-margin between MIs.
 
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
-        :param kwargs: [required] target-column or attribute or feature, [optional] minimum representativity
+        :param kwargs: [required] target-column or attribute or feature, [optional] minimum representativity,
+        [optional] MF shape, [optional] clustering algorithm, [optional] inference method.
 
         """
         super(TGradAMI, self).__init__(*args, **kwargs)
@@ -175,10 +176,9 @@ class TGradAMI(TGrad):
                 else np.vstack((delayed_data, temp_col))
         return delayed_data, time_data
 
-    def discover_tgp_ami(self, target_col: int, use_clustering: bool = False, search_algorithm: str = "apriori",
+    def discover_tgp_ami(self, target_col: int, search_algorithm: str = "apriori",
                          max_iteration: int=3, transformation_steps: dict|None = None,
-                         error_margin: float = 0.0001,
-                         eval_mode: bool = False) -> dict:
+                         error_margin: float = 0.0001, eval_mode: bool = False) -> dict:
         """
         A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
         transformation that maintains MI and estimate the best time-delay value of the mined Fuzzy Temporal Gradual
@@ -186,7 +186,6 @@ class TGradAMI(TGrad):
     
         :param target_col: [required] Index of the target attribute/feature/column. Temporal transformations are
         estimated relative to this attribute.
-        :param use_clustering: Use a clustering algorithm to estimate the best time-delay value.
         :param search_algorithm: Gradual pattern mining algorithm to apply to the transformed dataset. Supported values
         are ``apriori``, ``ga``, ``aco``, ``pso``, ``hc``, ``random``, and ``clustergp``. Defaults to ``"apriori"``.
         :param max_iteration: Maximum number of iterations to run the search algorithm.
@@ -217,7 +216,7 @@ class TGradAMI(TGrad):
         delayed_data, time_data = self.gather_delayed_data(optimal_dict, max_step)
 
         # 3. Discover temporal-GPs from time-delayed data
-        lst_tgp = self._mine_gps_at_step(time_delay_data=time_data, attr_data=delayed_data, clustering_method=use_clustering)
+        lst_tgp = self._mine_gps_at_step(time_delay_data=time_data, attr_data=delayed_data)
 
         # 4. Organize FTGPs into a single list
         if lst_tgp:

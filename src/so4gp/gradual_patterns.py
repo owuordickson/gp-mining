@@ -17,7 +17,6 @@ A collection of Gradual Pattern classes and methods.
 import copy
 import torch
 import numpy as np
-import skfuzzy as fuzzy
 from dataclasses import dataclass
 
 
@@ -876,6 +875,20 @@ class GP:
         return new_gp
 
     @staticmethod
+    def get_selected_rows(packed_bit_mat: np.ndarray|torch.tensor, dim: int) -> np.ndarray | torch.Tensor:
+        """
+        Get objects participating in at least one active warping relation.
+
+        Returns:
+            Unique object indices.
+        """
+
+        edge_list = GP.gen_gradual_warping_set(packed_bit_mat, dim, )
+        if isinstance(edge_list, torch.Tensor):
+            return torch.unique(edge_list.flatten())
+        return np.unique(edge_list.flatten())
+
+    @staticmethod
     def gen_gradual_warping_set(packed_pairwise_mat: np.ndarray | torch.Tensor, n: int) -> np.ndarray | torch.Tensor:
         """
         A method that decomposes the pairwise matrix of a gradual item/pattern into a warping set. Attributes that have
@@ -941,26 +954,10 @@ class GP:
         :param time_data: (optional) time data for estimating time lag
         """
 
-        def get_selected_rows() -> np.ndarray | torch.Tensor:
-            """
-            Get objects participating in at least one active warping relation.
-
-            Returns:
-                Unique object indices.
-            """
-
-            edge_list = GP.gen_gradual_warping_set(packed_bit_mat, dim, )
-            if isinstance(edge_list, torch.Tensor):
-                return torch.unique(edge_list.flatten())
-            return np.unique(edge_list.flatten())
-
         if bin_data_1 is None or bin_data_2 is None:
             return PairwiseMatrix(packed_bin_mat=np.zeros((dim, dim)), support=0, pattern=set())
 
-        # --------------------------------------------------------------
-        # Intersection of packed bitmaps
-        # Supports NumPy arrays and PyTorch tensors (CPU or CUDA)
-        # --------------------------------------------------------------
+        # Intersection of packed bitmaps -- Supports NumPy arrays and PyTorch tensors (CPU or CUDA)
         packed_1 = bin_data_1.packed_bin_mat
         packed_2 = bin_data_2.packed_bin_mat
 
@@ -982,21 +979,13 @@ class GP:
             bit_counts = np.array([bin(i).count("1") for i in range(256)], dtype=np.uint8,)
             sup = (bit_counts[packed_bit_mat].sum() / GP.pair_count(n=dim))
 
-        # --------------------------------------------------------------
         # Combine gradual items
-        # --------------------------------------------------------------
         gp = bin_data_1.pattern | bin_data_2.pattern
 
-        # --------------------------------------------------------------
         # Time-delay computation
-        # --------------------------------------------------------------
         if time_data is not None:
-            t_data = time_data["time_data"]
-            use_gp = time_data["use_gp"]
-            fuzzy_mf = time_data["tri_mf"]
-            gp_set = gp if use_gp else None
-            selected_rows = get_selected_rows()
-            t_lag = TimeDelay.approx_time_lag(selected_rows, t_data, gi_arr=gp_set, tri_mf_data=fuzzy_mf,)
+            selected_rows = GP.get_selected_rows(packed_bit_mat, dim,)
+            t_lag = TimeDelay.approx_time_lag(selected_rows, time_data, gp_set=gp)
             return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup, time_lag=t_lag, pattern=gp,)
 
         return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup,pattern=gp,)
@@ -1112,8 +1101,8 @@ class TimeDelay:
             txt = "No time lag found!"
         return txt
 
-    @classmethod
-    def predict_time(cls, crisp_inputs: np.ndarray, time_data: np.ndarray, fuzzy_mfs: list[dict], inference_method) -> float:
+    @staticmethod
+    def predict_time(crisp_inputs: np.ndarray, time_data: np.ndarray, fuzzy_mfs: list[dict], inference_method: str) -> float:
         """Predict time using a multi-antecedent fuzzy inference system.
 
         Each crisp input is first fuzzified against the same set of
@@ -1256,9 +1245,7 @@ class TimeDelay:
             multi-antecedent rule.
         """
 
-        # --------------------------------------------------------------
         # Validate inputs
-        # --------------------------------------------------------------
         inputs = np.asarray(crisp_inputs, dtype=np.float64, ).ravel()
 
         if inputs.size == 0:
@@ -1338,9 +1325,7 @@ class TimeDelay:
 
             return np.clip(memberships,0.0,1.0,)
 
-        # --------------------------------------------------------------
         # Output universe
-        # --------------------------------------------------------------
         universe = np.linspace(
             min(0.0, float(time_values.min()) - 5.0),
             float(time_values.max()) + 5.0,
@@ -1435,9 +1420,7 @@ class TimeDelay:
         # --------------------------------------------------------------
         aggregated_mf = np.max( rule_outputs, axis=1,)
 
-        # --------------------------------------------------------------
         # Centroid defuzzification
-        # --------------------------------------------------------------
         total_membership = np.sum(aggregated_mf,)
 
         if total_membership <= np.finfo(np.float64).eps:
@@ -1449,17 +1432,15 @@ class TimeDelay:
         return float(prediction)
 
     @classmethod
-    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|np.ndarray|None, gi_arr: set|None = None, tri_mf_data: np.ndarray|None = None) -> "TimeDelay":
+    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|None, gp_set: set | None=None) -> "TimeDelay":
         """
         A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
         methods: (1) uses classical slide and re-calculate dynamic programming to find the best time-delay value and,
         (2) uses metaheuristic hill-climbing to find the best time-delay value.
 
         :param selected_rows: Only the rows where the GP is respected.
-        :param time_data: Time-delay values.
-        :param gi_arr: Gradual item object.
-        :param tri_mf_data: The 'a,b,c' values of the triangular MF. Used to find and approximate the best time-delay value
-        using KMeans and Hill-climbing approach.
+        :param time_data: A dict that contains time-data, mined GP, MFs parameters and inference method.
+        :param gp_set: Gradual item object.
 
         :return: TimeDelay object.
         """
@@ -1467,146 +1448,37 @@ class TimeDelay:
         if time_data is None:
             return cls(-1, 0)
 
-        def approx_time_slide_calculate(time_lag_arr: np.ndarray) -> TimeDelay:
-            """
+        t_data: np.ndarray|None = time_data["time_data"]
+        use_gp: bool = time_data["use_gp"]
+        mf_data: list[dict] = time_data["fuzzy_mfs"]
+        inference: str = time_data["inference"]
+        gp_set = gp_set if use_gp else None
 
-            A method that selects the most appropriate time-delay value from a list of possible values.
-
-            :param time_lag_arr: An array of all the possible time-delay values.
-            :return: The approximated TimeDelay object.
-            """
-
-            if len(time_lag_arr) <= 0:
-                # if time_lags is blank, return nothing
-                return cls()
-            else:
-                time_lag_arr = np.absolute(np.array(time_lag_arr))
-                min_a = np.min(time_lag_arr)
-                max_c = np.max(time_lag_arr)
-                count = time_lag_arr.size + 3
-                tot_boundaries = np.linspace(min_a / 2, max_c + 1, num=count)
-
-                highest_sup = 0
-                center = time_lag_arr[0]
-                size = len(tot_boundaries)
-                for i in range(0, size, 2):
-                    if (i + 3) <= size:
-                        boundaries = tot_boundaries[i:i + 3:1]
-                    else:
-                        boundaries = tot_boundaries[size - 3:size:1]
-                    memberships = fuzzy.membership.trimf(time_lag_arr, boundaries)
-
-                    # Compute Support
-                    sup_count = np.count_nonzero(memberships > 0)
-                    total = memberships.size
-                    curr_sup = sup_count / total
-                    # curr_sup = calculate_support(memberships)
-
-                    if curr_sup > highest_sup:
-                        highest_sup = curr_sup
-                        center = boundaries[1]
-                    if curr_sup >= 0.5:
-                        # print(boundaries[1])
-                        return cls(int(boundaries[1]), curr_sup)
-                return cls(center, highest_sup)
-
-        def approx_time_hill_climbing(x_train: np.ndarray, initial_bias: float = 0, step_size: float = 0.9,
-                                      max_iterations: int = 10):
-            """
-            A method that uses Hill-climbing algorithm to approximate the best time-delay value given a fuzzy triangular
-            membership function.
-
-            :param x_train: Initial time-delay values as an array.
-            :param initial_bias: (hyperparameter) initial bias value for the hill-climbing algorithm.
-            :param step_size: (hyperparameter) step size for the hill-climbing algorithm.
-            :param max_iterations: (hyperparameter) maximum number of iterations for the hill-climbing algorithm.
-            :return: Best position to move the triangular MF with its mean-squared-error.
-            """
-
-            def hill_climbing_cost_function(min_membership: float = 0):
-                """
-                Computes the logistic regression cost function for a fuzzy set created from a
-                triangular membership function.
-
-                :param min_membership: The minimum accepted value to allow membership in a fuzzy set.
-                :return: Cost function values.
-                """
-                # 1. Generate fuzzy data set using MF from x_data
-                memberships = np.where(y_train <= b,
-                                       (y_train - a) / (b - a),
-                                       (c - y_train) / (c - b))
-
-                # 2. Generate y_train based on the given criteria (x>minimum_membership)
-                y_hat: np.ndarray = np.where(memberships >= min_membership, 1, 0)  # type: ignore
-
-                # 3. Compute loss_val
-                hat_count = np.count_nonzero(y_hat)
-                true_count = len(y_hat)
-                loss_val: float = (((true_count - hat_count) / true_count) ** 2) ** 0.5
-                # loss_val = abs(true_count - hat_count)
-                return loss_val
-
-            # 1. Normalize x_train
-            x_train = np.array(x_train, dtype=float)
-
-            # 2. Perform hill climbing to find the optimal bias
-            bias = initial_bias
-            y_train = x_train + bias
-            best_mse = hill_climbing_cost_function()
-            for iteration in range(max_iterations):
-                # a. Generate a new candidate bias by perturbing the current bias
-                new_bias = bias + step_size * np.random.randn()
-
-                # b. Compute the predictions and the MSE with the new bias
-                y_train = x_train + new_bias
-                new_mse = hill_climbing_cost_function()
-
-                # c. If the new MSE is lower, update the bias
-                if new_mse < best_mse:
-                    bias = new_bias
-                    best_mse = new_mse
-
-            # Make predictions using the optimal bias
-            return bias, best_mse
+        if t_data is None:
+            return cls(-1, 0)
 
         # 2. Get TimeDelay Array
         lst_rows = selected_rows.cpu().tolist() if isinstance(selected_rows, torch.Tensor) else selected_rows.tolist()
-        if gi_arr is not None and isinstance(time_data, dict):
-            ## time_data = {col1: [row time-lags], col2: [row time-lags]}
+        if gp_set is not None and isinstance(t_data, dict):
+            ## t_data = {col1: [row time-lags], col2: [row time-lags]}
             t_lag_lst = []
-            sel_cols: set = set(time_data.keys())
-            for gi_str in gi_arr:
+            sel_cols: set = set(t_data.keys())
+            for gi_str in gp_set:
                 col = GI.from_string(gi_str).attribute_col
                 if col in sel_cols:
-                    t_lag_lst.append(time_data[col])
+                    t_lag_lst.append(t_data[col])
             t_lag_arr = np.array(t_lag_lst)
             t_lag_arr = t_lag_arr[:, lst_rows]
+            print(f"w GPs: {t_lag_arr}")
         else:
-            ## time_data = [row time-lags]
-            t_lag_arr = [time_data[lst_rows]]
+            ## t_data = [row time-lags]
+            t_lag_arr = np.ndarray([t_data[lst_rows]])
+            print(f"w/o GPs: {t_lag_arr}")
 
         # 3. Approximate TimeDelay value
-        best_time_lag: TimeDelay = cls(-1, 0)
-        if tri_mf_data is not None:
-            # 3b. Learn the best MF through KMeans and Hill-Climbing
-            a, b, c = tri_mf_data
-            best_time_lag = cls(-1, -1)
-            fuzzy_set = []
-            for t_lags in t_lag_arr:
-                init_bias = abs(b - np.median(t_lags))
-                slide_val, loss = approx_time_hill_climbing(t_lags, initial_bias=init_bias)
-                tstamp = int(b - slide_val)
-                sup = float(1 - loss)
-                fuzzy_set.append([tstamp, float(loss)])
-                if sup >= best_time_lag.support and abs(tstamp) > abs(best_time_lag.timestamp):
-                    best_time_lag = cls(tstamp, sup)
-                # print(f"New Membership Fxn: {a - slide_val}, {b - slide_val}, {c - slide_val}")
-        else:
-            # 3a. Learn the best MF through slide-descent/sliding
-            for t_lags in t_lag_arr:
-                time_lag = approx_time_slide_calculate(t_lags)
-                if time_lag.support >= best_time_lag.support:
-                    best_time_lag = time_lag
+        time_val: float = TimeDelay.predict_time(crisp_inputs=t_lag_arr, time_data=t_data, fuzzy_mfs=mf_data, inference_method=inference)
+        best_time_lag: TimeDelay = cls(time_val, 0.99)
+
         return best_time_lag
 
 

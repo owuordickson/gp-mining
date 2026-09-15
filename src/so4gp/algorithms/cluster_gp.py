@@ -214,12 +214,14 @@ class ClusterGP(BaseGrad):
 
                 # 4. Estimate Time Delay
                 if time_data is not None:
-                    t_data = time_data["time_data"]
-                    use_gp = time_data["use_gp"]
-                    fuzzy_mf = time_data["tri_mf"]
-                    gp_set = set([gi.to_string() for gi in cluster_gis]) if use_gp else None
+                    #t_data = time_data["time_data"]
+                    #use_gp = time_data["use_gp"]
+                    #fuzzy_mf = time_data["tri_mf"]
+                    gp_set = set([gi.to_string() for gi in cluster_gis])
                     bin_data = np.ones([self.row_count, self.row_count], dtype=bool)
-                    time_lag = TimeDelay.approx_time_lag(bin_data, t_data, gi_arr=gp_set, tri_mf_data=fuzzy_mf)
+                    selected_rows = GP.get_selected_rows(packed_bit_mat, self.row_count, )
+                    time_lag = TimeDelay.approx_time_lag(selected_rows, time_data, gp_set=gp_set)
+                    # time_lag = TimeDelay.approx_time_lag(bin_data, t_data, gp_set=gp_set, tri_mf_data=fuzzy_mf)
 
                 # 5. Infer GPs from the clusters
                 if est_sup >= self.thd_supp:

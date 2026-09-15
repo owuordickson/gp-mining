@@ -9,8 +9,6 @@ import copy
 import numpy as np
 import pandas as pd
 # import multiprocessing as mp
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import MinMaxScaler
 from .graank_alg import OrigGRAANK
 from ..graank import GRAANK
 from ...data_gp import DataGP
@@ -19,7 +17,7 @@ from ...gradual_patterns import TGP, NO_TIME_LABEL
 
 class TGrad(OrigGRAANK):
 
-    def __init__(self, *args, min_rep: float = 0.5, mf_shape='tri', clustering_method='fcm', inference_method='mamdani', **kwargs):
+    def __init__(self, *args, min_rep: float=0.5, mf_shape: str='triangular', clustering_method: str='fcm', inference_method: str='mamdani', **kwargs):
         """
         TGrad is an algorithm used to extract temporal gradual patterns from numeric datasets. An algorithm for mining
         temporal gradual patterns using fuzzy membership functions. It uses a technique
@@ -27,6 +25,9 @@ class TGrad(OrigGRAANK):
 
         :param args: [required] a data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
         :param min_rep: [optional] minimum representativity value.
+        :param mf_shape: [optional] shape of the fuzzy membership function. Options are: 'triangular', 'trapezoidal', 'gaussian'.
+        :param clustering_method: [optional] clustering algorithm for estimating the MFs. Options are: 'kmeans', 'fcm'.
+        :param inference_method: [optional] inference method for estimating the MFs. Options: 'mamdani', larsen'.
 
         """
 
@@ -35,7 +36,6 @@ class TGrad(OrigGRAANK):
         self._algorithm_max_iter: int = 3
         self._min_rep: float = min_rep
         self._max_step: int = self.row_count - int(min_rep * self.row_count)
-        #def __init__(self, raw_data, mf_shape='triangular', clustering_method='fcm', inference_method='mamdani'):
         self.mf_shape = mf_shape.lower()
         self.clustering_method = clustering_method.lower()
         self.inference_method = inference_method.lower()
@@ -246,21 +246,21 @@ class TGrad(OrigGRAANK):
             print(f"Error at step {step}: {e}")
             return None
 
-    def _mine_gps_at_step(self, time_delay_data: dict | np.ndarray, attr_data: np.ndarray | None = None,
-                          clustering_method: bool = False) -> list[TGP]:
+    def _mine_gps_at_step(self, time_delay_data: dict | np.ndarray, attr_data: np.ndarray | None = None) -> list[TGP]:
         """
         Uses apriori algorithm to find GP candidates based on the target-attribute. The candidates are validated if
         their computed support is greater than or equal to the minimum support threshold specified by the user.
 
         :param time_delay_data: Time-delay values
         :param attr_data: the transformed data.
-        :param clustering_method: Find and approximate the best time-delay value using KMeans and Hill-climbing approach.
+
         :return: Temporal-GPs as a list.
         """
 
         if attr_data is None:
             return []
 
+        """
         if clustering_method:
             if isinstance(time_delay_data, dict):
                 t_lag_arr = np.array(list(time_delay_data.values()))
@@ -272,11 +272,17 @@ class TGrad(OrigGRAANK):
             tri_mf_data = np.array([a, b, c])
         else:
             tri_mf_data = None
+        """
+        if isinstance(time_delay_data, dict):
+            t_lag_arr: np.ndarray = np.array(list(time_delay_data.values()))
+        else:
+            t_lag_arr: np.ndarray = np.array(time_delay_data)
+        fuzzy_mfs = self.build_membership_functions(t_lag_arr)
 
         if type(self) is TGrad:
-            time_data: dict = {"time_data": time_delay_data, "use_gp": False, "tri_mf": tri_mf_data}
+            time_data: dict = {"time_data": t_lag_arr, "use_gp": False, "fuzzy_mfs": fuzzy_mfs, "inference": self.inference_method}
         else:
-            time_data: dict = {"time_data": time_delay_data, "use_gp": True, "tri_mf": tri_mf_data}
+            time_data: dict = {"time_data": time_delay_data, "use_gp": True, "fuzzy_mfs": fuzzy_mfs, "inference": self.inference_method}
         data_df = pd.DataFrame(attr_data.T, columns=self.titles)
         mine_obj = GRAANK(data_df, min_sup=self.thd_supp, eq=self._include_equal_values)
         mine_obj.discover(search_type=self._search_algorithm, target_col=self._target_col, time_data=time_data,
@@ -324,7 +330,6 @@ class TGrad(OrigGRAANK):
                 time_diffs_arr.append(time_diff_abs)
         return True, time_diffs, np.array(time_diffs_arr)
 
-    # --- STEP 1: Membership Function Construction ---
     def build_membership_functions(self, time_data: np.ndarray | None,) -> list[dict]:
         """Build membership-function parameters from time-delay data.
 
@@ -537,74 +542,6 @@ class TGrad(OrigGRAANK):
 
         return mf_params
 
-    # --- STEP 2 & 3: Fuzzification, Inference and Defuzzification ---
-    def predict_time(self, crisp_inputs, time_data, fuzzy_mfs):
-        """
-        Runs crisp values forward through fuzzification matrix layouts, combines them
-        via AND (minimum structural intersections), generates rule outputs via
-        Mamdani or Larsen, and finishes with Centroid Defuzzification.
-        """
-
-        def evaluate_mf(crisp_val, mf_dict):
-            """ Evaluates degree of membership for value x against target parameter schema """
-            shape = mf_dict['shape']
-            p = mf_dict['params']
-
-            if shape == 'triangular':
-                return np.maximum(0, np.minimum((crisp_val - p[0]) / (p[1] - p[0] + 1e-10), (p[2] - crisp_val) / (p[2] - p[1] + 1e-10)))
-            elif shape == 'trapezoidal':
-                return np.maximum(0, np.minimum(np.minimum((crisp_val - p[0]) / (p[1] - p[0] + 1e-10), 1),
-                                                (p[3] - crisp_val) / (p[3] - p[2] + 1e-10)))
-            else:  # Gaussian
-                return np.exp(-0.5 * ((crisp_val - p[0]) / p[1]) ** 2)
-
-        inputs = np.array(crisp_inputs, dtype=float)
-        num_mfs = len(fuzzy_mfs)
-        universe = np.linspace(max(0, np.min(time_data) - 5), np.max(time_data) + 5)
-
-        # a) Fuzzify Inputs -- Each input gets mapped across all available generated MFs
-        fuzzified_matrix = []
-        for x in inputs:
-            memberships = [evaluate_mf(x, mf) for mf in fuzzy_mfs]
-            fuzzified_matrix.append(memberships)
-        fuzzified_matrix = np.array(fuzzified_matrix)
-
-        # b) Apply Rules (Antecedent Logic)
-        # This implementation uses a diagonal rule framework (Input 1 is MF_i AND Input 2 is MF_i -> Output is MF_i)
-        # Apply strict mathematical AND operations (Minimum composition) across parallel assignments
-        firing_strengths = np.min(fuzzified_matrix, axis=0)
-
-        # c) Aggregate Output Profiles
-        # Evaluate the whole universe range against existing output MFs multiplied by firing strengths
-        aggregated_mf = np.zeros_like(universe)
-
-        for i in range(num_mfs):
-            w = firing_strengths[i]
-            if w <= 0:
-                continue
-
-            # Compute the raw baseline output curve over the universe spectrum
-            base_curve = np.array([evaluate_mf(u, fuzzy_mfs[i]) for u in universe])
-
-            if self.inference_method == 'mamdani':
-                # Clipping operation (min)
-                rule_output = np.minimum(w, base_curve)
-            else:  # Larsen Inference
-                # Scaling operation (product multiplying)
-                rule_output = w * base_curve
-
-            # Aggregate via Maximum rule composition layout
-            aggregated_mf = np.maximum(aggregated_mf, rule_output)
-
-        # d) Defuzzify (Centroid Method)
-        sum_mf = np.sum(aggregated_mf)
-        if sum_mf == 0:
-            # Fallback: configuration to the center point of dataset if no rules trigger
-            return np.mean(crisp_inputs)
-
-        defuzzified_time = np.sum(universe * aggregated_mf) / sum_mf
-        return defuzzified_time
-
     @staticmethod
     def get_timestamp(time_str: str):
         """
@@ -621,65 +558,3 @@ class TGrad(OrigGRAANK):
                 return False
         except ValueError:
             return False
-
-    @staticmethod
-    def build_mf_w_clusters(time_data: np.ndarray | None):
-        """
-        A method that builds the boundaries of a fuzzy Triangular membership function (MF) using Singular Value
-        Decomposition (to estimate the number of centers) and KMeans algorithm to group time data according to the
-        identified centers. We then use the largest cluster to build the MF.
-
-        :param time_data: Time-delay values as an array.
-        :return: The boundary values of the triangular membership function.
-        """
-
-        if time_data is None:
-            return 0, 0, 0
-
-        try:
-            # 1. Reshape into 1-column dataset
-            time_data = time_data.reshape(-1, 1)
-
-            # 2. Standardize data
-            scaler = MinMaxScaler()
-            data_scaled = scaler.fit_transform(time_data)
-
-            # 3. Apply SVD
-            u, s, vt = np.linalg.svd(data_scaled, full_matrices=False)
-
-            # 4. Plot singular values to help determine the number of clusters
-            # Based on the plot, choose the number of clusters (e.g., 3 clusters)
-            num_clusters = int(s[0])
-
-            # 5. Perform k-means clustering
-            kmeans = KMeans(n_clusters=num_clusters)
-            kmeans.fit(data_scaled)
-
-            # 6. Get cluster centers
-            centers = kmeans.cluster_centers_.flatten()
-
-            # 7. Define membership functions to ensure membership > 0.5
-            largest_mf = [0, 0, 0]
-            for center in centers:
-                half_width = 0.5 / 2  # since the membership value should be > 0.5
-                a = center - half_width
-                b = center
-                c = center + half_width
-                if abs(c - a) > abs(largest_mf[2] - largest_mf[0]):
-                    largest_mf = [a, b, c]
-
-            # 8. Reverse the scaling
-            a = scaler.inverse_transform([[largest_mf[0]]])[0, 0]
-            b = scaler.inverse_transform([[largest_mf[1]]])[0, 0]
-            c = scaler.inverse_transform([[largest_mf[2]]])[0, 0]
-
-            # 9. Shift to remove negative MF (we do not want negative timestamps)
-            if a < 0:
-                shift_by = abs(a)
-                a = a + shift_by
-                b = b + shift_by
-                c = c + shift_by
-            return a, b, c
-        except Exception as e:
-            print(e)
-            return 0, 0, 0

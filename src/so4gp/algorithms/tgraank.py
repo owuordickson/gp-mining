@@ -36,7 +36,8 @@ class TGRAANK:
           https://ieeexplore.ieee.org/abstract/document/11197674/
     """
 
-    def __init__(self, data_source, min_sup: float = 0.5, min_rep: float = 0.5, eq: bool = False, device: str = "cpu"):
+    def __init__(self, data_source, min_sup: float = 0.5, min_rep: float = 0.5, eq: bool = False,
+                 mf_shape: str="triangular", clustering_algorithm: str = "kmeans", inference_method: str = "mamdani", device: str = "cpu"):
         """
         Initialize a temporal gradual pattern miner.
 
@@ -67,15 +68,35 @@ class TGRAANK:
                 Whether equal values should be treated as satisfying gradual
                 comparisons.
 
-                * ``False`` — strict comparisons.
+                * ``False`` — (default) strict comparisons.
                 * ``True`` — allow equal values.
+
+            mf_shape:
+                The shape of the fuzzy membership function to use to estimate time-lag.
+
+                * ``triangular`` — (default) triangular membership function.
+                * ``trapezoidal`` — trapezoidal membership function.
+                * ``gaussian`` — gaussian membership function.
+
+            clustering_algorithm:
+                The clustering algorithm to use to estimate and build the membership functions
+                according to the shape selected.
+
+                * ``kmeans`` — (default) the KMeans algorithm.
+                * ``fcm`` — The fuzzy-cluster-cmeans algorithm.
+
+            inference_method:
+                The inference method to use to evaluate the fuzzy rules to be aggregated and
+                defuzzified to estimate the time-delay.
+
+                * ``mamdani`` — (default) The Mamdani inference.
+                * ``larsen`` — The Larsen inference.
 
             device:
                 The device on which the computation is performed.
 
-                * ``cpu`` (default): will use Numpy operations.
-
-                * ``gpu``: will use GPU (Tensor) operations.
+                * ``cpu`` (default) — will use Numpy operations.
+                * ``gpu`` — will use GPU (Tensor) operations.
 
         Attributes:
             mining_engine:
@@ -104,8 +125,12 @@ class TGRAANK:
         self._min_supp: float = min_sup
         self._min_rep: float = min_rep
         self._eq: bool = eq
+        self._mf_shape = mf_shape
+        self._clustering_alg = clustering_algorithm
+        self._inference_method = inference_method
         self._device = device
-        self._mine_obj = TGrad(data_source, min_sup=min_sup, min_rep=min_rep, eq=eq, add_time=True, device=device)
+        self._mine_obj = TGrad(data_source, min_sup=min_sup, min_rep=min_rep, eq=eq, mf_shape=mf_shape,
+                               clustering_algorithm=clustering_algorithm, inference_method=inference_method, add_time=True, device=device)
 
     @property
     def mining_engine(self):
@@ -256,7 +281,8 @@ class TGRAANK:
 
             if transformations == 'all':
                 self._mine_obj = TGrad(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
-                                       add_time=True, device=self._device)
+                                       mf_shape=self._mf_shape, clustering_algorithm=self._clustering_alg,
+                                       inference_method=self._inference_method, add_time=True, device=self._device)
                 # num_cores = kwargs.get("num_cores", 1)
                 #if num_cores <= 1:
                 #    num_cores = get_num_cores()
@@ -265,7 +291,8 @@ class TGRAANK:
             elif transformations == 'ami':
                 from .base.tgrad_ami import TGradAMI
                 self._mine_obj = TGradAMI(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
-                                          add_time=True, device=self._device,)
+                                       mf_shape=self._mf_shape, clustering_algorithm=self._clustering_alg,
+                                       inference_method=self._inference_method, add_time=True, device=self._device,)
                 res_dict = self._mine_obj.discover_tgp_ami(target_col=target_col,
                                                             transformation_steps=transformation_steps,
                                                             max_iteration=max_iteration,
