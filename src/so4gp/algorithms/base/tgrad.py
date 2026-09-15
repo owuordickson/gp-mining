@@ -8,7 +8,6 @@ import time
 import copy
 import numpy as np
 import pandas as pd
-import scipy.linalg as la
 # import multiprocessing as mp
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
@@ -357,15 +356,16 @@ class TGrad(OrigGRAANK):
 
             # Build a 2D trajectory Hankel matrix
             window_len = total_count // 2  # Window length
-            hankel_mat = la.hankel(time_data[:window_len], time_data[window_len - 1:])
+            k_cols = total_count - window_len + 1
+            hankel_mat = np.array([time_data[p: p + k_cols] for p in range(window_len)])
 
             # Compute Singular Value Decomposition
-            u, s, vt = la.svd(hankel_mat, full_matrices=False)
+            u_val, s_val, vt_val = np.linalg.svd(hankel_mat, full_matrices=False)
 
             # Calculate cumulative energy contribution
-            cumulative_energy = np.cumsum(s ** 2) / np.sum(s ** 2)
+            cumulative_energy = np.cumsum(s_val ** 2) / np.sum(s_val ** 2)
 
-            # Determine number of components meeting energy threshold
+            # Determine number of components meeting the energy threshold
             estimated = np.argmax(cumulative_energy >= threshold) + 1
             n_clusters = max(2, int(estimated))  # Guarantee at least 2 clusters
             return n_clusters
@@ -387,13 +387,13 @@ class TGrad(OrigGRAANK):
                 for _ in range(100):
                     distances = np.abs(t_data - centers)
                     labels = np.argmin(distances, axis=1)
-                    new_centers = np.array([t_data[labels == i].mean() if len(t_data[labels == i]) > 0 else centers[i] for i in
+                    new_centers = np.array([t_data[labels == n].mean() if len(t_data[labels == n]) > 0 else centers[n] for n in
                                             range(num_clusters)])
                     if np.allclose(centers, new_centers):
                         break
                     centers = new_centers
                 centroids = sorted(centers)
-                spreads = [np.std(t_data[labels == c]) if len(t_data[labels == c]) > 0 else np.std(t_data) for c in
+                spreads = [np.std(t_data[labels == n]) if len(t_data[labels == n]) > 0 else np.std(t_data) for n in
                                 range(num_clusters)]
 
             else:  # Fuzzy C-Means (FCM)
@@ -420,7 +420,7 @@ class TGrad(OrigGRAANK):
                 centroids = sorted(centers)
                 # Calculate weighted deviations per cluster for spreads
                 spreads = [
-                    np.sqrt(np.sum(u_mat[:, c] ** m * (t_data.flatten() - centroids[c]) ** 2) / np.sum(u_mat[:, c] ** m)) for c
+                    np.sqrt(np.sum(u_mat[:, n] ** m * (t_data.flatten() - centroids[n]) ** 2) / np.sum(u_mat[:, n] ** m)) for n
                     in range(num_clusters)]
             return centroids, spreads
 
@@ -453,7 +453,7 @@ class TGrad(OrigGRAANK):
         return mf_params
 
     # --- STEP 2 & 3: Fuzzification, Inference and Defuzzification ---
-    def predict_time(self, crisp_inputs, fuzzy_mfs):
+    def predict_time(self, crisp_inputs, time_data, fuzzy_mfs):
         """
         Runs crisp values forward through fuzzification matrix layouts, combines them
         via AND (minimum structural intersections), generates rule outputs via
@@ -515,7 +515,7 @@ class TGrad(OrigGRAANK):
         sum_mf = np.sum(aggregated_mf)
         if sum_mf == 0:
             # Fallback: configuration to the center point of dataset if no rules trigger
-            return np.mean(peaks)
+            return np.mean(crisp_inputs)
 
         defuzzified_time = np.sum(universe * aggregated_mf) / sum_mf
         return defuzzified_time
