@@ -1112,8 +1112,8 @@ class TimeDelay:
             txt = "No time lag found!"
         return txt
 
-    @staticmethod
-    def predict_time(crisp_inputs: np.ndarray, time_data: np.ndarray, fuzzy_mfs: list[dict],) -> float:
+    @classmethod
+    def predict_time(cls, crisp_inputs: np.ndarray, time_data: np.ndarray, fuzzy_mfs: list[dict], inference_method) -> float:
         """Predict time using a multi-antecedent fuzzy inference system.
 
         Each crisp input is first fuzzified against the same set of
@@ -1228,6 +1228,9 @@ class TimeDelay:
                                  | "gaussian",
                         "params": [...]
                     }
+
+            inference_method:
+                The technique to use for fuzzy inference. Either 'mamdani' or 'larsen'.
 
         Returns:
             The predicted time value obtained through centroid
@@ -1401,10 +1404,10 @@ class TimeDelay:
         # For inputs whose strongest memberships occur at different MFs,
         # the activated MFs are combined through their firing strengths.
         # --------------------------------------------------------------
-        method = self.inference_method.lower()
+        method = inference_method.lower()
 
         if method not in {"mamdani", "larsen"}:
-            raise ValueError(f"Unsupported inference method: {self.inference_method!r}. Expected 'mamdani' or 'larsen'.")
+            raise ValueError(f"Unsupported inference method: {inference_method!r}. Expected 'mamdani' or 'larsen'.")
 
         # --------------------------------------------------------------
         # Apply the multi-antecedent activation to every output MF.
