@@ -40,14 +40,6 @@ class TGrad(OrigGRAANK):
         self.mf_shape = mf_shape.lower()
         self.clustering_method = clustering_method.lower()
         self.inference_method = inference_method.lower()
-        # Internal state variables
-        #self.n_clusters = None
-        #self.centroids = []
-        #self.spreads = []
-        #self.mf_params = []
-        # Define universe of discourse based on data footprint
-        #self.universe = np.linspace(max(0, np.min(self.raw_data) - 5), np.max(time_data) + 5, 2000)
-
         self._full_attr_data: np.ndarray = copy.deepcopy(self.data).T
         if len(self.time_cols) > 0:
             # print("Dataset Ok")
@@ -333,23 +325,6 @@ class TGrad(OrigGRAANK):
                 time_diffs_arr.append(time_diff_abs)
         return True, time_diffs, np.array(time_diffs_arr)
 
-    @staticmethod
-    def get_timestamp(time_str: str):
-        """
-        A method that computes the corresponding timestamp from a DateTime string.
-
-        :param time_str: DateTime value as a string
-        :return: timestamp value
-        """
-        try:
-            ok, stamp = DataGP.test_time(time_str)
-            if ok:
-                return stamp
-            else:
-                return False
-        except ValueError:
-            return False
-
     # self.n_clusters = None
     # self.centroids = []
     # self.spreads = []
@@ -358,7 +333,7 @@ class TGrad(OrigGRAANK):
     # self.universe = np.linspace(max(0, np.min(time_data) - 5), np.max(time_data) + 5, 2000)
 
     # --- STEP 1: Membership Function Construction ---
-    def build_membership_functions(self, time_data: np.ndarray | None):
+    def build_membership_functions(self, time_data: np.ndarray | None) -> list[dict]:
         """
         Dynamically extracts parameter frameworks to build Triangular,
         Trapezoidal, or Gaussian Membership Functions.
@@ -405,8 +380,6 @@ class TGrad(OrigGRAANK):
                 return None, None
 
             t_data = time_data.reshape(-1, 1)
-            centroids = None
-            spreads = None
 
             if self.clustering_method == 'kmeans':
                 # Simplified explicit 1D K-Means implementation
@@ -451,8 +424,9 @@ class TGrad(OrigGRAANK):
                     in range(num_clusters)]
             return centroids, spreads
 
+        mf_params = []
         if time_data is None:
-            return
+            return mf_params
 
         # --- STEP 1a: SVD Estimation for Number of MFs ---
         num_clusters = estimate_n_clusters()
@@ -460,56 +434,53 @@ class TGrad(OrigGRAANK):
         # --- STEP 1b: Clustering Execution ---
         peaks, bounds = compute_clusters()
 
-        if len(self.centroids) == 0:
-            compute_clusters()
-
-        self.mf_params = []
         for i in range(num_clusters):
-            c = self.centroids[i]
-            s = max(self.spreads[i], 0.1)  # Bound lower spread to avoid dividing by zero
+            c = peaks[i]
+            s = max(bounds[i], 0.1)  # Bound lower spread to avoid dividing by zero
 
             if self.mf_shape == 'triangular':
-                left = self.centroids[i - 1] if i > 0 else c - 3 * s
-                right = self.centroids[i + 1] if i < self.n_clusters - 1 else c + 3 * s
-                self.mf_params.append({'shape': 'triangular', 'params': [left, c, right]})
+                left = peaks[i - 1] if i > 0 else c - 3 * s
+                right = peaks[i + 1] if i < num_clusters - 1 else c + 3 * s
+                mf_params.append({'shape': 'triangular', 'params': [left, c, right]})
 
             elif self.mf_shape == 'trapezoidal':
-                left = self.centroids[i - 1] if i > 0 else c - 4 * s
-                right = self.centroids[i + 1] if i < self.n_clusters - 1 else c + 4 * s
-                self.mf_params.append({'shape': 'trapezoidal', 'params': [left, c - 0.5 * s, c + 0.5 * s, right]})
+                left = peaks[i - 1] if i > 0 else c - 4 * s
+                right = peaks[i + 1] if i < num_clusters - 1 else c + 4 * s
+                mf_params.append({'shape': 'trapezoidal', 'params': [left, c - 0.5 * s, c + 0.5 * s, right]})
 
             else:  # Default to Gaussian
-                self.mf_params.append({'shape': 'gaussian', 'params': [c, s]})
-
+                mf_params.append({'shape': 'gaussian', 'params': [c, s]})
+        return mf_params
 
     # --- STEP 2 & 3: Fuzzification, Inference and Defuzzification ---
-    def predict_time(self, crisp_inputs):
+    def predict_time(self, crisp_inputs, fuzzy_mfs):
         """
         Runs crisp values forward through fuzzification matrix layouts, combines them
         via AND (minimum structural intersections), generates rule outputs via
         Mamdani or Larsen, and finishes with Centroid Defuzzification.
         """
 
-        def evaluate_mf(x, mf_dict):
+        def evaluate_mf(crisp_val, mf_dict):
             """ Evaluates degree of membership for value x against target parameter schema """
             shape = mf_dict['shape']
             p = mf_dict['params']
 
             if shape == 'triangular':
-                return np.maximum(0, np.minimum((x - p[0]) / (p[1] - p[0] + 1e-10), (p[2] - x) / (p[2] - p[1] + 1e-10)))
+                return np.maximum(0, np.minimum((crisp_val - p[0]) / (p[1] - p[0] + 1e-10), (p[2] - crisp_val) / (p[2] - p[1] + 1e-10)))
             elif shape == 'trapezoidal':
-                return np.maximum(0, np.minimum(np.minimum((x - p[0]) / (p[1] - p[0] + 1e-10), 1),
-                                                (p[3] - x) / (p[3] - p[2] + 1e-10)))
+                return np.maximum(0, np.minimum(np.minimum((crisp_val - p[0]) / (p[1] - p[0] + 1e-10), 1),
+                                                (p[3] - crisp_val) / (p[3] - p[2] + 1e-10)))
             else:  # Gaussian
-                return np.exp(-0.5 * ((x - p[0]) / p[1]) ** 2)
+                return np.exp(-0.5 * ((crisp_val - p[0]) / p[1]) ** 2)
 
         inputs = np.array(crisp_inputs, dtype=float)
+        num_mfs = len(fuzzy_mfs)
+        universe = np.linspace(max(0, np.min(time_data) - 5), np.max(time_data) + 5)
 
-        # a) Fuzzify Inputs
-        # Each input gets mapped across all available generated MFs
+        # a) Fuzzify Inputs -- Each input gets mapped across all available generated MFs
         fuzzified_matrix = []
         for x in inputs:
-            memberships = [evaluate_mf(x, mf) for mf in self.mf_params]
+            memberships = [evaluate_mf(x, mf) for mf in fuzzy_mfs]
             fuzzified_matrix.append(memberships)
         fuzzified_matrix = np.array(fuzzified_matrix)
 
@@ -519,16 +490,16 @@ class TGrad(OrigGRAANK):
         firing_strengths = np.min(fuzzified_matrix, axis=0)
 
         # c) Aggregate Output Profiles
-        # Evaluate whole universe range against existing output MFs multiplied by firing strengths
-        aggregated_mf = np.zeros_like(self.universe)
+        # Evaluate the whole universe range against existing output MFs multiplied by firing strengths
+        aggregated_mf = np.zeros_like(universe)
 
-        for i in range(self.n_clusters):
+        for i in range(num_mfs):
             w = firing_strengths[i]
             if w <= 0:
                 continue
 
-            # Compute raw baseline output curve over universe spectrum
-            base_curve = np.array([evaluate_mf(u, self.mf_params[i]) for u in self.universe])
+            # Compute the raw baseline output curve over the universe spectrum
+            base_curve = np.array([evaluate_mf(u, fuzzy_mfs[i]) for u in universe])
 
             if self.inference_method == 'mamdani':
                 # Clipping operation (min)
@@ -543,12 +514,28 @@ class TGrad(OrigGRAANK):
         # d) Defuzzify (Centroid Method)
         sum_mf = np.sum(aggregated_mf)
         if sum_mf == 0:
-            # Fallback configuration to center point of dataset if no rules trigger
-            return np.mean(self.centroids)
+            # Fallback: configuration to the center point of dataset if no rules trigger
+            return np.mean(peaks)
 
-        defuzzified_time = np.sum(self.universe * aggregated_mf) / sum_mf
+        defuzzified_time = np.sum(universe * aggregated_mf) / sum_mf
         return defuzzified_time
 
+    @staticmethod
+    def get_timestamp(time_str: str):
+        """
+        A method that computes the corresponding timestamp from a DateTime string.
+
+        :param time_str: DateTime value as a string
+        :return: timestamp value
+        """
+        try:
+            ok, stamp = DataGP.test_time(time_str)
+            if ok:
+                return stamp
+            else:
+                return False
+        except ValueError:
+            return False
 
     @staticmethod
     def build_mf_w_clusters(time_data: np.ndarray | None):
