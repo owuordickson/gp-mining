@@ -8,7 +8,8 @@ import time
 import copy
 import numpy as np
 import pandas as pd
-#import multiprocessing as mp
+import scipy.linalg as la
+# import multiprocessing as mp
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
 from .graank_alg import OrigGRAANK
@@ -19,7 +20,7 @@ from ...gradual_patterns import TGP, NO_TIME_LABEL
 
 class TGrad(OrigGRAANK):
 
-    def __init__(self, *args, min_rep: float = 0.5, **kwargs):
+    def __init__(self, *args, min_rep: float = 0.5, mf_shape='tri', clustering_method='fcm', inference_method='mamdani', **kwargs):
         """
         TGrad is an algorithm used to extract temporal gradual patterns from numeric datasets. An algorithm for mining
         temporal gradual patterns using fuzzy membership functions. It uses a technique
@@ -35,6 +36,18 @@ class TGrad(OrigGRAANK):
         self._algorithm_max_iter: int = 3
         self._min_rep: float = min_rep
         self._max_step: int = self.row_count - int(min_rep * self.row_count)
+        #def __init__(self, raw_data, mf_shape='triangular', clustering_method='fcm', inference_method='mamdani'):
+        self.mf_shape = mf_shape.lower()
+        self.clustering_method = clustering_method.lower()
+        self.inference_method = inference_method.lower()
+        # Internal state variables
+        #self.n_clusters = None
+        #self.centroids = []
+        #self.spreads = []
+        #self.mf_params = []
+        # Define universe of discourse based on data footprint
+        #self.universe = np.linspace(max(0, np.min(self.raw_data) - 5), np.max(time_data) + 5, 2000)
+
         self._full_attr_data: np.ndarray = copy.deepcopy(self.data).T
         if len(self.time_cols) > 0:
             # print("Dataset Ok")
@@ -61,7 +74,7 @@ class TGrad(OrigGRAANK):
         if 0 < value <= 1:
             self._min_rep = value
 
-    def discover_tgp(self, target_col: int, search_algorithm: str="apriori", max_iteration: int=3) -> dict:
+    def discover_tgp(self, target_col: int, search_algorithm: str = "apriori", max_iteration: int = 3) -> dict:
         """
         Mine Fuzzy Temporal Gradual Patterns (FTGPs) from a temporal dataset.
 
@@ -148,7 +161,7 @@ class TGrad(OrigGRAANK):
         self.clear_gradual_patterns()
 
         # 1. Mine FTGPs (using parallel multiprocessing)
-        #with mp.Pool(num_cores) as pool:
+        # with mp.Pool(num_cores) as pool:
         #    steps = range(1, self._max_step)
         #    pattern_data = pool.map(self._safe_transform_and_mine, steps)
         pattern_data = []
@@ -242,7 +255,7 @@ class TGrad(OrigGRAANK):
             print(f"Error at step {step}: {e}")
             return None
 
-    def _mine_gps_at_step(self, time_delay_data: dict|np.ndarray, attr_data: np.ndarray|None = None,
+    def _mine_gps_at_step(self, time_delay_data: dict | np.ndarray, attr_data: np.ndarray | None = None,
                           clustering_method: bool = False) -> list[TGP]:
         """
         Uses apriori algorithm to find GP candidates based on the target-attribute. The candidates are validated if
@@ -276,7 +289,7 @@ class TGrad(OrigGRAANK):
         data_df = pd.DataFrame(attr_data.T, columns=self.titles)
         mine_obj = GRAANK(data_df, min_sup=self.thd_supp, eq=self._include_equal_values)
         mine_obj.discover(search_type=self._search_algorithm, target_col=self._target_col, time_data=time_data,
-                          compute_descriptors=False, max_iteration=self._algorithm_max_iter,)
+                          compute_descriptors=False, max_iteration=self._algorithm_max_iter, )
         return mine_obj.mining_engine.gradual_patterns
 
     def get_time_diffs(self, step: int) -> tuple[bool, dict, np.ndarray]:  # optimized
@@ -336,6 +349,206 @@ class TGrad(OrigGRAANK):
                 return False
         except ValueError:
             return False
+
+    # self.n_clusters = None
+    # self.centroids = []
+    # self.spreads = []
+    # self.mf_params = []
+    # Define universe of discourse based on data footprint
+    # self.universe = np.linspace(max(0, np.min(time_data) - 5), np.max(time_data) + 5, 2000)
+
+    # --- STEP 1: Membership Function Construction ---
+    def build_membership_functions(self, time_data: np.ndarray | None):
+        """
+        Dynamically extracts parameter frameworks to build Triangular,
+        Trapezoidal, or Gaussian Membership Functions.
+
+        :param time_data: Time-delay values as an array.
+        """
+
+        def estimate_n_clusters( threshold=0.90):
+            """
+            Embeds 1D time series data into a trajectory Hankel matrix and analyzes
+            singular values to estimate dominant latent clusters.
+            """
+            n_clusters = 0
+            if time_data is None:
+                return n_clusters
+
+            total_count = len(time_data)
+            if total_count < 3:
+                n_clusters = 2
+                return n_clusters
+
+            # Build a 2D trajectory Hankel matrix
+            window_len = total_count // 2  # Window length
+            hankel_mat = la.hankel(time_data[:window_len], time_data[window_len - 1:])
+
+            # Compute Singular Value Decomposition
+            u, s, vt = la.svd(hankel_mat, full_matrices=False)
+
+            # Calculate cumulative energy contribution
+            cumulative_energy = np.cumsum(s ** 2) / np.sum(s ** 2)
+
+            # Determine number of components meeting energy threshold
+            estimated = np.argmax(cumulative_energy >= threshold) + 1
+            n_clusters = max(2, int(estimated))  # Guarantee at least 2 clusters
+            return n_clusters
+
+        # --- STEP 1b: Clustering Execution ---
+        def compute_clusters():
+            """
+            Groups the unlabelled 1D data into the calculated number of clusters.
+            Supports both K-Means and Fuzzy C-Means (FCM) tracking logic.
+            """
+            if time_data is None:
+                return None, None
+
+            t_data = time_data.reshape(-1, 1)
+            centroids = None
+            spreads = None
+
+            if self.clustering_method == 'kmeans':
+                # Simplified explicit 1D K-Means implementation
+                centers = np.linspace(np.min(t_data), np.max(t_data), num_clusters)
+                for _ in range(100):
+                    distances = np.abs(t_data - centers)
+                    labels = np.argmin(distances, axis=1)
+                    new_centers = np.array([t_data[labels == i].mean() if len(t_data[labels == i]) > 0 else centers[i] for i in
+                                            range(num_clusters)])
+                    if np.allclose(centers, new_centers):
+                        break
+                    centers = new_centers
+                centroids = sorted(centers)
+                spreads = [np.std(t_data[labels == c]) if len(t_data[labels == c]) > 0 else np.std(t_data) for c in
+                                range(num_clusters)]
+
+            else:  # Fuzzy C-Means (FCM)
+                # Explicit Vectorized FCM Routine
+                centers = np.linspace(np.min(t_data), np.max(t_data), num_clusters)
+                m = 2.0  # Fuzziness exponent
+                for _ in range(100):
+                    # Calculate Euclidean distances
+                    dist = np.abs(t_data - centers.reshape(1, -1))
+                    dist = np.fmax(dist, 1e-10)  # Avoid zero divisions
+
+                    # Update membership matrix U
+                    inv_dist = 1.0 / dist
+                    power = 2.0 / (m - 1)
+                    denom = np.sum(inv_dist ** power, axis=1, keepdims=True)
+                    u_mat = (inv_dist ** power) / denom
+
+                    # Update centers
+                    new_centers = np.sum((u_mat ** m) * t_data, axis=0) / np.sum(u_mat ** m, axis=0)
+                    if np.allclose(centers, new_centers):
+                        break
+                    centers = new_centers
+
+                centroids = sorted(centers)
+                # Calculate weighted deviations per cluster for spreads
+                spreads = [
+                    np.sqrt(np.sum(u_mat[:, c] ** m * (t_data.flatten() - centroids[c]) ** 2) / np.sum(u_mat[:, c] ** m)) for c
+                    in range(num_clusters)]
+            return centroids, spreads
+
+        if time_data is None:
+            return
+
+        # --- STEP 1a: SVD Estimation for Number of MFs ---
+        num_clusters = estimate_n_clusters()
+
+        # --- STEP 1b: Clustering Execution ---
+        peaks, bounds = compute_clusters()
+
+        if len(self.centroids) == 0:
+            compute_clusters()
+
+        self.mf_params = []
+        for i in range(num_clusters):
+            c = self.centroids[i]
+            s = max(self.spreads[i], 0.1)  # Bound lower spread to avoid dividing by zero
+
+            if self.mf_shape == 'triangular':
+                left = self.centroids[i - 1] if i > 0 else c - 3 * s
+                right = self.centroids[i + 1] if i < self.n_clusters - 1 else c + 3 * s
+                self.mf_params.append({'shape': 'triangular', 'params': [left, c, right]})
+
+            elif self.mf_shape == 'trapezoidal':
+                left = self.centroids[i - 1] if i > 0 else c - 4 * s
+                right = self.centroids[i + 1] if i < self.n_clusters - 1 else c + 4 * s
+                self.mf_params.append({'shape': 'trapezoidal', 'params': [left, c - 0.5 * s, c + 0.5 * s, right]})
+
+            else:  # Default to Gaussian
+                self.mf_params.append({'shape': 'gaussian', 'params': [c, s]})
+
+
+    # --- STEP 2 & 3: Fuzzification, Inference and Defuzzification ---
+    def predict_time(self, crisp_inputs):
+        """
+        Runs crisp values forward through fuzzification matrix layouts, combines them
+        via AND (minimum structural intersections), generates rule outputs via
+        Mamdani or Larsen, and finishes with Centroid Defuzzification.
+        """
+
+        def evaluate_mf(x, mf_dict):
+            """ Evaluates degree of membership for value x against target parameter schema """
+            shape = mf_dict['shape']
+            p = mf_dict['params']
+
+            if shape == 'triangular':
+                return np.maximum(0, np.minimum((x - p[0]) / (p[1] - p[0] + 1e-10), (p[2] - x) / (p[2] - p[1] + 1e-10)))
+            elif shape == 'trapezoidal':
+                return np.maximum(0, np.minimum(np.minimum((x - p[0]) / (p[1] - p[0] + 1e-10), 1),
+                                                (p[3] - x) / (p[3] - p[2] + 1e-10)))
+            else:  # Gaussian
+                return np.exp(-0.5 * ((x - p[0]) / p[1]) ** 2)
+
+        inputs = np.array(crisp_inputs, dtype=float)
+
+        # a) Fuzzify Inputs
+        # Each input gets mapped across all available generated MFs
+        fuzzified_matrix = []
+        for x in inputs:
+            memberships = [evaluate_mf(x, mf) for mf in self.mf_params]
+            fuzzified_matrix.append(memberships)
+        fuzzified_matrix = np.array(fuzzified_matrix)
+
+        # b) Apply Rules (Antecedent Logic)
+        # This implementation uses a diagonal rule framework (Input 1 is MF_i AND Input 2 is MF_i -> Output is MF_i)
+        # Apply strict mathematical AND operations (Minimum composition) across parallel assignments
+        firing_strengths = np.min(fuzzified_matrix, axis=0)
+
+        # c) Aggregate Output Profiles
+        # Evaluate whole universe range against existing output MFs multiplied by firing strengths
+        aggregated_mf = np.zeros_like(self.universe)
+
+        for i in range(self.n_clusters):
+            w = firing_strengths[i]
+            if w <= 0:
+                continue
+
+            # Compute raw baseline output curve over universe spectrum
+            base_curve = np.array([evaluate_mf(u, self.mf_params[i]) for u in self.universe])
+
+            if self.inference_method == 'mamdani':
+                # Clipping operation (min)
+                rule_output = np.minimum(w, base_curve)
+            else:  # Larsen Inference
+                # Scaling operation (product multiplying)
+                rule_output = w * base_curve
+
+            # Aggregate via Maximum rule composition layout
+            aggregated_mf = np.maximum(aggregated_mf, rule_output)
+
+        # d) Defuzzify (Centroid Method)
+        sum_mf = np.sum(aggregated_mf)
+        if sum_mf == 0:
+            # Fallback configuration to center point of dataset if no rules trigger
+            return np.mean(self.centroids)
+
+        defuzzified_time = np.sum(self.universe * aggregated_mf) / sum_mf
+        return defuzzified_time
+
 
     @staticmethod
     def build_mf_w_clusters(time_data: np.ndarray | None):
