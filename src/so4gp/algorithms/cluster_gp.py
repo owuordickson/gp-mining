@@ -192,7 +192,7 @@ class ClusterGP(BaseGrad):
             return support
 
         time_lag = None
-        target_col = self._target_col
+        target_col = self.target_col
         all_gis = self._gradual_items
         cum_wins = self._cum_wins
 
@@ -255,7 +255,7 @@ class ClusterGP(BaseGrad):
         """
 
         start_time = time.time()
-        self._target_col = target_col
+        self.target_col = target_col
         self.clear_gradual_patterns()
         # 1. Generate net-win matrices
         s_matrix = self._net_win_mat  # Net-win matrix (S)

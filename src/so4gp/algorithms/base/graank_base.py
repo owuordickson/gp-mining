@@ -149,6 +149,18 @@ class BaseGrad(DataGP):
         self._search_space: "BaseGrad.SearchSpace|None" = None
 
     @property
+    def target_col(self):
+        return self._target_col
+
+    @target_col.setter
+    def target_col(self, tgt_col: int):
+        if (tgt_col < 0) or (tgt_col >= self.col_count):
+            msg = "Target column does not exist\nselect a column value between: " \
+                      "0 and " + str(self.col_count - 1)
+            raise ValueError(msg)
+        self._target_col = tgt_col
+
+    @property
     def search_space(self) -> "BaseGrad.SearchSpace|None":
         return self._search_space
 
@@ -260,7 +272,7 @@ class BaseGrad(DataGP):
             return temp_gp
 
         s_space = self.search_space
-        target_col = self._target_col
+        target_col = self.target_col
         valid_bins_dict = self.valid_bins
         if valid_bins_dict is None or candidate is None or s_space is None:
             return False
@@ -393,7 +405,7 @@ class BaseGrad(DataGP):
             otherwise False.
         """
 
-        target_col = self._target_col
+        target_col = self.target_col
         if target_col is None:
             return True
 

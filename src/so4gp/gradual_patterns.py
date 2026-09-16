@@ -1478,6 +1478,7 @@ class TimeDelay:
             ## t_data = [row time-lags]
             t_lag_arr = t_data[lst_rows]
             all_time_arr = t_data
+            print(f"w/o GPs: {t_lag_arr}\n")
 
         # 3. Approximate TimeDelay value
         time_val: float = TimeDelay.predict_time(crisp_inputs=t_lag_arr, time_data=all_time_arr, fuzzy_mfs=mf_data, inference_method=inference)

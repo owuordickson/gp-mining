@@ -45,7 +45,7 @@ class RandomGRAANK(BaseGrad):
         """
 
         start = time.time()
-        self._target_col = target_col
+        self.target_col = target_col
         s_space = self.blank_search_space()
         if s_space is None:
             return {"Error": "Search space is empty!"}

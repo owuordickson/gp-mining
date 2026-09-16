@@ -54,7 +54,7 @@ class ParticleGRAANK(BaseGrad):
         """
 
         start = time.time()
-        self._target_col = target_col
+        self.target_col = target_col
         try:
             self.init_search_space(self._n_particles)
             s_space = self.search_space

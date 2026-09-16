@@ -17,7 +17,8 @@ from ...gradual_patterns import TGP, NO_TIME_LABEL
 
 class TGrad(OrigGRAANK):
 
-    def __init__(self, *args, min_rep: float=0.5, mf_shape: str='triangular', clustering_algorithm: str='fcm', inference_method: str='mamdani', **kwargs):
+    def __init__(self, *args, min_rep: float = 0.5, mf_shape: str = 'triangular', clustering_algorithm: str = 'fcm',
+                 inference_method: str = 'mamdani', **kwargs):
         """
         TGrad is an algorithm used to extract temporal gradual patterns from numeric datasets. An algorithm for mining
         temporal gradual patterns using fuzzy membership functions. It uses a technique
@@ -30,7 +31,6 @@ class TGrad(OrigGRAANK):
         :param inference_method: [optional] inference method for estimating the MFs. Options: 'mamdani', larsen'.
 
         """
-
         super(TGrad, self).__init__(*args, **kwargs)
         self._search_algorithm: str = "apriori"
         self._algorithm_max_iter: int = 3
@@ -146,7 +146,7 @@ class TGrad(OrigGRAANK):
         """
 
         start = time.time()
-        self._target_col = target_col
+        self.target_col = target_col
         self._search_algorithm = search_algorithm
         self._algorithm_max_iter = max_iteration
         self.clear_gradual_patterns()
@@ -193,47 +193,42 @@ class TGrad(OrigGRAANK):
         # NB: Restructure dataset based on target/reference col
         if self._time_ok:
             # 1. Calculate the time difference using a step
-            ok, time_diffs, time_diffs_arr = self.get_time_diffs(step)
-            if not ok:
-                msg = "Error: Time in row " + str(time_diffs.keys()) \
-                      + " or row " + str(time_diffs.values()) + " is not valid."
+            time_diffs, time_diffs_arr = self.get_time_diffs(step)
+            tgt_col = self.target_col
+            if tgt_col in self.time_cols:
+                msg = "Target column is a 'date-time' attribute"
+                raise Exception(msg)
+            elif (tgt_col < 0) or (tgt_col >= self.col_count):
+                msg = "Target column does not exist\nselect column between: " \
+                      "0 and " + str(self.col_count - 1)
                 raise Exception(msg)
             else:
-                tgt_col = self._target_col
-                if tgt_col in self.time_cols:
-                    msg = "Target column is a 'date-time' attribute"
-                    raise Exception(msg)
-                elif (tgt_col < 0) or (tgt_col >= self.col_count):
-                    msg = "Target column does not exist\nselect column between: " \
-                          "0 and " + str(self.col_count - 1)
-                    raise Exception(msg)
-                else:
-                    # 2. Transform datasets
-                    delayed_attr_data = None
-                    n = self.row_count
-                    for col_index in range(self.col_count):
-                        # Transform the datasets using (row) n+step
-                        if (col_index == tgt_col) or (col_index in self.time_cols):
-                            # date-time column OR target column
-                            temp_col = self._full_attr_data[col_index][0: (n - step)]
-                        else:
-                            # other attributes
-                            temp_col = self._full_attr_data[col_index][step: n]
-
-                        delayed_attr_data = temp_col if (delayed_attr_data is None) \
-                            else np.vstack((delayed_attr_data, temp_col))
-                    # print(f"Time Diffs: {time_diffs}\n")
-                    # print(f"{self.full_attr_data}: {type(self.full_attr_data)}\n")
-                    # print(f"{delayed_attr_data}: {type(delayed_attr_data)}\n")
-
-                    if return_patterns:
-                        # 2. Execute t-graank for each transformation
-                        t_gps = self._mine_gps_at_step(time_delay_data=time_diffs_arr, attr_data=delayed_attr_data)
-                        if len(t_gps) > 0:
-                            return t_gps
-                        return False
+                # 2. Transform datasets
+                delayed_attr_data = None
+                n = self.row_count
+                for col_index in range(self.col_count):
+                    # Transform the datasets using (row) n+step
+                    if (col_index == tgt_col) or (col_index in self.time_cols):
+                        # date-time column OR target column
+                        temp_col = self._full_attr_data[col_index][0: (n - step)]
                     else:
-                        return delayed_attr_data, time_diffs
+                        # other attributes
+                        temp_col = self._full_attr_data[col_index][step: n]
+
+                    delayed_attr_data = temp_col if (delayed_attr_data is None) \
+                        else np.vstack((delayed_attr_data, temp_col))
+                # print(f"Time Diffs: {time_diffs}\n")
+                # print(f"{self.full_attr_data}: {type(self.full_attr_data)}\n")
+                # print(f"{delayed_attr_data}: {type(delayed_attr_data)}\n")
+
+                if return_patterns:
+                    # 2. Execute t-graank for each transformation
+                    t_gps = self._mine_gps_at_step(time_delay_data=time_diffs_arr, attr_data=delayed_attr_data)
+                    if len(t_gps) > 0:
+                        return t_gps
+                    return False
+                else:
+                    return delayed_attr_data, time_diffs
         else:
             msg = "Fatal Error: Time format in column could not be processed"
             raise Exception(msg)
@@ -288,11 +283,11 @@ class TGrad(OrigGRAANK):
             return []
         
         mine_obj = GRAANK(data_df, min_sup=self.thd_supp, eq=self._include_equal_values)
-        mine_obj.discover(search_type=self._search_algorithm, target_col=self._target_col, time_data=time_data,
+        mine_obj.discover(search_type=self._search_algorithm, target_col=self.target_col, time_data=time_data,
                           compute_descriptors=False, max_iteration=self._algorithm_max_iter, )
         return mine_obj.mining_engine.gradual_patterns
 
-    def get_time_diffs(self, step: int) -> tuple[bool, dict, np.ndarray]:  # optimized
+    def get_time_diffs(self, step: int) -> tuple[dict, np.ndarray]:  # optimized
         """
         A method that computes the difference between 2 timestamps separated by a specific transformation step.
 
@@ -319,7 +314,8 @@ class TGrad(OrigGRAANK):
                     temp_stamp_2 = TGrad.get_timestamp(temp_2)
                     if (not temp_stamp_1) or (not temp_stamp_2):
                         # Unable to read time
-                        return False, {i + 1: i + step + 1}, np.array(time_diffs_arr)
+                        msg = f"Error: Time in row {i + 1} or row {i + step + 1} is not valid!"
+                        raise ValueError(msg)
                     else:
                         stamp_1 += temp_stamp_1
                         stamp_2 += temp_stamp_2
@@ -331,9 +327,9 @@ class TGrad(OrigGRAANK):
                 time_diff_abs = float(abs(time_diff))
                 time_diffs[int(i)] = time_diff_abs
                 time_diffs_arr.append(time_diff_abs)
-        return True, time_diffs, np.array(time_diffs_arr)
+        return time_diffs, np.array(time_diffs_arr)
 
-    def build_membership_functions(self, time_data: np.ndarray | None,) -> list[dict]:
+    def build_membership_functions(self, time_data: np.ndarray | None, ) -> list[dict]:
         """Build membership-function parameters from time-delay data.
 
         The number of membership functions is estimated from the dominant
@@ -377,9 +373,9 @@ class TGrad(OrigGRAANK):
 
             threshold = float(np.clip(threshold, 0.0, 1.0))
             window_len = total_count // 2
-            hankel_mat = np.lib.stride_tricks.sliding_window_view(values, window_len,).T
+            hankel_mat = np.lib.stride_tricks.sliding_window_view(values, window_len).T
 
-            singular_values = np.linalg.svd(hankel_mat, compute_uv=False,)
+            singular_values = np.linalg.svd(hankel_mat, compute_uv=False)
             energy = singular_values ** 2
             total_energy = energy.sum()
 
@@ -388,25 +384,26 @@ class TGrad(OrigGRAANK):
 
             cumulative_energy = np.cumsum(energy) / total_energy
             estimated = (
-                    np.searchsorted(cumulative_energy, threshold, side="left",)
+                    np.searchsorted(cumulative_energy, threshold, side="left", )
                     + 1)
 
             return max(2, int(estimated))
 
-        def compute_kmeans(data: np.ndarray, n_clusters: int, max_iter: int = 100, tolerance: float = 1e-6,) -> tuple[np.ndarray, np.ndarray]:
+        def compute_kmeans(data: np.ndarray, n_clusters: int, max_iter: int = 100, tolerance: float = 1e-6) -> tuple[
+            np.ndarray, np.ndarray]:
             """Perform vectorized one-dimensional K-Means clustering."""
             minimum, maximum = data.min(), data.max()
-            centers = np.linspace(minimum, maximum, n_clusters, dtype=np.float64,)
+            centers = np.linspace(minimum, maximum, n_clusters, dtype=np.float64, )
             for _ in range(max_iter):
                 distances = np.abs(data[:, None] - centers[None, :])
-                labels = np.argmin(distances, axis=1,)
-                counts = np.bincount(labels, minlength=n_clusters,).astype(np.float64)
-                sums = np.bincount(labels, weights=data, minlength=n_clusters,)
+                labels = np.argmin(distances, axis=1, )
+                counts = np.bincount(labels, minlength=n_clusters, ).astype(np.float64)
+                sums = np.bincount(labels, weights=data, minlength=n_clusters, )
 
                 new_centers = centers.copy()
                 non_empty = counts > 0
                 new_centers[non_empty] = (sums[non_empty] / counts[non_empty])
-                if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance,):
+                if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance, ):
                     centers = new_centers
                     break
                 centers = new_centers
@@ -415,25 +412,26 @@ class TGrad(OrigGRAANK):
             centers = centers[order]
 
             # Reassign after sorting to obtain correctly matched spreads.
-            labels = np.argmin(np.abs(data[:, None] - centers[None, :]), axis=1,)
-            counts = np.bincount(labels, minlength=n_clusters,).astype(np.float64)
-            sums = np.bincount(labels, weights=data,  minlength=n_clusters,)
-            squared_sums = np.bincount(labels, weights=data ** 2, minlength=n_clusters,)
-            spreads = np.zeros(n_clusters, dtype=np.float64,)
+            labels = np.argmin(np.abs(data[:, None] - centers[None, :]), axis=1, )
+            counts = np.bincount(labels, minlength=n_clusters).astype(np.float64)
+            sums = np.bincount(labels, weights=data, minlength=n_clusters)
+            squared_sums = np.bincount(labels, weights=data ** 2, minlength=n_clusters)
+            spreads = np.zeros(n_clusters, dtype=np.float64)
 
             non_empty = counts > 0
-            means = np.zeros(n_clusters, dtype=np.float64,)
+            means = np.zeros(n_clusters, dtype=np.float64, )
             means[non_empty] = (sums[non_empty] / counts[non_empty])
 
-            variances = np.zeros(n_clusters, dtype=np.float64,)
+            variances = np.zeros(n_clusters, dtype=np.float64)
             variances[non_empty] = (squared_sums[non_empty] / counts[non_empty] - means[non_empty] ** 2)
-            spreads[non_empty] = np.sqrt( np.maximum(variances[non_empty], 0.0, ))
+            spreads[non_empty] = np.sqrt(np.maximum(variances[non_empty], 0.0))
 
-            fallback_spread = max(float(np.std(data)), 0.1,)
+            fallback_spread = max(float(np.std(data)), 0.1, )
             spreads[~non_empty] = fallback_spread
             return centers, spreads
 
-        def compute_fcm(data: np.ndarray, n_clusters: int, fuzziness: float = 2.0, max_iter: int = 100, tolerance: float = 1e-6,) -> tuple[np.ndarray, np.ndarray]:
+        def compute_fcm(data: np.ndarray, n_clusters: int, fuzziness: float = 2.0, max_iter: int = 100,
+                        tolerance: float = 1e-6, ) -> tuple[np.ndarray, np.ndarray]:
             """Perform vectorized one-dimensional Fuzzy C-Means clustering."""
             minimum, maximum = data.min(), data.max()
             centers = np.linspace(minimum, maximum, n_clusters, dtype=np.float64, )
@@ -443,19 +441,19 @@ class TGrad(OrigGRAANK):
             for _ in range(max_iter):
                 distances = np.abs(data[:, None] - centers[None, :])
                 zero_distance = distances <= eps
-                safe_distances = np.maximum(distances, eps,)
+                safe_distances = np.maximum(distances, eps)
                 weights = safe_distances ** (-exponent)
 
                 zero_rows = zero_distance.any(axis=1)
                 if np.any(zero_rows):
                     weights[zero_rows] = zero_distance[zero_rows]
 
-                membership = (weights / weights.sum(axis=1, keepdims=True,))
+                membership = (weights / weights.sum(axis=1, keepdims=True))
                 membership_m = membership ** fuzziness
                 denominator = membership_m.sum(axis=0)
 
                 new_centers = ((membership_m * data[:, None]).sum(axis=0) / np.maximum(denominator, eps))
-                if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance,):
+                if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance):
                     centers = new_centers
                     break
                 centers = new_centers
@@ -473,7 +471,7 @@ class TGrad(OrigGRAANK):
                 )
             )
 
-            fallback_spread = max(float(np.std(data)), 0.1,)
+            fallback_spread = max(float(np.std(data)), 0.1)
             spreads = np.where(
                 np.isfinite(spreads) & (spreads > 0.0),
                 spreads,
@@ -488,7 +486,7 @@ class TGrad(OrigGRAANK):
         num_clusters = estimate_n_clusters()
 
         # Avoid requesting more clusters than distinct values.
-        num_clusters = min(num_clusters, max(2, np.unique(values).size),)
+        num_clusters = min(num_clusters, max(2, np.unique(values).size), )
 
         # --------------------------------------------------------------
         # Cluster time-delay data.
@@ -498,20 +496,19 @@ class TGrad(OrigGRAANK):
             peaks = np.full(num_clusters, min_val, dtype=np.float64, )
             bounds = np.full(num_clusters, 0.1, dtype=np.float64, )
         elif self.clustering_algorithm.lower() == "kmeans":
-            peaks, bounds = compute_kmeans(values, num_clusters,)
+            peaks, bounds = compute_kmeans(values, num_clusters, )
         else:
-            peaks, bounds = compute_fcm(values, num_clusters,)
+            peaks, bounds = compute_fcm(values, num_clusters, )
 
         # --------------------------------------------------------------
         # Build membership functions.
         # --------------------------------------------------------------
         shape = self.mf_shape.lower()
 
-        if shape not in {"triangular", "trapezoidal", "gaussian",}:
+        if shape not in {"triangular", "trapezoidal", "gaussian", }:
             raise ValueError(
                 f"Unsupported membership-function shape: {self.mf_shape!r}. Expected 'triangular', "
                 "'trapezoidal', or 'gaussian'.")
-
 
         mf_params: list[dict] = []
 
@@ -525,11 +522,11 @@ class TGrad(OrigGRAANK):
 
                 mf_params.append({
                     "shape": "triangular",
-                    "params": [left, center, right,],
+                    "params": [left, center, right],
                 })
 
             elif shape == "trapezoidal":
-                left = (float(peaks[i - 1]) if i > 0 else center - 4.0 * spread )
+                left = (float(peaks[i - 1]) if i > 0 else center - 4.0 * spread)
                 right = (float(peaks[i + 1]) if i < num_clusters - 1 else center + 4.0 * spread)
 
                 mf_params.append({
@@ -540,7 +537,7 @@ class TGrad(OrigGRAANK):
             else:
                 mf_params.append({
                     "shape": "gaussian",
-                    "params": [center, spread,],
+                    "params": [center, spread],
                 })
 
         return mf_params
