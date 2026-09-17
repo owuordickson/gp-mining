@@ -1425,7 +1425,7 @@ class TimeDelay:
         return float(prediction)
 
     @classmethod
-    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|None, gp_set: set | None=None) -> "TimeDelay":
+    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|None, gp_set: set) -> "TimeDelay":
         """
         A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
         methods: (1) uses classical slide and re-calculate dynamic programming to find the best time-delay value and,
@@ -1441,7 +1441,7 @@ class TimeDelay:
         if time_data is None:
             return cls(-1, 0)
 
-        t_data: np.ndarray|None = time_data["time_data"] # {col1: [tlag1, ...], col2: [...],}
+        t_data: dict|None = time_data["time_data"] # {col1: [tlag1, ...], col2: [...],}
         use_gp: bool = time_data["use_gp"]
         mf_data: list[dict] = time_data["fuzzy_mfs"]
         inference: str = time_data["inference"]
@@ -1466,24 +1466,6 @@ class TimeDelay:
         else:
             # all selected rows for all the columns
             sel_time_arr = all_time_arr[:, lst_rows]
-        
-        """if use_gp:
-            ## t_data = {col1: [row time-lags], col2: [row time-lags]}
-            t_lag_lst = []
-            sel_cols: set = set(t_data.keys())
-            for gi_str in gp_set:
-                col = GI.from_string(gi_str).attribute_col
-                if col in sel_cols:
-                    t_lag_lst.append(t_data[col])
-            t_lag_mat = np.array(t_lag_lst)
-            sel_time_arr = t_lag_mat[:, lst_rows][0]
-            all_time_arr = t_lag_mat[:, :][0]
-            print(f"w GPs: {sel_time_arr}\n{type(all_time_arr)}: {all_time_arr}\n")
-        else:
-            sel_time_arr = np.array(t_data.values())[:, lst_rows]
-            all_time_arr = t_data
-            print(f"w/o GPs: {sel_time_arr}\n")
-        """
 
         # 3. Approximate TimeDelay value
         all_time_arr = all_time_arr.ravel()  # Converts into 1D array

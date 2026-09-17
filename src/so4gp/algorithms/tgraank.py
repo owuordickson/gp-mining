@@ -286,8 +286,9 @@ class TGRAANK:
                 # num_cores = kwargs.get("num_cores", 1)
                 #if num_cores <= 1:
                 #    num_cores = get_num_cores()
+                ignore_time = kwargs.get("ignore_time", False)
                 res_dict = self._mine_obj.discover_tgp(target_col=target_col, search_algorithm=search_algorithm,
-                                                       max_iteration=max_iteration)
+                                                       max_iteration=max_iteration, ignore_time=ignore_time)
             elif transformations == 'ami':
                 from .base.tgrad_ami import TGradAMI
                 self._mine_obj = TGradAMI(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
@@ -381,7 +382,7 @@ class TGRAANK:
 
         for target in feature_cols:
             result = json.loads(
-                self.discover(target_col=target, transformations="all", search_algorithm='apriori', max_iteration=1, compute_causality=True)
+                self.discover(target_col=target, transformations="all", search_algorithm='apriori', max_iteration=1, compute_causality=True, ignore_time=True)
             )
             #print(f"Target: {target}\n{result['Causality']}")
 

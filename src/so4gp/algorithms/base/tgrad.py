@@ -65,7 +65,7 @@ class TGrad(OrigGRAANK):
         if 0 < value <= 1:
             self._min_rep = value
 
-    def discover_tgp(self, target_col: int, search_algorithm: str = "apriori", max_iteration: int = 3) -> dict:
+    def discover_tgp(self, target_col: int, search_algorithm: str="apriori", max_iteration: int=3, ignore_time: bool=False) -> dict:
         """
         Mine Fuzzy Temporal Gradual Patterns (FTGPs) from a temporal dataset.
 
@@ -122,6 +122,9 @@ class TGrad(OrigGRAANK):
             max_iteration:
                 The maximum number of iterations to run the search algorithm.
 
+            ignore_time:
+                Mine TGPs but skip the calculation and estimation of time delay.
+
         Returns:
             A list containing the mined Fuzzy Temporal Gradual Patterns.
 
@@ -152,13 +155,13 @@ class TGrad(OrigGRAANK):
 
         # 1. Mine FTGPs (using parallel multiprocessing)
         # with mp.Pool(num_cores) as pool:
-        #    steps = range(1, self._max_step)
+        #    steps = range(1, self.max_step)
         #    pattern_data = pool.map(self._safe_transform_and_mine, steps)
         pattern_data = []
         feature_cols = self.attr_cols
-        for step in (1, self._max_step):
+        for step in range(1, self.max_step):
             transformation_steps: dict = {int(feature_cols[i]): step for i in range(len(feature_cols))}
-            pattern_data.append(self._safe_transform_and_mine(transformation_steps, step))
+            pattern_data.append(self._safe_transform_and_mine(transformation_steps, step, skip_time=ignore_time))
 
         # 2. Organize FTGPs into a single list
         for item in pattern_data:
@@ -248,52 +251,15 @@ class TGrad(OrigGRAANK):
             msg = "Fatal Error: Time format in column could not be processed"
             raise Exception(msg)
 
-    """
-    def transform_and_mine(self, step: int, return_patterns: bool = True):
-
-        # NB: Restructure dataset based on target/reference col
-        if self._time_ok:
-            # 1. Calculate the time difference using a step
-            time_diffs, time_diffs_arr = self.get_time_diffs(step)
-            tgt_col = self.target_col
-            time_data: dict = {}  # {col1: [time-lags], col2: [time-lags]}
-            
-            # 2. Transform datasets
-            transformed_data = None
-            n = self.row_count
-            for col_index in range(self.col_count):
-                # Transform the datasets using (row) n+step
-                if (col_index == tgt_col) or (col_index in self.time_cols):
-                    # date-time column OR target column
-                    temp_col = self._full_attr_data[col_index][0: (n - step)]
-                else:
-                    # other attributes
-                    temp_col = self._full_attr_data[col_index][step: n]
-                    time_data[col_index] = time_diffs_arr
-
-                transformed_data = temp_col if (transformed_data is None) \
-                        else np.vstack((transformed_data, temp_col))
-
-            if return_patterns:
-                # 2. Execute t-graank for each transformation
-                t_gps = self._mine_gps_at_step(time_delay_data=time_diffs_arr, attr_data=transformed_data)
-                if len(t_gps) > 0:
-                    return t_gps
-                return False
-            else:
-                return transformed_data, time_diffs
-        else:
-            msg = "Fatal Error: Time format in column could not be processed"
-            raise Exception(msg)
-    """
-
-    def _safe_transform_and_mine(self, transformation_steps: dict, max_step: int):
+    def _safe_transform_and_mine(self, transformation_steps: dict, max_step: int, skip_time: bool=False):
         """Wrapper to catch exceptions during parallel mining."""
         try:
             # 1. Calculate the time difference using a step
             transformed_data, time_data = self.transform_data(transformation_steps, max_step)
             # 2. Execute GRAANK for each transformation
-            t_gps = self._mine_gps_at_step(time_delay_data=time_data, attr_data=transformed_data)
+            if skip_time:
+                time_data = None
+            t_gps = self._mine_gps_at_step(time_delay_data=time_data, transformed_data=transformed_data)
             if len(t_gps) > 0:
                 return t_gps
             return False
@@ -301,41 +267,31 @@ class TGrad(OrigGRAANK):
             print(f"Error at step {max_step}: {e}")
             return None
 
-    def _mine_gps_at_step(self, time_delay_data: dict, attr_data: np.ndarray | None = None) -> list[TGP]:
+    def _mine_gps_at_step(self, time_delay_data: dict|None, transformed_data: np.ndarray | None = None) -> list[TGP]:
         """
         Uses apriori algorithm to find GP candidates based on the target-attribute. The candidates are validated if
         their computed support is greater than or equal to the minimum support threshold specified by the user.
 
         :param time_delay_data: Time-delay values
-        :param attr_data: the transformed data.
+        :param transformed_data: the transformed data.
 
         :return: Temporal-GPs as a list.
         """
 
-        if attr_data is None:
+        if transformed_data is None:
             return []
 
-        """
-        if clustering_algorithm:
-            if isinstance(time_delay_data, dict):
-                t_lag_arr = np.array(list(time_delay_data.values()))
-            else:
-                t_lag_arr = np.array(time_delay_data)
-
-            # Build the main triangular MF using the clustering algorithm
-            a, b, c = TGrad.build_mf_w_clusters(t_lag_arr)
-            tri_mf_data = np.array([a, b, c])
+        if time_delay_data is None:
+            time_data: dict = {"time_data": None, "use_gp": False, "fuzzy_mfs": [], "inference": self.inference_method}
         else:
-            tri_mf_data = None
-        """
-        t_lag_arr: np.ndarray = np.array(list(time_delay_data.values()))
-        fuzzy_mfs = self.build_membership_functions(t_lag_arr)
+            t_lag_arr: np.ndarray = np.array(list(time_delay_data.values()))
+            fuzzy_mfs = self.build_membership_functions(t_lag_arr)
+            time_data: dict = {"time_data": time_delay_data, "use_gp": True, "fuzzy_mfs": fuzzy_mfs, "inference": self.inference_method}
 
         if type(self) is TGrad:
-            time_data: dict = {"time_data": time_delay_data, "use_gp": False, "fuzzy_mfs": fuzzy_mfs, "inference": self.inference_method}
-        else:
-            time_data: dict = {"time_data": time_delay_data, "use_gp": True, "fuzzy_mfs": fuzzy_mfs, "inference": self.inference_method}
-        data_df = pd.DataFrame(attr_data.T, columns=self.titles)
+            time_data["use_gp"] = False
+
+        data_df = pd.DataFrame(transformed_data.T, columns=self.titles)
         if data_df.empty:
             return []
         

@@ -5,6 +5,7 @@
 import time
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
+from ...gradual_patterns import TGP
 from .tgrad import TGrad
 
 
@@ -131,7 +132,7 @@ class TGradAMI(TGrad):
         return return_results(steps_dict, round(np.min(mse_arr), 5), max_step)
 
     def discover_tgp_ami(self, target_col: int, search_algorithm: str = "apriori",
-                         max_iteration: int=3, transformation_steps: dict|None = None,
+                         max_iteration: int=3, transformation_steps: dict|None = None, ignore_time: bool=False,
                          error_margin: float = 0.0001, eval_mode: bool = False) -> dict:
         """
         A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
@@ -144,6 +145,7 @@ class TGradAMI(TGrad):
         are ``apriori``, ``ga``, ``aco``, ``pso``, ``hc``, ``random``, and ``clustergp``. Defaults to ``"apriori"``.
         :param max_iteration: Maximum number of iterations to run the search algorithm.
         :param transformation_steps: Data transformation steps (used to override the computed transformation steps).
+        :param ignore_time: Mine TGPs but skip the calculation and estimation of time delay.
         :param error_margin: [optional] minimum Mutual Information error margin.
         :param eval_mode: Run algorithm in evaluation mode.
 
@@ -166,12 +168,13 @@ class TGradAMI(TGrad):
                     max_step = v
 
         # 3. Discover temporal-GPs from time-delayed data
-        lst_tgp = self._safe_transform_and_mine(transformation_steps, max_step)
+        lst_tgp = self._safe_transform_and_mine(transformation_steps, max_step, skip_time=ignore_time)
 
         # 4. Organize FTGPs into a single list
         if lst_tgp:
             for tgp in lst_tgp:
-                self.add_gradual_pattern(tgp)
+                if isinstance(tgp, TGP):
+                    self.add_gradual_pattern(tgp)
 
         # 5. Check if the algorithm is in evaluation mode
         if eval_mode:
