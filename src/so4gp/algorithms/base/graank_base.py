@@ -154,7 +154,10 @@ class BaseGrad(DataGP):
 
     @target_col.setter
     def target_col(self, tgt_col: int):
-        if (tgt_col < 0) or (tgt_col >= self.col_count):
+        if tgt_col in self.time_cols:
+            msg = "Target column should not be a 'date-time' attribute"
+            raise ValueError(msg)
+        elif (tgt_col < 0) or (tgt_col >= self.col_count):
             msg = "Target column does not exist\nselect a column value between: " \
                       "0 and " + str(self.col_count - 1)
             raise ValueError(msg)

@@ -40,7 +40,7 @@ class TGradAMI(TGrad):
     def transformation_data(self):
         return self._transformation_data
 
-    def get_mi_transformation_steps(self, error_margin: float, feature_cols: np.ndarray) -> tuple[dict[int, int], int]:
+    def get_mi_transformation_steps(self, error_margin: float) -> tuple[dict[int, int], int]:
         """
         Estimate the optimal transformation step for each feature using
         Average Mutual Information (AMI).
@@ -70,12 +70,6 @@ class TGradAMI(TGrad):
                 information of the original dataset and that of a transformed
                 dataset.
 
-            feature_cols:
-                Feature matrix excluding the target attribute. The feature matrix
-                contains the indices of these attributes. Each column is
-                independently evaluated to determine its optimal temporal
-                transformation.
-
         Returns:
             A dictionary mapping each feature column index to its selected
             transformation step (estimated time delay) and the maximum transformation step.
@@ -86,8 +80,13 @@ class TGradAMI(TGrad):
             transformation.
         """
 
-        # 1. Compute MI for original dataset w.r.t. target-col
+        def return_results(steps_data, mi_err, maximum_step):
+            self._mi_error = mi_err
+            self.min_rep = round(((self.row_count - maximum_step) / self.row_count), 5)
+            return steps_data, maximum_step
 
+        # 1. Compute MI for original dataset w.r.t. target-col
+        feature_cols = self.attr_cols
         y = np.array(self.full_attr_data[self.target_col], dtype=float).T
         x_data = np.array(self.full_attr_data[feature_cols], dtype=float).T
         init_mi_info = np.array(mutual_info_regression(x_data, y), dtype=float)
@@ -96,26 +95,24 @@ class TGradAMI(TGrad):
         mi_list = []
         for step in range(1, self.max_step):
             # Compute MI
-            attr_data, _ = self.transform_and_mine(step, return_patterns=False)
+            steps_dict = {int(feature_cols[i]): step for i in range(len(feature_cols))}
+            attr_data, _ = self.transform_data(steps_dict, step)
+            if attr_data is None:
+                return return_results(steps_dict, -1, step)
+
             y = np.array(attr_data[self.target_col], dtype=float).T
             x_data = np.array(attr_data[feature_cols], dtype=float).T
             try:
                 mi_vals = np.array(mutual_info_regression(x_data, y), dtype=float)
             except ValueError:
-                steps_dict = {int(feature_cols[i]): step for i in range(len(feature_cols))}
-                self._mi_error = -1
-                self.min_rep = round(((self.row_count - step) / self.row_count), 5)
-                return steps_dict, step
+                return return_results(steps_dict, -1, step)
 
             # Compute MI error
             squared_diff = np.square(np.subtract(mi_vals, init_mi_info))
             mse_arr = np.sqrt(squared_diff)
             is_mi_preserved = np.all(mse_arr <= error_margin)
             if is_mi_preserved:
-                steps_dict = {int(feature_cols[i]): step for i in range(len(feature_cols))}
-                self._mi_error = round(np.min(mse_arr), 5)
-                self.min_rep = round(((self.row_count - step) / self.row_count), 5)
-                return steps_dict, step
+                return return_results(steps_dict, round(np.min(mse_arr), 5), step)
             mi_list.append(mi_vals)
         mi_info_arr = np.array(mi_list, dtype=float)
 
@@ -131,49 +128,7 @@ class TGradAMI(TGrad):
 
         # 5. Integrate feature indices with the computed steps
         steps_dict = {int(feature_cols[i]): int(optimal_steps_arr[i] + 1) for i in range(len(feature_cols))}
-
-        self._mi_error = round(np.min(mse_arr), 5)
-        self.min_rep = round(((self.row_count - max_step) / self.row_count), 5)
-        return steps_dict, max_step
-
-    def transform_data(self, transformation_steps: dict, max_step: int) -> tuple[np.ndarray | None, dict]:
-        """
-        A method that combined attribute data with different data transformations and computes the corresponding
-        time-delay values for each attribute.
-
-        :param transformation_steps: Raw transformed dataset.
-        :param max_step: Largest data transformation step.
-        :return: Combined transformed dataset with corresponding time-delay values.
-        """
-
-        transformed_data: np.ndarray|None = None
-        time_data: dict = {}  # {col1: [time-lags], col2: [time-lags]}
-        n = self.row_count
-        k = (n - max_step)  # Number of rows created by the largest step-delay
-        for col_index in range(self.col_count):
-            if (col_index == self.target_col) or (col_index in self.time_cols):
-                # date-time column OR target column
-                temp_col = self.full_attr_data[col_index][0: k]
-            else:
-                # other attributes
-                step = transformation_steps[col_index]
-                temp_col = self.full_attr_data[col_index][step: n]
-                _, _, time_diffs_arr = self.get_time_diffs(step)
-                time_data[col_index] = time_diffs_arr
-
-                # Get first k items for delayed data
-                temp_col = temp_col[0: k]
-
-                # for i in range(k):
-                #    if i in time_dict:
-                #        time_dict[i].append(time_diffs[i])
-                #    else:
-                #        time_dict[i] = [time_diffs[i]]
-                # print(f"{time_diffs}\n")
-                # WHAT ABOUT TIME DIFFERENCE/DELAY? It is different for every step!!!
-            transformed_data = temp_col if (transformed_data is None) \
-                else np.vstack((transformed_data, temp_col))
-        return transformed_data, time_data
+        return return_results(steps_dict, round(np.min(mse_arr), 5), max_step)
 
     def discover_tgp_ami(self, target_col: int, search_algorithm: str = "apriori",
                          max_iteration: int=3, transformation_steps: dict|None = None,
@@ -203,20 +158,15 @@ class TGradAMI(TGrad):
 
         # 1. Compute and find the lowest mutual information (based) steps
         if transformation_steps is None:
-            feature_cols: np.ndarray = np.setdiff1d(self.attr_cols, self.target_col)
-            transformation_steps, max_step = self.get_mi_transformation_steps(error_margin=error_margin,
-                                                                      feature_cols=feature_cols)
+            transformation_steps, max_step = self.get_mi_transformation_steps(error_margin=error_margin)
         else:
             max_step = 0
             for _, v in transformation_steps.items():
                 if v > max_step:
                     max_step = v
 
-        # 2. Create a final (and dynamic) delayed dataset
-        delayed_data, time_data = self.transform_data(transformation_steps, max_step)
-
         # 3. Discover temporal-GPs from time-delayed data
-        lst_tgp = self._mine_gps_at_step(time_delay_data=time_data, attr_data=delayed_data)
+        lst_tgp = self._safe_transform_and_mine(transformation_steps, max_step)
 
         # 4. Organize FTGPs into a single list
         if lst_tgp:
@@ -231,13 +181,13 @@ class TGradAMI(TGrad):
                 title_row.append(txt)
                 if (col != self.target_col) and (col not in self.time_cols):
                     time_title.append(txt)
-            str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
+            #str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
             self._transformation_data = {
                 'Patterns': self.display_patterns,
                 'Transformation Steps': transformation_steps,
-                'Time Data': str_time_data,
-                'Transformed Data': np.vstack(
-                    (np.array(title_row), delayed_data.T if delayed_data is not None else np.array([]))),
+                #'Time Data': str_time_data,
+                #'Transformed Data': np.vstack(
+                #    (np.array(title_row), transformed_data.T if transformed_data is not None else np.array([]))),
             }
 
         duration = time.time() - start
