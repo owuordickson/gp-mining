@@ -1100,7 +1100,7 @@ class TimeDelay:
         return txt
 
     @staticmethod
-    def predict_time(crisp_inputs: np.ndarray, time_data: np.ndarray, fuzzy_mfs: list[dict], inference_method: str) -> float:
+    def predict_time(crisp_inputs: np.ndarray, time_values: np.ndarray, fuzzy_mfs: list[dict], inference_method: str) -> float:
         """Predict time using a multi-antecedent fuzzy inference system.
 
         Each crisp input is first fuzzified against the same set of
@@ -1199,7 +1199,7 @@ class TimeDelay:
                 values. All supplied inputs participate in the same
                 multi-antecedent fuzzy AND rule.
 
-            time_data:
+            time_values:
                 One-dimensional array of observed time-delay values.
                 These values define the universe of discourse for the
                 output variable.
@@ -1244,18 +1244,9 @@ class TimeDelay:
         """
 
         # Validate inputs
-        inputs = np.asarray(crisp_inputs, dtype=np.float64, ).ravel()
-
-        if inputs.size == 0:
+        if crisp_inputs.size == 0:
             # raise ValueError( "crisp_inputs must contain at least one value.")
             return 0
-
-        if not np.all(np.isfinite(inputs)):
-            # raise ValueError("crisp_inputs must contain only finite values.")
-            return 0
-
-        time_values = np.asarray(time_data, dtype=np.float64,).ravel()
-        time_values = time_values[np.isfinite(time_values)]
 
         if time_values.size == 0:
             # raise ValueError("time_data must contain at least one finite value.")
@@ -1348,7 +1339,7 @@ class TimeDelay:
         #     ]
         #
         # --------------------------------------------------------------
-        fuzzified = evaluate_mfs(inputs)
+        fuzzified = evaluate_mfs(crisp_inputs)
 
         # --------------------------------------------------------------
         # Multi-input AND
@@ -1426,7 +1417,7 @@ class TimeDelay:
         total_membership = np.sum(aggregated_mf,)
 
         if total_membership <= np.finfo(np.float64).eps:
-            return float(np.mean(inputs))
+            return float(np.mean(crisp_inputs))
 
         prediction = (
                 np.sum(universe * aggregated_mf,) / total_membership
@@ -1450,19 +1441,33 @@ class TimeDelay:
         if time_data is None:
             return cls(-1, 0)
 
-        t_data: np.ndarray|None = time_data["time_data"]
+        t_data: np.ndarray|None = time_data["time_data"] # {col1: [tlag1, ...], col2: [...],}
         use_gp: bool = time_data["use_gp"]
         mf_data: list[dict] = time_data["fuzzy_mfs"]
         inference: str = time_data["inference"]
-        gp_set = gp_set if use_gp else None
 
         if t_data is None:
             return cls(-1, 0)
 
         # 2. Get TimeDelay Array
-        lst_rows = selected_rows.cpu().tolist() if isinstance(selected_rows, torch.Tensor) else selected_rows.tolist()
-        print(f"{type(lst_rows)}: {lst_rows}\n{type(t_data)}: {t_data}")
-        if gp_set is not None and isinstance(t_data, dict):
+        lst_rows: list = selected_rows.cpu().tolist() if isinstance(selected_rows, torch.Tensor) else selected_rows.tolist()
+        all_time_arr: np.ndarray = np.array(list(t_data.values()), dtype=np.float64,) # Format: 2D array of size [cols X rows]
+
+        if use_gp:
+            # all selected rows for only columns that appear in the GPs
+            sel_time_lst = []
+            attr_cols: set = set(t_data.keys())
+            for gi_str in gp_set:
+                col = GI.from_string(gi_str).attribute_col
+                if col in attr_cols:
+                    sel_time_lst.append(t_data[col])
+            sel_time_mat = np.array(sel_time_lst)
+            sel_time_arr = sel_time_mat[:, lst_rows] 
+        else:
+            # all selected rows for all the columns
+            sel_time_arr = all_time_arr[:, lst_rows]
+        
+        """if use_gp:
             ## t_data = {col1: [row time-lags], col2: [row time-lags]}
             t_lag_lst = []
             sel_cols: set = set(t_data.keys())
@@ -1471,17 +1476,24 @@ class TimeDelay:
                 if col in sel_cols:
                     t_lag_lst.append(t_data[col])
             t_lag_mat = np.array(t_lag_lst)
-            t_lag_arr = t_lag_mat[:, lst_rows][0]
+            sel_time_arr = t_lag_mat[:, lst_rows][0]
             all_time_arr = t_lag_mat[:, :][0]
-            print(f"w GPs: {t_lag_arr}\n{type(all_time_arr)}: {all_time_arr}\n")
+            print(f"w GPs: {sel_time_arr}\n{type(all_time_arr)}: {all_time_arr}\n")
         else:
-            ## t_data = [row time-lags]
-            t_lag_arr = t_data[lst_rows]
+            sel_time_arr = np.array(t_data.values())[:, lst_rows]
             all_time_arr = t_data
-            print(f"w/o GPs: {t_lag_arr}\n")
+            print(f"w/o GPs: {sel_time_arr}\n")
+        """
 
         # 3. Approximate TimeDelay value
-        time_val: float = TimeDelay.predict_time(crisp_inputs=t_lag_arr, time_data=all_time_arr, fuzzy_mfs=mf_data, inference_method=inference)
+        all_time_arr = all_time_arr.ravel()  # Converts into 1D array
+        all_time_arr = all_time_arr[np.isfinite(all_time_arr)]  # Removes all NaN and Infinite values
+
+        sel_time_arr = sel_time_arr.ravel() # Converts into 1D array
+        sel_time_arr = sel_time_arr[np.isfinite(sel_time_arr)]  # Removes all NaN and Infinite values
+        sel_time_arr = np.unique(sel_time_arr)  # only the unique values
+
+        time_val: float = TimeDelay.predict_time(crisp_inputs=sel_time_arr, time_values=all_time_arr, fuzzy_mfs=mf_data, inference_method=inference)
         pred_time_lag: TimeDelay = cls(time_val, 0.99)
 
         return pred_time_lag
