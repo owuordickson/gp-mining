@@ -875,7 +875,7 @@ class GP:
         return new_gp
 
     @staticmethod
-    def get_selected_rows(packed_bit_mat: np.ndarray|torch.tensor, dim: int) -> np.ndarray | torch.Tensor:
+    def get_selected_rows(packed_bit_mat: np.ndarray|torch.Tensor, dim: int) -> np.ndarray | torch.Tensor:
         """
         Get objects participating in at least one active warping relation.
 
