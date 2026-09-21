@@ -32,14 +32,14 @@ if __name__ == "__main__":
     # result_json = mine_obj.discover(search_type='random', target_col=1, exclude_target=False, max_iteration=10) # Random
     #result_json = mine_obj.discover(search_type='clustergp', target_col=1, exclude_target=False, max_iteration=10, e_prob=0.0) # ClusterGP
 
-    # result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=5)                                      # TGRAANK
+    # result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='ga', max_iteration=10)                                      # TGRAANK
     result_json = mine_obj1.discover(target_col=1, transformations='all', search_algorithm='apriori', max_iteration=1, eval_mode=True, compute_causality=False)  # TGRAANK-AMI
     print(f"{result_json}\n")
-    start = time.time()
-    corr_df = mine_obj1.get_lagged_dependencies(max_lag=3)
-    print(corr_df)
-    end = time.time() - start
-    print(f"Time: {end}")
+    #start = time.time()
+    #corr_df = mine_obj1.get_lagged_dependencies(max_lag=3)
+    #print(corr_df)
+    #end = time.time() - start
+    #print(f"Time: {end}")
 
     ## Test Time
     #print(sgp.DataGP.test_time("09-01-2005"))
