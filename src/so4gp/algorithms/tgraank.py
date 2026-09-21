@@ -451,7 +451,7 @@ class TGRAANK:
                     search_algorithm="apriori",
                     max_iteration=1,
                     compute_causality=True,
-                    ignore_time=False,
+                    ignore_time=True,
                 )
             )
             # print(f"Target: {target}\n{result['Causality']}")
