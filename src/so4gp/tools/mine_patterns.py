@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2021 Dickson Owuor
 # See the LICENSE file at the root of this repository for complete details.
@@ -15,10 +14,8 @@ Credits:
     Thomas Runkler and Anne Laurent
 """
 
-import mcp
 import pandas as pd
 from mcp.server.fastmcp import FastMCP
-
 
 # 1. Initialize the FastMCP server instance
 mcp = FastMCP("Gradual Pattern Miner")

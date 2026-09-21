@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 
-import time
 import random
+import time
+
 from .graank_base import BaseGrad
 
 
@@ -29,7 +29,7 @@ class HillClimbingGRAANK(BaseGrad):
         :param step_size: [optional] step size, default is 0.5
 
         """
-        super(HillClimbingGRAANK, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._step_size: float = step_size
         self._max_iteration: int = max_iter
         self._n_var: int = 1

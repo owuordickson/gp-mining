@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 import gc
 import time
-import numpy as np
 from typing import cast
 
-from .graank_base import BaseGrad
+import numpy as np
+
 from ...gradual_patterns import GI, GP, TGP, PairwiseMatrix
+from .graank_base import BaseGrad
 
 
 class AntGRAANK(BaseGrad):
@@ -35,7 +35,7 @@ class AntGRAANK(BaseGrad):
         :param e_factor: [optional] evaporation factor, default is 0.5
 
         """
-        super(AntGRAANK, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._evaporation_factor: float = e_factor
         self._max_iteration: int = max_iter
         self._distance_matrix: np.ndarray | None = None

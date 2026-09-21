@@ -1,12 +1,12 @@
 __all__ = [
     "add_one_random_node",
-    "combine_far_apart",
-    "get_all_subgraphs",
-    "get_all_sink_cases",
-    "get_longest_path",
-    "check_corr_character",
-    "select_confounder_samples",
     "all_extensions",
+    "check_corr_character",
+    "combine_far_apart",
+    "get_all_sink_cases",
+    "get_all_subgraphs",
+    "get_longest_path",
+    "select_confounder_samples",
 ]
 
 import random
@@ -14,7 +14,6 @@ from itertools import combinations
 
 import networkx as nx
 import numpy as np
-
 
 # TODO The sampling algorithms are inefficient for higher number of nodes. FIX this with proper algorithms.
 # TODO Create a single random process for this tool to control the randomness -> reproducibility.

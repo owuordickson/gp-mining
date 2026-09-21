@@ -1,18 +1,19 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 import ntpath
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from .base.graank_alg import OrigGRAANK
-from .cluster_gp import ClusterGP
+
 from .base.graank_aco import AntGRAANK
+from .base.graank_alg import OrigGRAANK
 from .base.graank_ga import GeneticGRAANK
+from .cluster_gp import ClusterGP
 
 
 class GradPFS:
@@ -338,7 +339,7 @@ class GradPFS:
             for j in range(i, corr_arr.shape[1]):  # col index
                 cor_score = corr_arr[i, j]
                 if abs(cor_score) > thd_score:
-                    lst_sim.append((-j if cor_score < 0 else j))
+                    lst_sim.append(-j if cor_score < 0 else j)
                     cor_scores.append(round(float(abs(cor_score)), 3))
             if len(lst_sim) <= 1:
                 continue

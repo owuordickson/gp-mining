@@ -1,16 +1,12 @@
-from .data_gp import DataGP
-from .gradual_patterns import GI
-from .gradual_patterns import GP
-from .gradual_patterns import TGP
-from .gradual_patterns import TimeDelay
-from .gradual_patterns import PairwiseMatrix
-
-from .utils import get_num_cores
-from .utils import get_slurm_cores
-
+from functools import wraps
 
 import pandas as pd
-from functools import wraps
+
+from .data_gp import DataGP
+from .gradual_patterns import GI, GP, TGP, PairwiseMatrix, TimeDelay
+from .utils import get_num_cores, get_slurm_cores
+
+
 @wraps(DataGP.analyze_gps)
 def analyze_gps(data_src: pd.DataFrame|str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
     return DataGP.analyze_gps(data_src=data_src, min_sup=min_sup, est_gps=est_gps, approach=approach)
@@ -28,14 +24,14 @@ __credits__ = "Montpellier University"
 
 
 __all__ = [
-    "DataGP",
     "GI",
     "GP",
     "TGP",
-    "TimeDelay",
+    "DataGP",
     "PairwiseMatrix",
+    "TimeDelay",
+    "analyze_gps",
     "get_num_cores",
     "get_slurm_cores",
-    "save_pairwise_data",
-    "analyze_gps"
+    "save_pairwise_data"
 ]

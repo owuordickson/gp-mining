@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
@@ -13,8 +12,8 @@
 A collection of miscellaneous classes and methods.
 """
 
-import os
 import multiprocessing as mp
+import os
 
 
 def get_num_cores() -> int:

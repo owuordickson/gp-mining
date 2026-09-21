@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 
-import time
 import random
+import time
+
 import numpy as np
+
 from .graank_base import BaseGrad
 
 
@@ -34,7 +35,7 @@ class ParticleGRAANK(BaseGrad):
         :param coeff_g: [optional] global coefficient, default is 0.9
 
         """
-        super(ParticleGRAANK, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._max_iteration: int = max_iter
         self._n_particles: int = n_particle
         self._velocity: float = vel

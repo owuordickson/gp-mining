@@ -3,8 +3,10 @@
 # repository for complete details.
 
 import time
+
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
+
 from ...gradual_patterns import TGP
 from .tgrad import TGrad
 
@@ -29,7 +31,7 @@ class TGradAMI(TGrad):
         [optional] MF shape, [optional] clustering algorithm, [optional] inference method.
 
         """
-        super(TGradAMI, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._mi_error: float = 0
         self._transformation_data: dict = {}
 
@@ -163,9 +165,8 @@ class TGradAMI(TGrad):
             transformation_steps, max_step = self.get_mi_transformation_steps(error_margin=error_margin)
         else:
             max_step = 0
-            for _, v in transformation_steps.items():
-                if v > max_step:
-                    max_step = v
+            for v in transformation_steps.values():
+                max_step = max(max_step, v)
 
         # 3. Discover temporal-GPs from time-delayed data
         lst_tgp = self._safe_transform_and_mine(transformation_steps, max_step, skip_time=ignore_time)

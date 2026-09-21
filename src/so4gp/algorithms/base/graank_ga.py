@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 
-import time
 import random
+import time
+
 import numpy as np
+
 from .graank_base import BaseGrad
 
 
@@ -45,7 +46,7 @@ class GeneticGRAANK(BaseGrad):
         :type sigma: float
 
         """
-        super(GeneticGRAANK, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._max_iteration: int = max_iter
         self._parent_pop: int = n_pop
         self._children_pop: float = pc
@@ -86,9 +87,9 @@ class GeneticGRAANK(BaseGrad):
             val = float(str_x[i[0]])
             val += self._sigma * random.uniform(0, 1)
             if i[0] == 0:
-                str_y = "".join(("", "{}".format(int(val)), str_x[1:]))
+                str_y = "".join(("", f"{int(val)}", str_x[1:]))
             else:
-                str_y = "".join((str_x[:i[0] - 1], "{}".format(int(val)), str_x[i[0]:]))
+                str_y = "".join((str_x[:i[0] - 1], f"{int(val)}", str_x[i[0]:]))
             str_x = str_y
         y.position = int(str_y)
         return y

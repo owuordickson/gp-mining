@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 import math
 import time
+
 import numpy as np
 from sklearn.cluster import KMeans
 
+from ..gradual_patterns import GI, GP, TGP, TimeDelay, FatalError
 from .base.graank_base import BaseGrad
-from ..gradual_patterns import GI, GP, TGP, TimeDelay
 
 
 class ClusterGP(BaseGrad):
@@ -39,7 +39,7 @@ class ClusterGP(BaseGrad):
         >>> result_json = mine_obj.discover()
         >>> print(result_json) # doctest: +SKIP
         """
-        super(ClusterGP, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._erasure_probability: float = e_prob
         self._max_iteration: int = max_iter
         self._gradual_items: list[GI] = []
@@ -160,14 +160,12 @@ class ClusterGP(BaseGrad):
                             i = arr_ij[pr][0]
                             j = arr_ij[pr][1]
                             if pr_val == 1:
-                                log = math.log(
-                                    math.exp(score_vector[i]) / (math.exp(score_vector[i]) + math.exp(score_vector[j])),
-                                    10)
+                                log = math.log10(
+                                    math.exp(score_vector[i]) / (math.exp(score_vector[i]) + math.exp(score_vector[j])))
                                 temp_vec[i] += pr_val * log
                             elif pr_val == -1:
-                                log = math.log(
-                                    math.exp(score_vector[j]) / (math.exp(score_vector[i]) + math.exp(score_vector[j])),
-                                    10)
+                                log = math.log10(
+                                    math.exp(score_vector[j]) / (math.exp(score_vector[i]) + math.exp(score_vector[j])))
                                 temp_vec[j] += -pr_val * log
                     score_vector = abs(temp_vec / np.sum(temp_vec))
             return score_vector
@@ -261,7 +259,7 @@ class ClusterGP(BaseGrad):
         s_matrix = self._net_win_mat  # Net-win matrix (S)
         s_matrix_size = s_matrix.size if s_matrix is not None else 0
         if s_matrix_size < 1:
-            raise Exception("Erasure probability is too high, consider reducing it.")
+            raise FatalError("Erasure probability is too high, consider reducing it.")
 
         # 2a. Spectral Clustering: perform SVD to determine the independent rows
         u, s, vt = np.linalg.svd(s_matrix)

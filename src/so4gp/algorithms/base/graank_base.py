@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 import copy
 import random
-import numpy as np
 from dataclasses import dataclass
+
+import numpy as np
+
 from ...data_gp import DataGP
 from ...gradual_patterns import GI, GP, TGP
 
@@ -106,9 +107,9 @@ class BaseGrad(DataGP):
         iter_count: int
         eval_count: int
         invalid_count: int
-        best_candidate: "BaseGrad.Candidate"
+        best_candidate: BaseGrad.Candidate
         loser_gps: list[GP|TGP]
-        pop: list["BaseGrad.Candidate"]
+        pop: list[BaseGrad.Candidate]
 
     def __init__(self, *args, **kwargs):
         """
@@ -144,9 +145,9 @@ class BaseGrad(DataGP):
                 mining strategies such as Genetic GRAANK, ACO-GRAANK,
                 PSO-GRAANK, Hill-Climbing GRAANK, and Random GRAANK.
         """
-        super(BaseGrad, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._target_col: int | None = None
-        self._search_space: "BaseGrad.SearchSpace|None" = None
+        self._search_space: BaseGrad.SearchSpace|None = None
 
     @property
     def target_col(self):
@@ -164,10 +165,10 @@ class BaseGrad(DataGP):
         self._target_col = tgt_col
 
     @property
-    def search_space(self) -> "BaseGrad.SearchSpace|None":
+    def search_space(self) -> BaseGrad.SearchSpace|None:
         return self._search_space
 
-    def blank_search_space(self) -> "BaseGrad.SearchSpace|None":
+    def blank_search_space(self) -> BaseGrad.SearchSpace|None:
         """Create a blank search space."""
         try:
             self.init_search_space(1)
@@ -194,9 +195,7 @@ class BaseGrad(DataGP):
 
         # Initialize search space
         self._search_space = self._initialize_numeric_search_space(pop_size)
-        if self._search_space is None:
-            return False
-        return True
+        return self._search_space is not None
 
     def _initialize_numeric_search_space(self, total_pop: int):
         """Create a population of candidate solutions."""
@@ -239,7 +238,7 @@ class BaseGrad(DataGP):
         )
         return search_space
 
-    def _cost_function(self, candidate: "BaseGrad.Candidate|None", exclude_target: bool = False, time_data: dict|None= None) -> bool:
+    def _cost_function(self, candidate: BaseGrad.Candidate|None, exclude_target: bool = False, time_data: dict|None= None) -> bool:
         """Description
 
         Computes the fitness of a GP
@@ -311,7 +310,7 @@ class BaseGrad(DataGP):
         candidate.gp = gen_gp
         return True
 
-    def evaluate_candidate(self, candidate: "BaseGrad.Candidate|None", exclude_target: bool, time_data: dict|None= None):
+    def evaluate_candidate(self, candidate: BaseGrad.Candidate|None, exclude_target: bool, time_data: dict|None= None):
         """
         Evaluate a gradual-pattern candidate against the mining constraints.
 
@@ -369,9 +368,7 @@ class BaseGrad(DataGP):
             s_space.invalid_count += 1
         if candidate.cost is not None:
             # 1. Check if the candidate is better than the current best candidate
-            if s_space.best_candidate.cost is None:
-                s_space.best_candidate = copy.deepcopy(candidate)
-            elif candidate.cost < s_space.best_candidate.cost:
+            if s_space.best_candidate.cost is None or candidate.cost < s_space.best_candidate.cost:
                 s_space.best_candidate = copy.deepcopy(candidate)
 
             # 2. Check if it is a valid GP and is NOT a duplicate candidate

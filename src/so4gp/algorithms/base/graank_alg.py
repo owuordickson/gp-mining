@@ -1,16 +1,16 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 import copy
 import time
-import torch
-import numpy as np
 from itertools import combinations
 
-from .graank_base import BaseGrad
+import numpy as np
+import torch
+
 from ...gradual_patterns import GI, GP, TGP
+from .graank_base import BaseGrad
 
 
 class OrigGRAANK(BaseGrad):
@@ -33,7 +33,7 @@ class OrigGRAANK(BaseGrad):
         :param max_apriori_level: [optional] Maximum APRIORI level for generating candidates.
 
         """
-        super(OrigGRAANK, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._max_apriori_level: int|None = max_apriori_level
 
     def _gen_apriori_candidates(self, valid_dict: dict|None, time_data: dict|None= None, exclude_target: bool = False) -> dict:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
@@ -13,17 +12,19 @@
 A collection of classes for pre-processing data for mining gradual patterns.
 """
 
-import os
 import csv
-import time
-import torch
+import os
 import statistics
+import time
+
 import numpy as np
 import pandas as pd
-from tabulate import tabulate
+import torch
 from dateutil.parser import parse
+from tabulate import tabulate
+
+from .gradual_patterns import GI, GP, NO_TIME_LABEL, TGP, PairwiseMatrix, FatalError
 from .utils import write_file
-from .gradual_patterns import GI, GP, TGP, PairwiseMatrix, NO_TIME_LABEL
 
 
 class DataGP:
@@ -267,7 +268,7 @@ class DataGP:
         :param pattern: A gradual pattern
         """
         if not isinstance(pattern, (GP, TGP)):
-            raise Exception("Pattern must be of type GP, ExtGP, or TGP")
+            raise TypeError("Pattern must be of type GP, ExtGP, or TGP")
 
         if self._gradual_patterns is None:
             self._gradual_patterns = [pattern]
@@ -276,7 +277,7 @@ class DataGP:
 
     def clear_gradual_patterns(self) -> None:
         """Clears the list of gradual patterns."""
-        self._gradual_patterns = list()
+        self._gradual_patterns = []
 
     def remove_subsets(self, gi_arr: set, gradual_patterns: list[GP] | None = None) -> None:
         """
@@ -429,7 +430,7 @@ class DataGP:
         # out_txt += f"Number of cores: {num_cores}\n"
         out_txt += f"Number of patterns: {num_patterns}\n"
 
-        out_txt += f"\nAttributes:\n"
+        out_txt += "\nAttributes:\n"
         tgt_col = target_col if target_col is not None else -1
         for i, txt in enumerate(self.titles):
             if i == tgt_col:
@@ -611,7 +612,7 @@ class DataGP:
                     f.close()
 
                 if len(raw_data) <= 1:
-                    raise Exception("CSV file read error. File has little or no data")
+                    raise FatalError("CSV file read error. File has little or no data")
                 else:
                     # print ("Data fetched from CSV file")
                     # 2. Get table headers
@@ -627,7 +628,7 @@ class DataGP:
                     d_frame = pd.DataFrame(raw_data, columns=header_vals)
                     return DataGP.clean_data(d_frame)
             except Exception as error:
-                raise Exception("Error: " + str(error))
+                raise FatalError("Error: " + str(error))
 
     @staticmethod
     def test_time(date_str: str) -> tuple[bool, float | None]:

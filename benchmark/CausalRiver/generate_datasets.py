@@ -3,11 +3,18 @@ import sys
 from pathlib import Path
 
 import networkx as nx
-from omegaconf import DictConfig
 from hydra import compose, initialize
+from omegaconf import DictConfig
 
 sys.path.append("..")
-from tools.graph_sampling_tools import add_one_random_node, combine_far_apart, get_all_sink_cases, get_all_subgraphs, get_longest_path, select_confounder_samples
+from tools.graph_sampling_tools import (
+    add_one_random_node,
+    combine_far_apart,
+    get_all_sink_cases,
+    get_all_subgraphs,
+    get_longest_path,
+    select_confounder_samples,
+)
 
 # Here we generate all sub-sampling strategies that we evaluate and some additional ones.
 # Additional ones might be added according to need.
@@ -46,8 +53,8 @@ def load_pickle(path: str, verbose: bool = False) -> nx.Graph:
         raise Exception(f"Error loading pickle file: {path}. Please check if you have downloaded the *product* dataset. Please check the readme!") from e
 
     if verbose:
-        print(f"Nodes in G[{_path.name}]: {str(len(G.nodes))}")
-        print(f"Edges in G[{_path.name}]: {str(len(G.edges))}")
+        print(f"Nodes in G[{_path.name}]: {len(G.nodes)!s}")
+        print(f"Edges in G[{_path.name}]: {len(G.edges)!s}")
 
     return G
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
@@ -15,12 +14,17 @@ A collection of Gradual Pattern classes and methods.
 
 
 import copy
-import torch
-import numpy as np
 from dataclasses import dataclass
 
+import numpy as np
+import torch
 
 NO_TIME_LABEL = "NoTime"
+
+class FatalError(Exception):
+    """Custom exception to handle stoppage in case of missing information or user errors"""
+    pass
+
 
 @dataclass
 class PairwiseMatrix:
@@ -28,7 +32,7 @@ class PairwiseMatrix:
     packed_bin_mat: np.ndarray|torch.Tensor
     support: float
     pattern: set[str]
-    time_lag: "TimeDelay|None"=None
+    time_lag: TimeDelay|None=None
 
 
 class GI:
@@ -98,7 +102,7 @@ class GI:
         return f"{self._attribute_col}{self._symbol}"
 
     @classmethod
-    def from_string(cls, gi_str: str) -> "GI":
+    def from_string(cls, gi_str: str) -> GI:
         """Creates a GI from a string like '1+', '12-', or '125+'"""
         if not gi_str or gi_str[-1] not in ('+', '-'):
             print(f"Invalid GI format: '{gi_str}'. Must end with '+' or '-'.")
@@ -116,7 +120,7 @@ class GI:
             raise ValueError(f"Invalid column number in: '{gi_str}'")
 
     @staticmethod
-    def swap_gi_symbol(gi_obj: "GI") -> "GI":
+    def swap_gi_symbol(gi_obj: GI) -> GI:
         """
         Inverts a GI symbol to the opposite variation (i.e., from - to +; or, from + to -)
         :return: inverted GI object
@@ -128,7 +132,7 @@ class GI:
         return GI(gi_obj.attribute_col, sym)
 
     @staticmethod
-    def parse_gi(gi_str: str) -> "GI":
+    def parse_gi(gi_str: str) -> GI:
         """
         Converts a stringified GI into normal GI. The accepted format is '1_neg' or 1_pos'.
 
@@ -163,7 +167,7 @@ class GP:
         >>> print(f"{gradual_pattern.to_string()}: {gradual_pattern.support}")
 
         """
-        self._gradual_items: list[GI] = list()
+        self._gradual_items: list[GI] = []
         self._support: float = 0
         self._density: float = 0
         self._avg_dev_from_diag: float = 0
@@ -271,8 +275,8 @@ class GP:
 
         :return: Separate columns and variation symbols
         """
-        attrs = list()
-        syms = list()
+        attrs = []
+        syms = []
         for item in self._gradual_items:
             gi = item.as_tuple
             attrs.append(gi[0])
@@ -300,7 +304,7 @@ class GP:
         Returns the GP in string format
         :return: string
         """
-        pattern = list()
+        pattern = []
         for item in self._gradual_items:
             pattern.append(item.to_string())
         return pattern
@@ -317,19 +321,17 @@ class GP:
 
         # Pattern
         pattern = ""
-        i = 0
-        for item in self._gradual_items:
+        for i, item in enumerate(self._gradual_items):
             col_title = columns[item.attribute_col]
             pat = str(col_title + item.symbol)
             # pattern.append(pat)  # (item.to_string())
             pattern += pat + ", " if i < len(self._gradual_items) - 1 else pat
-            i += 1
 
         # Descriptors
         params = self.get_computed_descriptors(descriptor_title)
         return pattern, params
 
-    def validate_via_graank(self, data_gp, target_col: int | None, time_data: dict | None=None) -> "GP|TGP":
+    def validate_via_graank(self, data_gp, target_col: int | None, time_data: dict | None=None) -> GP|TGP:
         """
         Validates a candidate gradual pattern (GP) based on support computation. A GP is invalid if its support value is
         less than the minimum support threshold set by the user. It uses a breath-first approach to compute support.
@@ -415,7 +417,7 @@ class GP:
         else:
             return gen_pattern
 
-    def check_am(self, gp_list: list["GP|TGP"] | None, subset: bool = True) -> bool:
+    def check_am(self, gp_list: list[GP|TGP] | None, subset: bool = True) -> bool:
         """
         Anti-monotonicity check. Checks if a GP is a subset or superset of an already existing GP
 
@@ -443,7 +445,7 @@ class GP:
                     break
         return result
 
-    def is_duplicate(self, valid_gps: list["GP|TGP"]|None, invalid_gps: list["GP|TGP"]|None = None) -> bool:
+    def is_duplicate(self, valid_gps: list[GP|TGP]|None, invalid_gps: list[GP|TGP]|None = None) -> bool:
         """
         Checks if a pattern is in the list of winner GPs or loser GPs
 
@@ -806,7 +808,7 @@ class GP:
         return float(n * (n - 1.0) / 2.0)
 
     @staticmethod
-    def add_gradual_item_strict(gp: "GP|TGP", gi: GI, target_col: int|None = None, time_lag: "TimeDelay|None" = None) -> "GP|TGP":
+    def add_gradual_item_strict(gp: GP|TGP, gi: GI, target_col: int|None = None, time_lag: TimeDelay|None = None) -> GP|TGP:
         """
         Add a gradual item to a gradual pattern using pattern-aware placement.
 
@@ -865,7 +867,7 @@ class GP:
         return gp
 
     @staticmethod
-    def swap_gp_symbols(gp_obj: "GP") -> "GP":
+    def swap_gp_symbols(gp_obj: GP) -> GP:
         """
         Swaps the variation symbols of all the gradual items (GIs) in a gradual pattern (GP)
         """
@@ -907,7 +909,7 @@ class GP:
         pairwise_mat = np.unpackbits(packed_pairwise_mat, count=n * n).reshape(n, n).astype(bool)
         edge_lst: list[tuple[int, int]] = [(i, j) for i, row in enumerate(pairwise_mat) for j, val in enumerate(row) if
                                            val]
-        edge_lst = sorted(list(edge_lst), key=lambda x: x[0])
+        edge_lst = sorted(edge_lst, key=lambda x: x[0])
         return np.array(edge_lst)
 
     @staticmethod
@@ -944,7 +946,7 @@ class GP:
         return torch.stack((rows, cols), dim=1)
 
     @staticmethod
-    def perform_and(bin_data_1: "PairwiseMatrix|None", bin_data_2: "PairwiseMatrix|None", dim: int, time_data: dict|None=None) -> "PairwiseMatrix":
+    def perform_and(bin_data_1: PairwiseMatrix|None, bin_data_2: PairwiseMatrix|None, dim: int, time_data: dict|None=None) -> PairwiseMatrix:
         """
         Perform logical AND operation on two bitmaps.
 
@@ -969,7 +971,7 @@ class GP:
                 raise ValueError("Packed tensors must be on the same device.")
 
             packed_bit_mat = torch.bitwise_and(packed_1, packed_2)
-            bit_counts = torch.tensor([bin(i).count("1") for i in range(256)], dtype=torch.int64, device=packed_bit_mat.device,)
+            bit_counts = torch.tensor([(i).bit_count() for i in range(256)], dtype=torch.int64, device=packed_bit_mat.device,)
             sup = (bit_counts[packed_bit_mat.long()].sum().item() / GP.pair_count(n=dim))
         else:
             if isinstance(packed_2, torch.Tensor):
@@ -1425,7 +1427,7 @@ class TimeDelay:
         return float(prediction)
 
     @classmethod
-    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|None, gp_set: set) -> "TimeDelay":
+    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|None, gp_set: set) -> TimeDelay:
         """
         A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
         methods: (1) uses classical slide and re-calculate dynamic programming to find the best time-delay value and,
@@ -1503,9 +1505,9 @@ class TGP(GP):
         >>> t_gp.add_temporal_gradual_item(sgp.GI(2, "-"), sgp.TimeDelay(7200, 0.8))
         >>> t_gp.to_string()
         """
-        super(TGP, self).__init__()
+        super().__init__()
         self._target_gradual_item: GI | None = None
-        self._temporal_gradual_items: list[TGP.TemporalGI] = list()
+        self._temporal_gradual_items: list[TGP.TemporalGI] = []
 
     @property
     def target_gradual_item(self) -> GI | None:
@@ -1569,10 +1571,9 @@ class TGP(GP):
         target_gi = self._target_gradual_item
         col_title = columns[target_gi.attribute_col if target_gi else -1]
         pattern = f"{col_title}{target_gi.symbol if target_gi else ''}, "
-        has_no_time = True if NO_TIME_LABEL in columns else False
+        has_no_time = NO_TIME_LABEL in columns
 
-        i = 0
-        for temp_gi in self._temporal_gradual_items:
+        for i, temp_gi in enumerate(self._temporal_gradual_items):
             gi = temp_gi.gradual_item
             t_lag = temp_gi.time_delay
             str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {"lag" if has_no_time else t_lag.formatted_time['duration']}"
@@ -1580,7 +1581,6 @@ class TGP(GP):
             pat = f"({col_title}{gi.symbol}) {str_time}"
             # pattern.append(pat)
             pattern += pat + ", " if i < len(self._temporal_gradual_items) - 1 else pat
-            i += 1
 
         # Descriptors
         params = self.get_computed_descriptors(descriptor_title)
@@ -1662,7 +1662,7 @@ class TGP(GP):
             inference without additional domain validation.
         """
         relations: list[dict[str, object]] = []
-        has_no_time = True if NO_TIME_LABEL in columns else False
+        has_no_time = NO_TIME_LABEL in columns
 
         target = self.target_gradual_item
         if target is None:

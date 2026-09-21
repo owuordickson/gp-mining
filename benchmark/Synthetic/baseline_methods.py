@@ -1,6 +1,7 @@
 # Import libraries
 
 import numpy as np
+from causallearn.search.ConstraintBased.PC import pc
 
 # Statistical & Baselines
 from scipy.stats import pearsonr
@@ -8,13 +9,11 @@ from statsmodels.tsa.stattools import grangercausalitytests
 
 # Tigramite & Graph Learning
 from tigramite import data_processing as pp
-from tigramite.pcmci import PCMCI
 from tigramite.independence_tests.parcorr import ParCorr
-from causallearn.search.ConstraintBased.PC import pc
+from tigramite.pcmci import PCMCI
 
 # Custom frameworks (so4gp package)
 from so4gp.algorithms import TGRAANK
-
 
 
 def run_classical_statistics(df, threshold=0.3):

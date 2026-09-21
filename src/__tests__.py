@@ -1,11 +1,9 @@
 
-import torch
-import time
-import numpy as np
-import pandas
 
-from so4gp import DataGP
-from so4gp.algorithms import GRAANK, TGRAANK, ClusterGP
+import pandas
+import torch
+
+from so4gp.algorithms import TGRAANK
 
 if __name__ == "__main__":
 

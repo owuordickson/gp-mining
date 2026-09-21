@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 
-import time
 import random
+import time
+
 from .graank_base import BaseGrad
 
 
@@ -28,7 +28,7 @@ class RandomGRAANK(BaseGrad):
         :param max_iter: [optional] maximum_iteration, default is 1
 
         """
-        super(RandomGRAANK, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._max_iteration: int = max_iter
         self._n_var: int = 1
 

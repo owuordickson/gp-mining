@@ -1,14 +1,14 @@
-from hydra import compose, initialize
-from omegaconf import DictConfig
 import datetime
 
-from tools.tools import (
-    load_joint_samples,
-    benchmarking,
-    standard_preprocessing,
-    save_run,
-)
+from hydra import compose, initialize
+from omegaconf import DictConfig
 from tools.scoring_tools import score
+from tools.tools import (
+    benchmarking,
+    load_joint_samples,
+    save_run,
+    standard_preprocessing,
+)
 
 
 # Example script to benchmark causal discovery methods.
@@ -20,7 +20,7 @@ def main(cfg: DictConfig):
     elif cfg.method.name == "tgraank":
         from tools.baseline_methods import var_tgraank as cd_method
     else:
-        print("SPECIFY AND LOAD YOUR OWN METHOD HERE")
+        raise ValueError("SPECIFY AND LOAD YOUR OWN METHOD HERE")
 
     start = datetime.datetime.now()
     print("Loading data...")

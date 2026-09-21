@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
+    accuracy_score,
     precision_recall_curve,
     roc_auc_score,
-    accuracy_score,
 )
 
 # precision recall warning.

@@ -1,18 +1,20 @@
-# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MIT
 # See the LICENSE file at the root of this
 # repository for complete details.
 
 
-import time
 import copy
+import time
+
 import numpy as np
 import pandas as pd
+
+from ...data_gp import DataGP
+from ...gradual_patterns import NO_TIME_LABEL, TGP, FatalError
+from ..graank import GRAANK
+
 # import multiprocessing as mp
 from .graank_alg import OrigGRAANK
-from ..graank import GRAANK
-from ...data_gp import DataGP
-from ...gradual_patterns import TGP, NO_TIME_LABEL
 
 
 class TGrad(OrigGRAANK):
@@ -31,7 +33,7 @@ class TGrad(OrigGRAANK):
         :param inference_method: [optional] inference method for estimating the MFs. Options: 'mamdani', larsen'.
 
         """
-        super(TGrad, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._search_algorithm: str = "apriori"
         self._algorithm_max_iter: int = 3
         self._min_rep: float = min_rep
@@ -46,7 +48,7 @@ class TGrad(OrigGRAANK):
         else:
             # print("Dataset Error")
             self._time_ok: bool = False
-            raise Exception('No date-time datasets found')
+            raise FatalError('No date-time datasets found')
 
     @property
     def min_rep(self):
@@ -249,7 +251,7 @@ class TGrad(OrigGRAANK):
             return transformed_data, time_data
         else:
             msg = "Fatal Error: Time format in column could not be processed"
-            raise Exception(msg)
+            raise FatalError(msg)
 
     def _safe_transform_and_mine(self, transformation_steps: dict, max_step: int, skip_time: bool=False):
         """Wrapper to catch exceptions during parallel mining."""
