@@ -1103,11 +1103,14 @@ class GP:
 
         # Time-delay computation
         if time_data is not None:
-            selected_rows = GP.get_selected_rows(
-                packed_bit_mat,
-                dim,
-            )
-            t_lag = TimeDelay.approx_time_lag(selected_rows, time_data, gp_set=gp)
+            if time_data["time_data"] is None:
+                t_lag = TimeDelay(-1, 0)
+            else:
+                selected_rows = GP.get_selected_rows(
+                    packed_bit_mat,
+                    dim,
+                )
+                t_lag = TimeDelay.approx_time_lag(selected_rows, time_data, gp_set=gp)
             return PairwiseMatrix(
                 packed_bin_mat=packed_bit_mat,
                 support=sup,
