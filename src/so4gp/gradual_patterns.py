@@ -12,7 +12,6 @@
 A collection of Gradual Pattern classes and methods.
 """
 
-
 import copy
 from dataclasses import dataclass
 
@@ -21,6 +20,7 @@ import torch
 
 NO_TIME_LABEL = "NoTime"
 
+
 class FatalError(Exception):
     """Custom exception to handle stoppage in case of missing information or user errors"""
 
@@ -28,14 +28,14 @@ class FatalError(Exception):
 @dataclass
 class PairwiseMatrix:
     """A data-class for storing pairwise (bitmap) matrix as packed-bits and its support value."""
-    packed_bin_mat: np.ndarray|torch.Tensor
+
+    packed_bin_mat: np.ndarray | torch.Tensor
     support: float
     pattern: set[str]
-    time_lag: TimeDelay|None=None
+    time_lag: TimeDelay | None = None
 
 
 class GI:
-
     def __init__(self, attr_col, symbol):
         """
         GI (Gradual Item). A class that is used to create GI objects. A GI is a pair (i,v) where is a column, and v is a variation symbol -
@@ -61,7 +61,9 @@ class GI:
             self._symbol = symbol
         else:
             print(f"Invalid variation symbol: {symbol}")
-            raise ValueError("Invalid variation symbol. It should be either '+' or '-'.")
+            raise ValueError(
+                "Invalid variation symbol. It should be either '+' or '-'."
+            )
 
     @property
     def attribute_col(self) -> int:
@@ -103,9 +105,11 @@ class GI:
     @classmethod
     def from_string(cls, gi_str: str) -> GI:
         """Creates a GI from a string like '1+', '12-', or '125+'"""
-        if not gi_str or gi_str[-1] not in ('+', '-'):
+        if not gi_str or gi_str[-1] not in ("+", "-"):
             print(f"Invalid GI format: '{gi_str}'. Must end with '+' or '-'.")
-            raise ValueError(f"Invalid GI format: '{gi_str}'. Must end with '+' or '-'.")
+            raise ValueError(
+                f"Invalid GI format: '{gi_str}'. Must end with '+' or '-'."
+            )
 
         try:
             # Everything except the last char is the column
@@ -115,7 +119,9 @@ class GI:
 
             return cls(attr_col, symbol)
         except ValueError:
-            print(f"Invalid GI format: '{gi_str}'. Must be in the format 'column_number+'.")
+            print(
+                f"Invalid GI format: '{gi_str}'. Must be in the format 'column_number+'."
+            )
             raise ValueError(f"Invalid column number in: '{gi_str}'")
 
     @staticmethod
@@ -140,9 +146,9 @@ class GI:
 
         :return: GI
         """
-        txt = gi_str.split('_')
+        txt = gi_str.split("_")
         attr_col = int(txt[0])
-        if txt[1] == 'neg':
+        if txt[1] == "neg":
             symbol = "-"
         else:
             symbol = "+"
@@ -150,7 +156,6 @@ class GI:
 
 
 class GP:
-
     def __init__(self):
         """
         GP (Gradual Pattern). A class that is used to create GP objects. A GP object is a set of gradual items (GI),
@@ -206,7 +211,7 @@ class GP:
     def singularity_score(self) -> float:
         return self._singularity_score
 
-    def add_gradual_item(self, item: GI) -> None|bool:
+    def add_gradual_item(self, item: GI) -> None | bool:
         """
         Add a gradual item to this gradual pattern. First checks if the gradual item's column already exists in the GP.
 
@@ -248,22 +253,32 @@ class GP:
         :return: List of descriptors
         """
         if self.density <= 0:
-            params = [f"sup={self.support}"] if not descriptor_title else [{"Support": f"{self.support}"}]
+            params = (
+                [f"sup={self.support}"]
+                if not descriptor_title
+                else [{"Support": f"{self.support}"}]
+            )
         else:
             if not descriptor_title:
-                params = [f"sup={self.support}",
-                          f"density={self.density}",
-                          f"avg_dev={self.avg_deviation_from_diagonal}",
-                          f"dispersion={self.rank_dispersion}",
-                          f"connect={self.graph_connectivity}",
-                          f"singularity_scr={self.singularity_score}"]
+                params = [
+                    f"sup={self.support}",
+                    f"density={self.density}",
+                    f"avg_dev={self.avg_deviation_from_diagonal}",
+                    f"dispersion={self.rank_dispersion}",
+                    f"connect={self.graph_connectivity}",
+                    f"singularity_scr={self.singularity_score}",
+                ]
             else:
-                params = [{"Support": f"{self.support}"},
-                          {"Density": f"{self.density}"},
-                          {"Avg. Deviation from Diagonal": f"{self.avg_deviation_from_diagonal}"},
-                          {"Rank Dispersion": f"{self.rank_dispersion}"},
-                          {"Graph Connectivity": f"{self.graph_connectivity}"},
-                          {"Singularity Score": f"{self.singularity_score}"}]
+                params = [
+                    {"Support": f"{self.support}"},
+                    {"Density": f"{self.density}"},
+                    {
+                        "Avg. Deviation from Diagonal": f"{self.avg_deviation_from_diagonal}"
+                    },
+                    {"Rank Dispersion": f"{self.rank_dispersion}"},
+                    {"Graph Connectivity": f"{self.graph_connectivity}"},
+                    {"Singularity Score": f"{self.singularity_score}"},
+                ]
         return params
 
     def decompose(self) -> tuple[list[int], list[str]]:
@@ -282,7 +297,7 @@ class GP:
             syms.append(gi[1])
         return attrs, syms
 
-    def contains_attr(self, gi: GI|None) -> bool:
+    def contains_attr(self, gi: GI | None) -> bool:
         """
         Checks if any gradual item (GI) in the gradual pattern (GP) is composed of the column
         :param gi: gradual item
@@ -308,7 +323,9 @@ class GP:
             pattern.append(item.to_string())
         return pattern
 
-    def print(self, columns: list[str], descriptor_title: bool = False) -> tuple[str, list[str] | list[dict]]:
+    def print(
+        self, columns: list[str], descriptor_title: bool = False
+    ) -> tuple[str, list[str] | list[dict]]:
         """
         A method that returns patterns with actual column names
 
@@ -330,7 +347,9 @@ class GP:
         params = self.get_computed_descriptors(descriptor_title)
         return pattern, params
 
-    def validate_via_graank(self, data_gp, target_col: int | None, time_data: dict | None=None) -> GP|TGP:
+    def validate_via_graank(
+        self, data_gp, target_col: int | None, time_data: dict | None = None
+    ) -> GP | TGP:
         """
         Validates a candidate gradual pattern (GP) based on support computation. A GP is invalid if its support value is
         less than the minimum support threshold set by the user. It uses a breath-first approach to compute support.
@@ -357,7 +376,9 @@ class GP:
 
         pw_mat_1: PairwiseMatrix = gi_dict[target_gi.to_string()]
         time_lag = gi_dict[target_gi.to_string()].time_lag
-        GP.add_gradual_item_strict(gen_pattern, target_gi, target_col=target_col, time_lag=time_lag)
+        GP.add_gradual_item_strict(
+            gen_pattern, target_gi, target_col=target_col, time_lag=time_lag
+        )
 
         for gi in self.gradual_items:
             if gi.to_string() == target_gi.to_string():
@@ -366,7 +387,12 @@ class GP:
                 pw_mat_2 = gi_dict[gi.to_string()]
                 pw_mat_1 = GP.perform_and(pw_mat_1, pw_mat_2, n, time_data=time_data)
                 if pw_mat_1.support >= min_supp:
-                    GP.add_gradual_item_strict(gen_pattern, gi, target_col=target_col, time_lag=pw_mat_1.time_lag)
+                    GP.add_gradual_item_strict(
+                        gen_pattern,
+                        gi,
+                        target_col=target_col,
+                        time_lag=pw_mat_1.time_lag,
+                    )
                     gen_pattern.support = pw_mat_1.support
         if len(gen_pattern.gradual_items) <= 1:
             return self
@@ -416,7 +442,7 @@ class GP:
         else:
             return gen_pattern
 
-    def check_am(self, gp_list: list[GP|TGP] | None, subset: bool = True) -> bool:
+    def check_am(self, gp_list: list[GP | TGP] | None, subset: bool = True) -> bool:
         """
         Anti-monotonicity check. Checks if a GP is a subset or superset of an already existing GP
 
@@ -444,7 +470,11 @@ class GP:
                     break
         return result
 
-    def is_duplicate(self, valid_gps: list[GP|TGP]|None, invalid_gps: list[GP|TGP]|None = None) -> bool:
+    def is_duplicate(
+        self,
+        valid_gps: list[GP | TGP] | None,
+        invalid_gps: list[GP | TGP] | None = None,
+    ) -> bool:
         """
         Checks if a pattern is in the list of winner GPs or loser GPs
 
@@ -459,16 +489,22 @@ class GP:
             pass
         else:
             for pat in invalid_gps:
-                if set(self.as_set) == set(pat.as_set) or \
-                        set(self.as_swapped_set) == set(pat.as_set):
+                if set(self.as_set) == set(pat.as_set) or set(
+                    self.as_swapped_set
+                ) == set(pat.as_set):
                     return True
         for pat in valid_gps:
-            if set(self.as_set) == set(pat.as_set) or \
-                    set(self.as_swapped_set) == set(pat.as_set):
+            if set(self.as_set) == set(pat.as_set) or set(self.as_swapped_set) == set(
+                pat.as_set
+            ):
                 return True
         return False
 
-    def compute_descriptors(self, warping_set: np.ndarray | torch.Tensor | None, obj_count: int,) -> bool:
+    def compute_descriptors(
+        self,
+        warping_set: np.ndarray | torch.Tensor | None,
+        obj_count: int,
+    ) -> bool:
         """
         Compute gradual warping set (GWS) descriptors.
 
@@ -539,7 +575,7 @@ class GP:
             pair_count = len(w_set_gpu)
         else:
             w_set_cpu = np.asarray(warping_set)
-            if w_set_cpu.ndim != 2:# or w_set.shape[1] != 2:
+            if w_set_cpu.ndim != 2:  # or w_set.shape[1] != 2:
                 return False
 
             i_vals = w_set_cpu[:, 0]
@@ -592,7 +628,10 @@ class GP:
         # ------------------------------------------------------------------
         # Graph connectivity - GPU
         # ------------------------------------------------------------------
-        def compute_graph_connectivity_gpu(edges: torch.Tensor|None, active_only: bool = True,) -> int:
+        def compute_graph_connectivity_gpu(
+            edges: torch.Tensor | None,
+            active_only: bool = True,
+        ) -> int:
             """
             Compute connected components using GPU label propagation.
 
@@ -629,7 +668,7 @@ class GP:
             # --------------------------------------------------------------
             # Active nodes
             # --------------------------------------------------------------
-            #if active_only:
+            # if active_only:
             #    active_nodes = torch.unique(edges)
 
             # --------------------------------------------------------------
@@ -651,7 +690,6 @@ class GP:
             # parallel.
             #
             for _ in range(obj_count - 1):
-
                 new_labels = labels.clone()
 
                 # Propagate v -> u
@@ -674,8 +712,8 @@ class GP:
 
                 # Stop when no labels changed.
                 if torch.equal(
-                        new_labels,
-                        labels,
+                    new_labels,
+                    labels,
                 ):
                     labels = new_labels
                     break
@@ -695,7 +733,10 @@ class GP:
         # ------------------------------------------------------------------
         # Graph connectivity - NumPy
         # ------------------------------------------------------------------
-        def compute_graph_connectivity_cpu(edges: np.ndarray|None, active_only: bool = True,) -> int:
+        def compute_graph_connectivity_cpu(
+            edges: np.ndarray | None,
+            active_only: bool = True,
+        ) -> int:
             """
             Compute connected components using CPU union-find.
             """
@@ -712,7 +753,7 @@ class GP:
 
             def find(node: int) -> int:
                 while parent[node] != node:
-                    parent[node] = parent[ parent[node]]
+                    parent[node] = parent[parent[node]]
                     node = parent[node]
                 return node
 
@@ -734,14 +775,22 @@ class GP:
         # ------------------------------------------------------------------
         # Select connectivity implementation
         # ------------------------------------------------------------------
-        def compute_graph_connectivity(active_only: bool = True,) -> int:
+        def compute_graph_connectivity(
+            active_only: bool = True,
+        ) -> int:
             """
             Compute graph connectivity using the appropriate backend.
             """
             if isinstance(w_set_gpu, torch.Tensor):
-                return compute_graph_connectivity_gpu(w_set_gpu, active_only=active_only,)
+                return compute_graph_connectivity_gpu(
+                    w_set_gpu,
+                    active_only=active_only,
+                )
             else:
-                return compute_graph_connectivity_cpu(w_set_cpu, active_only=active_only,)
+                return compute_graph_connectivity_cpu(
+                    w_set_cpu,
+                    active_only=active_only,
+                )
 
         # ------------------------------------------------------------------
         # Singularity score
@@ -755,9 +804,14 @@ class GP:
             if isinstance(i_vals, torch.Tensor) and isinstance(j_vals, torch.Tensor):
                 # Each edge contributes one degree to each endpoint.
                 degree = (
-                        torch.bincount(i_vals, minlength=obj_count,)
-                        +
-                        torch.bincount(j_vals, minlength=obj_count,)
+                    torch.bincount(
+                        i_vals,
+                        minlength=obj_count,
+                    )
+                    + torch.bincount(
+                        j_vals,
+                        minlength=obj_count,
+                    )
                 ).float()
 
                 mean_deg = degree.mean()
@@ -770,10 +824,21 @@ class GP:
                 # --------------------------------------------------------------
                 # NumPy implementation
                 # --------------------------------------------------------------
-                degree = np.zeros(obj_count, dtype=np.int64,)
+                degree = np.zeros(
+                    obj_count,
+                    dtype=np.int64,
+                )
 
-                np.add.at(degree, i_vals.astype(np.int64),1,)
-                np.add.at(degree, j_vals.astype(np.int64),1,)
+                np.add.at(
+                    degree,
+                    i_vals.astype(np.int64),
+                    1,
+                )
+                np.add.at(
+                    degree,
+                    j_vals.astype(np.int64),
+                    1,
+                )
 
                 mean_deg = np.mean(degree)
                 if mean_deg == 0.0:
@@ -785,11 +850,23 @@ class GP:
         # ------------------------------------------------------------------
         # Compute descriptors
         # ------------------------------------------------------------------
-        self._density = round(compute_density(), 3,)
-        self._avg_dev_from_diag = round(compute_avg_dev_from_diagonal(), 3,)
-        self._rank_dispersion = round(compute_rank_dispersion(), 3,)
+        self._density = round(
+            compute_density(),
+            3,
+        )
+        self._avg_dev_from_diag = round(
+            compute_avg_dev_from_diagonal(),
+            3,
+        )
+        self._rank_dispersion = round(
+            compute_rank_dispersion(),
+            3,
+        )
         self._graph_connectivity = compute_graph_connectivity(active_only=True)
-        self._singularity_score = round(compute_singularity_score(), 3,)
+        self._singularity_score = round(
+            compute_singularity_score(),
+            3,
+        )
 
         return True
 
@@ -807,7 +884,12 @@ class GP:
         return float(n * (n - 1.0) / 2.0)
 
     @staticmethod
-    def add_gradual_item_strict(gp: GP|TGP, gi: GI, target_col: int|None = None, time_lag: TimeDelay|None = None) -> GP|TGP:
+    def add_gradual_item_strict(
+        gp: GP | TGP,
+        gi: GI,
+        target_col: int | None = None,
+        time_lag: TimeDelay | None = None,
+    ) -> GP | TGP:
         """
         Add a gradual item to a gradual pattern using pattern-aware placement.
 
@@ -859,7 +941,9 @@ class GP:
                 gp.target_gradual_item = gi
             else:
                 if time_lag is None:
-                    raise ValueError("time_lag must be provided for temporal gradual items.")
+                    raise ValueError(
+                        "time_lag must be provided for temporal gradual items."
+                    )
                 gp.add_temporal_gradual_item(gi, time_lag)
         else:
             gp.add_gradual_item(gi)
@@ -876,7 +960,9 @@ class GP:
         return new_gp
 
     @staticmethod
-    def get_selected_rows(packed_bit_mat: np.ndarray|torch.Tensor, dim: int) -> np.ndarray | torch.Tensor:
+    def get_selected_rows(
+        packed_bit_mat: np.ndarray | torch.Tensor, dim: int
+    ) -> np.ndarray | torch.Tensor:
         """
         Get objects participating in at least one active warping relation.
 
@@ -884,13 +970,18 @@ class GP:
             Unique object indices.
         """
 
-        edge_list = GP.gen_gradual_warping_set(packed_bit_mat, dim, )
+        edge_list = GP.gen_gradual_warping_set(
+            packed_bit_mat,
+            dim,
+        )
         if isinstance(edge_list, torch.Tensor):
             return torch.unique(edge_list.flatten())
         return np.unique(edge_list.flatten())
 
     @staticmethod
-    def gen_gradual_warping_set(packed_pairwise_mat: np.ndarray | torch.Tensor, n: int) -> np.ndarray | torch.Tensor:
+    def gen_gradual_warping_set(
+        packed_pairwise_mat: np.ndarray | torch.Tensor, n: int
+    ) -> np.ndarray | torch.Tensor:
         """
         A method that decomposes the pairwise matrix of a gradual item/pattern into a warping set. Attributes that have
         strong correlation will produce a warping set with dense zigzag patterns when plotted as a graph. Those with weak
@@ -905,14 +996,23 @@ class GP:
         if isinstance(packed_pairwise_mat, torch.Tensor):
             return GP.gen_gradual_warping_set_gpu(packed_pairwise_mat, n)
 
-        pairwise_mat = np.unpackbits(packed_pairwise_mat, count=n * n).reshape(n, n).astype(bool)
-        edge_lst: list[tuple[int, int]] = [(i, j) for i, row in enumerate(pairwise_mat) for j, val in enumerate(row) if
-                                           val]
+        pairwise_mat = (
+            np.unpackbits(packed_pairwise_mat, count=n * n).reshape(n, n).astype(bool)
+        )
+        edge_lst: list[tuple[int, int]] = [
+            (i, j)
+            for i, row in enumerate(pairwise_mat)
+            for j, val in enumerate(row)
+            if val
+        ]
         edge_lst = sorted(edge_lst, key=lambda x: x[0])
         return np.array(edge_lst)
 
     @staticmethod
-    def gen_gradual_warping_set_gpu(packed: torch.Tensor, n: int, ) -> torch.Tensor:
+    def gen_gradual_warping_set_gpu(
+        packed: torch.Tensor,
+        n: int,
+    ) -> torch.Tensor:
         """Convert a packed CUDA bitmap directly to edge indices.
 
         Args:
@@ -933,7 +1033,7 @@ class GP:
         bits = (packed[:, None] & bit_masks).flatten()
 
         # Remove np.packbits() padding.
-        bits = bits[:n * n]
+        bits = bits[: n * n]
 
         # Get flattened positions of set bits.
         positions = torch.nonzero(bits, as_tuple=False).flatten()
@@ -945,7 +1045,12 @@ class GP:
         return torch.stack((rows, cols), dim=1)
 
     @staticmethod
-    def perform_and(bin_data_1: PairwiseMatrix|None, bin_data_2: PairwiseMatrix|None, dim: int, time_data: dict|None=None) -> PairwiseMatrix:
+    def perform_and(
+        bin_data_1: PairwiseMatrix | None,
+        bin_data_2: PairwiseMatrix | None,
+        dim: int,
+        time_data: dict | None = None,
+    ) -> PairwiseMatrix:
         """
         Perform logical AND operation on two bitmaps.
 
@@ -956,7 +1061,9 @@ class GP:
         """
 
         if bin_data_1 is None or bin_data_2 is None:
-            return PairwiseMatrix(packed_bin_mat=np.zeros((dim, dim)), support=0, pattern=set())
+            return PairwiseMatrix(
+                packed_bin_mat=np.zeros((dim, dim)), support=0, pattern=set()
+            )
 
         # Intersection of packed bitmaps -- Supports NumPy arrays and PyTorch tensors (CPU or CUDA)
         packed_1 = bin_data_1.packed_bin_mat
@@ -964,37 +1071,59 @@ class GP:
 
         if isinstance(packed_1, torch.Tensor):
             if not isinstance(packed_2, torch.Tensor):
-                raise TypeError("Both packed bitmaps must be either NumPy arrays or PyTorch tensors.")
+                raise TypeError(
+                    "Both packed bitmaps must be either NumPy arrays or PyTorch tensors."
+                )
 
             if packed_1.device != packed_2.device:
                 raise ValueError("Packed tensors must be on the same device.")
 
             packed_bit_mat = torch.bitwise_and(packed_1, packed_2)
-            bit_counts = torch.tensor([i.bit_count() for i in range(256)], dtype=torch.int64, device=packed_bit_mat.device, )
-            sup = (bit_counts[packed_bit_mat.long()].sum().item() / GP.pair_count(n=dim))
+            bit_counts = torch.tensor(
+                [i.bit_count() for i in range(256)],
+                dtype=torch.int64,
+                device=packed_bit_mat.device,
+            )
+            sup = bit_counts[packed_bit_mat.long()].sum().item() / GP.pair_count(n=dim)
         else:
             if isinstance(packed_2, torch.Tensor):
-                raise TypeError("Both packed bitmaps must be either NumPy arrays or PyTorch tensors.")
+                raise TypeError(
+                    "Both packed bitmaps must be either NumPy arrays or PyTorch tensors."
+                )
 
             packed_bit_mat = np.bitwise_and(packed_1, packed_2)
-            bit_counts = np.array([i.bit_count() for i in range(256)], dtype=np.uint8, )
-            sup = (bit_counts[packed_bit_mat].sum() / GP.pair_count(n=dim))
+            bit_counts = np.array(
+                [i.bit_count() for i in range(256)],
+                dtype=np.uint8,
+            )
+            sup = bit_counts[packed_bit_mat].sum() / GP.pair_count(n=dim)
 
         # Combine gradual items
         gp = bin_data_1.pattern | bin_data_2.pattern
 
         # Time-delay computation
         if time_data is not None:
-            selected_rows = GP.get_selected_rows(packed_bit_mat, dim,)
+            selected_rows = GP.get_selected_rows(
+                packed_bit_mat,
+                dim,
+            )
             t_lag = TimeDelay.approx_time_lag(selected_rows, time_data, gp_set=gp)
-            return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup, time_lag=t_lag, pattern=gp,)
+            return PairwiseMatrix(
+                packed_bin_mat=packed_bit_mat,
+                support=sup,
+                time_lag=t_lag,
+                pattern=gp,
+            )
 
-        return PairwiseMatrix(packed_bin_mat=packed_bit_mat, support=sup,pattern=gp,)
+        return PairwiseMatrix(
+            packed_bin_mat=packed_bit_mat,
+            support=sup,
+            pattern=gp,
+        )
 
 
 class TimeDelay:
-
-    def __init__(self, tstamp: float=0, supp: float=0):
+    def __init__(self, tstamp: float = 0, supp: float = 0):
         """
             TimeDelay (Time Delay). A class used in Fuzzy Temporal Gradual Patterns to create the time-delay object.
 
@@ -1054,8 +1183,8 @@ class TimeDelay:
             :return: The formatted time-delay as a list.
             """
             stamp_in_seconds = abs(self._timestamp)
-            years = stamp_in_seconds / 3.154e+7
-            months = stamp_in_seconds / 2.628e+6
+            years = stamp_in_seconds / 3.154e7
+            months = stamp_in_seconds / 2.628e6
             weeks = stamp_in_seconds / 604800
             days = stamp_in_seconds / 86400
             hours = stamp_in_seconds / 3600
@@ -1081,10 +1210,10 @@ class TimeDelay:
                 return [round(years, 0), "years"]
 
         self._sign: str = delay_sign()
-        self._formatted_time: dict = {'value': 0, 'duration': ''}
+        self._formatted_time: dict = {"value": 0, "duration": ""}
         if self._timestamp != 0:
             time_arr = format_time()
-            self._formatted_time = {'value': time_arr[0], 'duration': time_arr[1]}
+            self._formatted_time = {"value": time_arr[0], "duration": time_arr[1]}
             self._valid = True
 
     def to_string(self) -> str:
@@ -1094,14 +1223,26 @@ class TimeDelay:
         :return: The time-delay as a string.
         """
         if self._formatted_time:
-            txt = ("~ " + self._sign + str(self._formatted_time['value']) + " " + str(self._formatted_time['duration'])
-                   + " : " + str(self._support))
+            txt = (
+                "~ "
+                + self._sign
+                + str(self._formatted_time["value"])
+                + " "
+                + str(self._formatted_time["duration"])
+                + " : "
+                + str(self._support)
+            )
         else:
             txt = "No time lag found!"
         return txt
 
     @staticmethod
-    def predict_time(crisp_inputs: np.ndarray, time_values: np.ndarray, fuzzy_mfs: list[dict], inference_method: str) -> float:
+    def predict_time(
+        crisp_inputs: np.ndarray,
+        time_values: np.ndarray,
+        fuzzy_mfs: list[dict],
+        inference_method: str,
+    ) -> float:
         """Predict time using a multi-antecedent fuzzy inference system.
 
         Each crisp input is first fuzzified against the same set of
@@ -1265,51 +1406,77 @@ class TimeDelay:
                 shape = (number_of_values, number_of_MFs)
             """
 
-            values = np.asarray(values, dtype=np.float64, ).ravel()
+            values = np.asarray(
+                values,
+                dtype=np.float64,
+            ).ravel()
             num_values = values.size
             num_mfs = len(fuzzy_mfs)
 
-            memberships = np.empty((num_values, num_mfs), dtype=np.float64, )
+            memberships = np.empty(
+                (num_values, num_mfs),
+                dtype=np.float64,
+            )
             eps = np.finfo(np.float64).eps
 
             for i, mf in enumerate(fuzzy_mfs):
                 shape = mf["shape"].lower()
-                params = np.asarray(mf["params"], dtype=np.float64,)
+                params = np.asarray(
+                    mf["params"],
+                    dtype=np.float64,
+                )
 
                 # ------------------------------------------------------
                 # Triangular MF
                 # ------------------------------------------------------
                 if shape == "triangular":
                     if params.size != 3:
-                        raise ValueError( "Triangular membership functions require [left, center, right].")
+                        raise ValueError(
+                            "Triangular membership functions require [left, center, right]."
+                        )
                     left, center, right = params
-                    rising = ((values - left) / max(center - left, eps))
-                    falling = ( (right - values) / max(right - center, eps))
+                    rising = (values - left) / max(center - left, eps)
+                    falling = (right - values) / max(right - center, eps)
 
-                    memberships[:, i] = np.maximum(0.0, np.minimum(rising, falling),)
+                    memberships[:, i] = np.maximum(
+                        0.0,
+                        np.minimum(rising, falling),
+                    )
 
                 # ------------------------------------------------------
                 # Trapezoidal MF
                 # ------------------------------------------------------
                 elif shape == "trapezoidal":
                     if params.size != 4:
-                        raise ValueError("Trapezoidal membership functions require [left, left_peak, right_peak, right].")
+                        raise ValueError(
+                            "Trapezoidal membership functions require [left, left_peak, right_peak, right]."
+                        )
                     left, left_peak, right_peak, right = params
-                    rising = ((values - left) / max(left_peak - left, eps))
-                    falling = ((right - values) / max(right - right_peak, eps))
+                    rising = (values - left) / max(left_peak - left, eps)
+                    falling = (right - values) / max(right - right_peak, eps)
 
                     memberships[:, i] = np.maximum(
-                        0.0, np.minimum( np.minimum(rising, 1.0), falling,),)
+                        0.0,
+                        np.minimum(
+                            np.minimum(rising, 1.0),
+                            falling,
+                        ),
+                    )
 
                 # ------------------------------------------------------
                 # Gaussian MF
                 # ------------------------------------------------------
                 elif shape == "gaussian":
                     if params.size != 2:
-                        raise ValueError("Gaussian membership functions require [center, sigma].")
+                        raise ValueError(
+                            "Gaussian membership functions require [center, sigma]."
+                        )
 
                     center, sigma = params
-                    sigma = max(abs(float(sigma)), eps,)
+                    sigma = max(
+                        abs(float(sigma)),
+                        eps,
+                    )
 
                     memberships[:, i] = np.exp(-0.5 * ((values - center) / sigma) ** 2)
                 else:
@@ -1317,7 +1484,11 @@ class TimeDelay:
                         f"Unsupported membership-function shape: {shape!r}. Expected 'triangular', 'trapezoidal', or 'gaussian'."
                     )
 
-            return np.clip(memberships,0.0,1.0,)
+            return np.clip(
+                memberships,
+                0.0,
+                1.0,
+            )
 
         # Output universe
         universe = np.linspace(
@@ -1353,7 +1524,10 @@ class TimeDelay:
         # This directly computes the multi-antecedent rule activation
         # without constructing M^n combinations.
         # --------------------------------------------------------------
-        firing_strengths = np.min(fuzzified, axis=0,)
+        firing_strengths = np.min(
+            fuzzified,
+            axis=0,
+        )
 
         # --------------------------------------------------------------
         # Evaluate the MFs over the output universe.
@@ -1386,7 +1560,9 @@ class TimeDelay:
         method = inference_method.lower()
 
         if method not in {"mamdani", "larsen"}:
-            raise ValueError(f"Unsupported inference method: {inference_method!r}. Expected 'mamdani' or 'larsen'.")
+            raise ValueError(
+                f"Unsupported inference method: {inference_method!r}. Expected 'mamdani' or 'larsen'."
+            )
 
         # --------------------------------------------------------------
         # Apply the multi-antecedent activation to every output MF.
@@ -1401,9 +1577,12 @@ class TimeDelay:
         #
         # --------------------------------------------------------------
         if method == "mamdani":
-            rule_outputs = np.minimum(output_mfs, firing_strengths[None, :],)
+            rule_outputs = np.minimum(
+                output_mfs,
+                firing_strengths[None, :],
+            )
         else:
-            rule_outputs = (output_mfs * firing_strengths[None, :])
+            rule_outputs = output_mfs * firing_strengths[None, :]
 
         # --------------------------------------------------------------
         # Aggregate all activated output membership functions.
@@ -1412,21 +1591,34 @@ class TimeDelay:
         #         = max_i rule_output_i(t)
         #
         # --------------------------------------------------------------
-        aggregated_mf = np.max( rule_outputs, axis=1,)
+        aggregated_mf = np.max(
+            rule_outputs,
+            axis=1,
+        )
 
         # Centroid defuzzification
-        total_membership = np.sum(aggregated_mf,)
+        total_membership = np.sum(
+            aggregated_mf,
+        )
 
         if total_membership <= np.finfo(np.float64).eps:
             return float(np.mean(crisp_inputs))
 
         prediction = (
-                np.sum(universe * aggregated_mf,) / total_membership
+            np.sum(
+                universe * aggregated_mf,
+            )
+            / total_membership
         )
         return float(prediction)
 
     @classmethod
-    def approx_time_lag(cls, selected_rows: np.ndarray|torch.Tensor, time_data: dict|None, gp_set: set) -> TimeDelay:
+    def approx_time_lag(
+        cls,
+        selected_rows: np.ndarray | torch.Tensor,
+        time_data: dict | None,
+        gp_set: set,
+    ) -> TimeDelay:
         """
         A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
         methods: (1) uses classical slide and re-calculate dynamic programming to find the best time-delay value and,
@@ -1442,7 +1634,9 @@ class TimeDelay:
         if time_data is None:
             return cls(-1, 0)
 
-        t_data: dict|None = time_data["time_data"] # {col1: [tlag1, ...], col2: [...],}
+        t_data: dict | None = time_data[
+            "time_data"
+        ]  # {col1: [tlag1, ...], col2: [...],}
         use_gp: bool = time_data["use_gp"]
         mf_data: list[dict] = time_data["fuzzy_mfs"]
         inference: str = time_data["inference"]
@@ -1451,8 +1645,15 @@ class TimeDelay:
             return cls(-1, 0)
 
         # 2. Get TimeDelay Array
-        lst_rows: list = selected_rows.cpu().tolist() if isinstance(selected_rows, torch.Tensor) else selected_rows.tolist()
-        all_time_arr: np.ndarray = np.array(list(t_data.values()), dtype=np.float64,) # Format: 2D array of size [cols X rows]
+        lst_rows: list = (
+            selected_rows.cpu().tolist()
+            if isinstance(selected_rows, torch.Tensor)
+            else selected_rows.tolist()
+        )
+        all_time_arr: np.ndarray = np.array(
+            list(t_data.values()),
+            dtype=np.float64,
+        )  # Format: 2D array of size [cols X rows]
 
         if use_gp:
             # all selected rows for only columns that appear in the GPs
@@ -1463,20 +1664,29 @@ class TimeDelay:
                 if col in attr_cols:
                     sel_time_lst.append(t_data[col])
             sel_time_mat = np.array(sel_time_lst)
-            sel_time_arr = sel_time_mat[:, lst_rows] 
+            sel_time_arr = sel_time_mat[:, lst_rows]
         else:
             # all selected rows for all the columns
             sel_time_arr = all_time_arr[:, lst_rows]
 
         # 3. Approximate TimeDelay value
         all_time_arr = all_time_arr.ravel()  # Converts into 1D array
-        all_time_arr = all_time_arr[np.isfinite(all_time_arr)]  # Removes all NaN and Infinite values
+        all_time_arr = all_time_arr[
+            np.isfinite(all_time_arr)
+        ]  # Removes all NaN and Infinite values
 
-        sel_time_arr = sel_time_arr.ravel() # Converts into 1D array
-        sel_time_arr = sel_time_arr[np.isfinite(sel_time_arr)]  # Removes all NaN and Infinite values
+        sel_time_arr = sel_time_arr.ravel()  # Converts into 1D array
+        sel_time_arr = sel_time_arr[
+            np.isfinite(sel_time_arr)
+        ]  # Removes all NaN and Infinite values
         sel_time_arr = np.unique(sel_time_arr)  # only the unique values
 
-        time_val: float = TimeDelay.predict_time(crisp_inputs=sel_time_arr, time_values=all_time_arr, fuzzy_mfs=mf_data, inference_method=inference)
+        time_val: float = TimeDelay.predict_time(
+            crisp_inputs=sel_time_arr,
+            time_values=all_time_arr,
+            fuzzy_mfs=mf_data,
+            inference_method=inference,
+        )
         pred_time_lag: TimeDelay = cls(time_val, 0.99)
 
         return pred_time_lag
@@ -1524,16 +1734,16 @@ class TGP(GP):
     def temporal_gradual_items(self) -> list[TemporalGI]:
         return self._temporal_gradual_items
 
-    def add_temporal_gradual_item(self, item: GI, time_delay: TimeDelay|None):
+    def add_temporal_gradual_item(self, item: GI, time_delay: TimeDelay | None):
         """
-            Adds a fuzzy temporal gradual item (fTGI) into the fuzzy temporal gradual pattern (fTGP)
-            :param item: gradual item
-            :type item: so4gp.GI
+        Adds a fuzzy temporal gradual item (fTGI) into the fuzzy temporal gradual pattern (fTGP)
+        :param item: gradual item
+        :type item: so4gp.GI
 
-            :param time_delay: time delay
-            :type time_delay: TimeDelay
+        :param time_delay: time delay
+        :type time_delay: TimeDelay
 
-            :return: void
+        :return: void
         """
         if item is None or time_delay is None:
             return
@@ -1549,7 +1759,9 @@ class TGP(GP):
         """
         Returns the Temporal-GP in string format as a list.
         """
-        pattern = [self._target_gradual_item.to_string() if self._target_gradual_item else ""]
+        pattern = [
+            self._target_gradual_item.to_string() if self._target_gradual_item else ""
+        ]
         for temp_gi in self._temporal_gradual_items:
             gi = temp_gi.gradual_item
             t_lag = temp_gi.time_delay
@@ -1557,7 +1769,9 @@ class TGP(GP):
             pattern.append(f"({gi.to_string()}) {str_time}")
         return pattern
 
-    def print(self, columns: list[str], descriptor_title: bool = False) -> tuple[str, list[str] | list[dict]]:
+    def print(
+        self, columns: list[str], descriptor_title: bool = False
+    ) -> tuple[str, list[str] | list[dict]]:
         """
         A method that returns a fuzzy temporal gradual pattern (TGP) with actual column names
 
@@ -1575,7 +1789,7 @@ class TGP(GP):
         for i, temp_gi in enumerate(self._temporal_gradual_items):
             gi = temp_gi.gradual_item
             t_lag = temp_gi.time_delay
-            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {"lag" if has_no_time else t_lag.formatted_time['duration']}"
+            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {'lag' if has_no_time else t_lag.formatted_time['duration']}"
             col_title = columns[gi.attribute_col]
             pat = f"({col_title}{gi.symbol}) {str_time}"
             # pattern.append(pat)
@@ -1603,7 +1817,9 @@ class TGP(GP):
         swapped = False
         if tgt1 is None or tgt2 is None:
             return False
-        if (tgt1 is not None and tgt2 is not None) and (tgt1.to_string() != tgt2.to_string()):
+        if (tgt1 is not None and tgt2 is not None) and (
+            tgt1.to_string() != tgt2.to_string()
+        ):
             if GI.swap_gi_symbol(tgt1).to_string() != tgt2.to_string():
                 return False
             else:
@@ -1612,11 +1828,17 @@ class TGP(GP):
         # Compare temporal gradual items
         lst_tgi1 = self.temporal_gradual_items
         lst_tgi2 = ftgp.temporal_gradual_items
-        if (len(lst_tgi1) != len(lst_tgi2)) and (len(lst_tgi1) <= 0) or (len(lst_tgi2) <= 0):
+        if (
+            (len(lst_tgi1) != len(lst_tgi2))
+            and (len(lst_tgi1) <= 0)
+            or (len(lst_tgi2) <= 0)
+        ):
             return False
 
         gi_set1 = {tgi.gradual_item.to_string() for tgi in lst_tgi1}
-        gi_set1_swap = {GI.swap_gi_symbol(tgi.gradual_item).to_string() for tgi in lst_tgi1}
+        gi_set1_swap = {
+            GI.swap_gi_symbol(tgi.gradual_item).to_string() for tgi in lst_tgi1
+        }
         gi_set2 = {tgi.gradual_item.to_string() for tgi in lst_tgi2}
         if gi_set1 != gi_set2:
             if swapped and gi_set1_swap != gi_set2:
@@ -1625,8 +1847,14 @@ class TGP(GP):
                 return False
 
         # Compare time delays
-        td_set1 = {f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi1}
-        td_set2 = {f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi2}
+        td_set1 = {
+            f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}"
+            for tgi in lst_tgi1
+        }
+        td_set2 = {
+            f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}"
+            for tgi in lst_tgi2
+        }
 
         # All checks passed, patterns are similar
         return td_set1 != td_set2
@@ -1672,7 +1900,7 @@ class TGP(GP):
                 time_lag = (
                     f"{lag.sign}"
                     f"{lag.formatted_time['value']} "
-                    f"{"lag" if has_no_time else lag.formatted_time['duration']}"
+                    f"{'lag' if has_no_time else lag.formatted_time['duration']}"
                 )
 
             relations.append(

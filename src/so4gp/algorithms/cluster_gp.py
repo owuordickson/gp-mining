@@ -13,7 +13,6 @@ from .base.graank_base import BaseGrad
 
 
 class ClusterGP(BaseGrad):
-
     def __init__(self, *args, e_prob: float = 0.5, max_iter: int = 10, **kwargs):
         """
         CluDataGP stands for Clustering DataGP. It is a class that inherits the DataGP class to create data-gp
@@ -43,13 +42,13 @@ class ClusterGP(BaseGrad):
         self._erasure_probability: float = e_prob
         self._max_iteration: int = max_iter
         self._gradual_items: list[GI] = []
-        self._win_mat: np.ndarray|None = None
-        self._cum_wins: np.ndarray|None = None
-        self._net_win_mat: np.ndarray|None = None
-        self._ij: np.ndarray|None = None
+        self._win_mat: np.ndarray | None = None
+        self._cum_wins: np.ndarray | None = None
+        self._net_win_mat: np.ndarray | None = None
+        self._ij: np.ndarray | None = None
         self._construct_matrices(e_prob)
 
-    def _construct_matrices(self, e: float=0):
+    def _construct_matrices(self, e: float = 0):
         """
         Generates all the gradual items and constructs: (1) net-win matrix, (2) cumulative wins, (3) pairwise objects.
 
@@ -69,7 +68,9 @@ class ClusterGP(BaseGrad):
         else:
             # 1a. Generate random pairs using erasure-probability
             total_pair_count = int(n * (n - 1) * 0.5)
-            rand_1d = np.random.choice(n, int(prob * total_pair_count) * 2, replace=True)
+            rand_1d = np.random.choice(
+                n, int(prob * total_pair_count) * 2, replace=True
+            )
             pair_ij = np.reshape(rand_1d, (-1, 2))
 
             # 1b. Remove duplicates
@@ -87,8 +88,11 @@ class ClusterGP(BaseGrad):
             col_data = np.array(attr_data[col], dtype=float)  # Feature data objects
 
             # Cumulative Wins: for estimation of score-vector
-            temp_cum_wins = np.where(col_data[pair_ij[:, 0]] < col_data[pair_ij[:, 1]], 1,
-                                     np.where(col_data[pair_ij[:, 0]] > col_data[pair_ij[:, 1]], -1, 0))
+            temp_cum_wins = np.where(
+                col_data[pair_ij[:, 0]] < col_data[pair_ij[:, 1]],
+                1,
+                np.where(col_data[pair_ij[:, 0]] > col_data[pair_ij[:, 1]], -1, 0),
+            )
 
             # S-vector
             s_vec = np.zeros((n,), dtype=np.int32)
@@ -107,11 +111,11 @@ class ClusterGP(BaseGrad):
                 s_vec[s_vec > 0] = 1  # Normalize net wins
                 s_vec[s_vec < 0] = -1  # Normalize net loses
 
-                self._gradual_items .append(GI(col, '+'))
+                self._gradual_items.append(GI(col, "+"))
                 cum_wins.append(temp_cum_wins)
                 s_mat.append(s_vec)
 
-                self._gradual_items .append(GI(col, '-'))
+                self._gradual_items.append(GI(col, "-"))
                 cum_wins.append(-temp_cum_wins)
                 s_mat.append(-s_vec)
 
@@ -120,7 +124,12 @@ class ClusterGP(BaseGrad):
         self._net_win_mat = np.array(s_mat)
         self._ij = pair_ij
 
-    def _infer_gps(self, clusters: np.ndarray, exclude_target:bool=False, time_data: dict|None=None) -> bool:
+    def _infer_gps(
+        self,
+        clusters: np.ndarray,
+        exclude_target: bool = False,
+        time_data: dict | None = None,
+    ) -> bool:
         """
         A function that infers GPs from clusters of gradual items.
 
@@ -161,11 +170,21 @@ class ClusterGP(BaseGrad):
                             j = arr_ij[pr][1]
                             if pr_val == 1:
                                 log = math.log10(
-                                    math.exp(score_vector[i]) / (math.exp(score_vector[i]) + math.exp(score_vector[j])))
+                                    math.exp(score_vector[i])
+                                    / (
+                                        math.exp(score_vector[i])
+                                        + math.exp(score_vector[j])
+                                    )
+                                )
                                 temp_vec[i] += pr_val * log
                             elif pr_val == -1:
                                 log = math.log10(
-                                    math.exp(score_vector[j]) / (math.exp(score_vector[i]) + math.exp(score_vector[j])))
+                                    math.exp(score_vector[j])
+                                    / (
+                                        math.exp(score_vector[i])
+                                        + math.exp(score_vector[j])
+                                    )
+                                )
                                 temp_vec[j] += -pr_val * log
                     score_vector = abs(temp_vec / np.sum(temp_vec))
             return score_vector
@@ -194,12 +213,16 @@ class ClusterGP(BaseGrad):
         all_gis = self._gradual_items
         cum_wins = self._cum_wins
 
-        lst_indices = [np.where(clusters == element)[0] for element in np.unique(clusters)]
+        lst_indices = [
+            np.where(clusters == element)[0] for element in np.unique(clusters)
+        ]
         for grp_idx in lst_indices:
             if grp_idx.size > 1:
                 # 1. Retrieve all cluster-pairs and the corresponding GIs
                 cluster_gis = [all_gis[idx] for idx in grp_idx]
-                cluster_cum_wins = cum_wins[grp_idx] if cum_wins is not None else np.array([]) # All the rows of selected groups
+                cluster_cum_wins = (
+                    cum_wins[grp_idx] if cum_wins is not None else np.array([])
+                )  # All the rows of selected groups
 
                 # 2. Compute score vector from R matrix
                 score_vectors = []  # Approach 2
@@ -212,33 +235,47 @@ class ClusterGP(BaseGrad):
 
                 # 4. Estimate Time Delay
                 if time_data is not None:
-                    #t_data = time_data["time_data"]
-                    #use_gp = time_data["use_gp"]
-                    #fuzzy_mf = time_data["tri_mf"]
+                    # t_data = time_data["time_data"]
+                    # use_gp = time_data["use_gp"]
+                    # fuzzy_mf = time_data["tri_mf"]
                     gp_set = {gi.to_string() for gi in cluster_gis}
                     np.ones([self.row_count, self.row_count], dtype=bool)
-                    selected_rows = GP.get_selected_rows(packed_bit_mat, self.row_count, )
-                    time_lag = TimeDelay.approx_time_lag(selected_rows, time_data, gp_set=gp_set)
+                    selected_rows = GP.get_selected_rows(
+                        packed_bit_mat,
+                        self.row_count,
+                    )
+                    time_lag = TimeDelay.approx_time_lag(
+                        selected_rows, time_data, gp_set=gp_set
+                    )
                     # time_lag = TimeDelay.approx_time_lag(bin_data, t_data, gp_set=gp_set, tri_mf_data=fuzzy_mf)
 
                 # 5. Infer GPs from the clusters
                 if est_sup >= self.thd_supp:
                     # Create GP object
-                    gp: GP|TGP = TGP() if time_data is not None else GP()
+                    gp: GP | TGP = TGP() if time_data is not None else GP()
                     for gi in cluster_gis:
-                        GP.add_gradual_item_strict(gp, gi, target_col=target_col , time_lag=time_lag)
+                        GP.add_gradual_item_strict(
+                            gp, gi, target_col=target_col, time_lag=time_lag
+                        )
                     gp.support = est_sup
 
                     # 4a. Check if the GP candidate is valid (has more than one GI)
-                    length_ok = (len(gp.gradual_items) > 1)
+                    length_ok = len(gp.gradual_items) > 1
                     # 4b. Check if target-feature is present in the GP candidate
-                    target_col_ok = self.check_target_feature(gp, exclude_target=exclude_target)
-                    is_valid = (length_ok and target_col_ok)
+                    target_col_ok = self.check_target_feature(
+                        gp, exclude_target=exclude_target
+                    )
+                    is_valid = length_ok and target_col_ok
                     if is_valid:
                         self.add_gradual_pattern(gp)
         return True
 
-    def discover(self, target_col: int | None = None, time_data: dict|None= None, exclude_target: bool = False) -> dict:
+    def discover(
+        self,
+        target_col: int | None = None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+    ) -> dict:
         """
         Applies spectral clustering to determine which gradual items belong to the same group based on the similarity
         of net-win vectors. Gradual items in the same cluster should have almost the same score vector. The candidates
@@ -284,6 +321,7 @@ class ClusterGP(BaseGrad):
             "Erasure probability": f"{self._erasure_probability}",
             "Number of iterations": f"{self._max_iteration}",
             "Run-time": f"{duration:.6f} seconds",
-            "Invalid Count": f"{0}"}
+            "Invalid Count": f"{0}",
+        }
 
         return out_dict

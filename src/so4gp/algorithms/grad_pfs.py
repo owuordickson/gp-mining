@@ -22,7 +22,12 @@ class GradPFS:
     patterns for regression tasks. This algorithm is published in:
     """
 
-    def __init__(self, data_src: str | pd.DataFrame, min_score: float = 0.75, target_col: int | None = None):
+    def __init__(
+        self,
+        data_src: str | pd.DataFrame,
+        min_score: float = 0.75,
+        target_col: int | None = None,
+    ):
         """
         An algorithm based on the filter method for performing univariate or/and multivariate feature selection through
         gradual patterns for regression tasks (not suitable for classification tasks). The results are returned as a
@@ -95,7 +100,7 @@ class GradPFS:
         col_names = np.array(col_names)
 
         # 4. Update correlation matrix with GP support
-        for gp in (grad.gradual_patterns or []):
+        for gp in grad.gradual_patterns or []:
             score = gp.support
             i = int(gp.gradual_items[0].attribute_col)
             j = int(gp.gradual_items[1].attribute_col)
@@ -115,7 +120,7 @@ class GradPFS:
         corr_df.index = col_names
         return corr_df
 
-    def multivariate_fs(self, algorithm: str = 'GRAANK') -> pd.DataFrame | None:
+    def multivariate_fs(self, algorithm: str = "GRAANK") -> pd.DataFrame | None:
         """
         Run the multivariate GradPFS feature selection algorithm.
 
@@ -164,12 +169,12 @@ class GradPFS:
             raise ValueError("You must specify a target feature (column index).")
 
         # 1. Instantiate GRAANK object and extract GPs
-        algorithm += 'GRAANK'  # bypass for now (TO BE DELETED)
-        if algorithm == 'CLU':
+        algorithm += "GRAANK"  # bypass for now (TO BE DELETED)
+        if algorithm == "CLU":
             grad = ClusterGP(self.data_src, min_sup=self.thd_score)
-        elif algorithm == 'ACO':
+        elif algorithm == "ACO":
             grad = AntGRAANK(self.data_src, min_sup=self.thd_score)
-        elif algorithm == 'CLU':
+        elif algorithm == "CLU":
             grad = GeneticGRAANK(self.data_src, min_sup=self.thd_score)
         else:
             grad = OrigGRAANK(self.data_src, min_sup=self.thd_score)
@@ -186,9 +191,9 @@ class GradPFS:
 
         # 3a. Collect the irrelevant features (and redundant among themselves)
         rel_lst = []
-        for gp in (grad.gradual_patterns or []):
-             rel_attributes = gp.decompose()[0]
-             rel_lst = rel_attributes.copy()
+        for gp in grad.gradual_patterns or []:
+            rel_attributes = gp.decompose()[0]
+            rel_lst = rel_attributes.copy()
         rel_set = set(rel_lst)
         rel_set = rel_set.difference({self.target_col})
 
@@ -211,8 +216,14 @@ class GradPFS:
         # # 5. Update the correlation list (relevant features w.r.t. target feature)
         irr_features = col_names[list(irr_set)]
         rel_features = col_names[list(rel_set)]
-        corr_lst = [[{str(col_names[self.target_col])}, set(rel_features.tolist()), set(irr_features.tolist())],
-                     [{self.target_col}, rel_set, irr_set]]
+        corr_lst = [
+            [
+                {str(col_names[self.target_col])},
+                set(rel_features.tolist()),
+                set(irr_features.tolist()),
+            ],
+            [{self.target_col}, rel_set, irr_set],
+        ]
 
         # # 3c. Update correlation matrix with GP support
         # corr_lst = []
@@ -232,11 +243,14 @@ class GradPFS:
             return None
         corr_arr = np.array(corr_lst, dtype=object)
         # corr_df = pd.DataFrame(corr_arr, columns=[ "Attribute Indices", "Relevant Features", "GradPFS Score"])
-        corr_df = pd.DataFrame(corr_arr, columns=["Target Feature", "Relevant Features", "Irrelevant Features"])
+        corr_df = pd.DataFrame(
+            corr_arr,
+            columns=["Target Feature", "Relevant Features", "Irrelevant Features"],
+        )
         """:type corr_df: pd.DataFrame"""
         return corr_df
 
-    def generate_pdf_report(self, fs_type: str = 'U') -> bool:
+    def generate_pdf_report(self, fs_type: str = "U") -> bool:
         """
         A method that executes GradPFS algorithm for either Univariate Feature Selection ('U') or
         Multivariate Feature Selection ('M') and generates a PDF report.
@@ -246,7 +260,7 @@ class GradPFS:
         """
 
         # 2. Run a feature selection algorithm
-        if fs_type == 'M':
+        if fs_type == "M":
             # 2a. Multivariate feature selection
             corr_df = self.multivariate_fs()
             fig_corr = None
@@ -255,18 +269,28 @@ class GradPFS:
 
             # Create table data
             tab_data = np.vstack([corr_df.columns, corr_df.to_numpy()])
-            col_width = [1/3, 1/3, 1/3]
+            col_width = [1 / 3, 1 / 3, 1 / 3]
         else:
             # 2b. Univariate feature selection
             corr_mat_df = self.univariate_fs()
-            lst_redundant = GradPFS.find_redundant_features(corr_mat_df.to_numpy(), self.thd_score)
+            lst_redundant = GradPFS.find_redundant_features(
+                corr_mat_df.to_numpy(), self.thd_score
+            )
 
             # Create a plot figure
             fig_corr = plt.Figure(figsize=(8.5, 8), dpi=300)
             ax_corr = fig_corr.add_subplot(1, 1, 1)
-            sns.heatmap(corr_mat_df, annot=True, cmap="coolwarm", annot_kws={"size": 7}, ax=ax_corr)
+            sns.heatmap(
+                corr_mat_df,
+                annot=True,
+                cmap="coolwarm",
+                annot_kws={"size": 7},
+                ax=ax_corr,
+            )
             ax_corr.set_title("Univariate Feature Correlation Matrix")
-            fig_corr.tight_layout(pad=3)  # Add padding to ensure the plot doesn't occupy the whole page
+            fig_corr.tight_layout(
+                pad=3
+            )  # Add padding to ensure the plot doesn't occupy the whole page
 
             # Create table data
             tab_data = [["Redundant Features", "GradPFS Score"]]
@@ -281,16 +305,16 @@ class GradPFS:
                     score_val = scores
                 tab_data.append([str(feat), str(score_val)])
             tab_data = np.array(tab_data, dtype=object)
-            col_width = [1/2, 1/2]
+            col_width = [1 / 2, 1 / 2]
 
         # 3. Produce PDF report
         if isinstance(self.data_src, str):
             f_name = ntpath.basename(self.data_src)
-            f_name = f_name.replace('.csv', '')
+            f_name = f_name.replace(".csv", "")
         else:
             f_name = ""
 
-        if fs_type == 'M':
+        if fs_type == "M":
             out_info = [["Feature Selection Type", "Multivariate"]]
             pdf_file = f"{f_name}_multi_report.pdf"
         else:
@@ -309,12 +333,18 @@ class GradPFS:
         # out_file.append(["File", f"{f_path}"])
         out_file = np.array(out_file, dtype=object)
 
-        with (PdfPages(pdf_file)) as pdf:  # type: ignore
-            pdf.savefig(GradPFS.generate_table("Gradual Pattern-based Feature Selection (GradPFS) Report",
-                                               out_info, [2/3,1/3], xscale=0.5))
+        with PdfPages(pdf_file) as pdf:  # type: ignore
+            pdf.savefig(
+                GradPFS.generate_table(
+                    "Gradual Pattern-based Feature Selection (GradPFS) Report",
+                    out_info,
+                    [2 / 3, 1 / 3],
+                    xscale=0.5,
+                )
+            )
             if fig_corr is not None:
                 pdf.savefig(fig_corr)
-            pdf.savefig(GradPFS.generate_table("", out_file, [1/4, 3/4]))
+            pdf.savefig(GradPFS.generate_table("", out_file, [1 / 4, 3 / 4]))
             pdf.savefig(GradPFS.generate_table("", tab_data, col_width))
         return True
 
@@ -376,7 +406,13 @@ class GradPFS:
         return [sim_set, cor_scores]
 
     @staticmethod
-    def generate_table(title: str, data: np.ndarray, col_width: list, xscale: float = 1, yscale: float = 1.5):
+    def generate_table(
+        title: str,
+        data: np.ndarray,
+        col_width: list,
+        xscale: float = 1,
+        yscale: float = 1.5,
+    ):
         """
         A method that represents data in a table format using the matplotlib library.
 
@@ -387,13 +423,19 @@ class GradPFS:
         :param yscale: The length of the table.
         :return: A matplotlib table.
         """
-        #fig_tab = plt.Figure(figsize=(8.5, 11), dpi=300)
+        # fig_tab = plt.Figure(figsize=(8.5, 11), dpi=300)
         # ax_tab = fig_tab.add_subplot(1, 1, 1)
         fig_tab, ax_tab = plt.subplots(figsize=(8.5, 11), dpi=300)
 
         ax_tab.set_axis_off()
         ax_tab.set_title(f"{title}")
-        tab = ax_tab.table(cellText=data[:, :], loc='upper center', colWidths=col_width, cellLoc='left', ax=ax_tab)
+        tab = ax_tab.table(
+            cellText=data[:, :],
+            loc="upper center",
+            colWidths=col_width,
+            cellLoc="left",
+            ax=ax_tab,
+        )
         tab.scale(xscale, yscale)
 
         fig_tab.tight_layout()

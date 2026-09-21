@@ -46,10 +46,10 @@ source_suffix = {
 }
 
 ## Enable dollarmath parsing inside Markdown files
-#myst_enable_extensions = [
+# myst_enable_extensions = [
 #    "dollarmath",
 #    "amsmath",
-#]
+# ]
 
 templates_path = ["_templates"]
 
@@ -71,6 +71,7 @@ napoleon_use_rtype = True
 autodoc_typehints = "description"
 autoclass_content = "both"
 autodoc_preserve_defaults = True
+
 
 # Remove duplicate constructor documentation
 def remove_lines_before_parameters(app, what, name, obj, options, lines):

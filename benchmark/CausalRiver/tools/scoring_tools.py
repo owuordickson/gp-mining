@@ -10,9 +10,6 @@ from sklearn.metrics import (
 np.seterr(divide="ignore", invalid="ignore")
 
 
-
-
-
 def remove_diagonal(T):
     # Takes in 3 dim tensor and removes diagonal of 2/3 dim.
     out = []
@@ -56,15 +53,15 @@ def score(preds, labs, remove_autoregressive=True, name="Result"):
     Takes in either a 2dim or a 3dim tensor (batch of summary graphs)
     name is used for later column naming.
     """
-    
+
     # Some casting concerning input data type:
     if isinstance(preds, list):
-        preds = np.array(preds) 
+        preds = np.array(preds)
     if isinstance(labs, list):
-        labs = np.array(labs) 
-    if isinstance(preds,pd.DataFrame):
+        labs = np.array(labs)
+    if isinstance(preds, pd.DataFrame):
         preds = preds.values
-    if isinstance(labs,pd.DataFrame):
+    if isinstance(labs, pd.DataFrame):
         labs = labs.values
     # expand dims if a single samle is provided
     if preds.ndim == 2:

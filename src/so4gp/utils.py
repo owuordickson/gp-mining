@@ -33,16 +33,16 @@ def get_slurm_cores() -> int | bool:
     :return: Count of CPUs (int) or False
     """
     try:
-        cores = int(os.environ['SLURM_JOB_CPUS_PER_NODE'])
+        cores = int(os.environ["SLURM_JOB_CPUS_PER_NODE"])
         return cores
     except ValueError:
         try:
-            str_cores = str(os.environ['SLURM_JOB_CPUS_PER_NODE'])
-            temp = str_cores.split('(', 1)
+            str_cores = str(os.environ["SLURM_JOB_CPUS_PER_NODE"])
+            temp = str_cores.split("(", 1)
             cpus = int(temp[0])
             str_nodes = temp[1]
-            temp = str_nodes.split('x', 1)
-            str_temp = str(temp[1]).split(')', 1)
+            temp = str_nodes.split("x", 1)
+            str_temp = str(temp[1]).split(")", 1)
             nodes = int(str_temp[0])
             cores = cpus * nodes
             return cores
@@ -63,7 +63,7 @@ def write_file(data, path, wr=True) -> None:
     :return:
     """
     if wr:
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(data)
             f.close()
     else:

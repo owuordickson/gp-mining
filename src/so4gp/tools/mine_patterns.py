@@ -25,9 +25,9 @@ mcp = FastMCP("Gradual Pattern Miner")
 def mine_gps(
     data: list[list[str | float | int]],
     min_support: float = 0.5,
-    target_column: int|None = None,
-    algorithm: str = 'graank',
-    max_iteration: int|None = None,
+    target_column: int | None = None,
+    algorithm: str = "graank",
+    max_iteration: int | None = None,
 ) -> str:
     """
     Extract standard co-occurring gradual patterns from a tabular dataset.
@@ -100,35 +100,48 @@ def mine_gps(
     data_df = pd.DataFrame(data, columns=column_names)
 
     # Run the mining algorithm
-    if algorithm == 'cluster-gp':
+    if algorithm == "cluster-gp":
         from ..algorithms.cluster_gp import ClusterGP
+
         if max_iteration is not None:
             mine_obj = ClusterGP(data_df, min_sup=min_support, max_iter=max_iteration)
         else:
             mine_obj = ClusterGP(data_df, min_sup=min_support)
         return mine_obj.discover(save_results=False)
-    elif algorithm == 'graank-aco':
+    elif algorithm == "graank-aco":
         from ..algorithms.graank import GRAANK
+
         mine_obj = GRAANK(data_df, min_sup=min_support)
-        return mine_obj.discover(search_type='aco', target_col=target_column, max_iteration=max_iteration, save_results=False)
-    elif algorithm == 'graank-ga':
+        return mine_obj.discover(
+            search_type="aco",
+            target_col=target_column,
+            max_iteration=max_iteration,
+            save_results=False,
+        )
+    elif algorithm == "graank-ga":
         from ..algorithms.graank import GRAANK
+
         mine_obj = GRAANK(data_df, min_sup=min_support)
-        return mine_obj.discover(search_type='ga', target_col=target_column, max_iteration=max_iteration,
-                                 save_results=False)
-    elif algorithm == 'graank':
+        return mine_obj.discover(
+            search_type="ga",
+            target_col=target_column,
+            max_iteration=max_iteration,
+            save_results=False,
+        )
+    elif algorithm == "graank":
         from ..algorithms.graank import GRAANK
+
         mine_obj = GRAANK(data_df, min_sup=min_support)
         return mine_obj.discover(target_col=target_column, save_results=False)
     else:
-        raise ValueError('Invalid algorithm!')
+        raise ValueError("Invalid algorithm!")
 
 
 @mcp.tool()
 def mine_tgps(
     data: list[list[str | float | int]],
-        target_column: int,
-        min_support: float = 0.5,
+    target_column: int,
+    min_support: float = 0.5,
     min_rep: float = 0.5,
 ) -> str:
     """
@@ -222,5 +235,8 @@ def mine_tgps(
 
     # Run the mining algorithm
     from ..algorithms.tgraank import TGRAANK
+
     mine_obj = TGRAANK(data_df, min_sup=min_support, min_rep=min_rep)
-    return mine_obj.discover(target_col=target_column, transformations='ami', save_results=False)
+    return mine_obj.discover(
+        target_col=target_column, transformations="ami", save_results=False
+    )

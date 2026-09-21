@@ -10,7 +10,6 @@ from .graank_base import BaseGrad
 
 
 class HillClimbingGRAANK(BaseGrad):
-
     def __init__(self, *args, max_iter: int = 1, step_size: float = 0.5, **kwargs):
         """
         Extract gradual patterns (GPs) from a numeric data source using the Hill Climbing (Local Search) Algorithm
@@ -34,7 +33,12 @@ class HillClimbingGRAANK(BaseGrad):
         self._max_iteration: int = max_iter
         self._n_var: int = 1
 
-    def discover(self, target_col: int | None = None, time_data: dict|None= None, exclude_target: bool = False) -> dict:
+    def discover(
+        self,
+        target_col: int | None = None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+    ) -> dict:
         """
         Uses hill-climbing algorithm to find GP candidates. The candidates are validated if their computed support is
         greater than or equal to the minimum support threshold specified by the user.
@@ -61,7 +65,10 @@ class HillClimbingGRAANK(BaseGrad):
             if candidate.position is None:
                 best_pos = s_space.best_candidate.position
                 if best_pos is not None:
-                    candidate.position = best_pos + (random.randrange(s_space.var_min, s_space.var_max) * self._step_size)
+                    candidate.position = best_pos + (
+                        random.randrange(s_space.var_min, s_space.var_max)
+                        * self._step_size
+                    )
 
             # Evaluate candidate
             self.evaluate_candidate(candidate, exclude_target, time_data=time_data)
@@ -76,5 +83,6 @@ class HillClimbingGRAANK(BaseGrad):
             "Step Size": f"{self._step_size}",
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds",
-            "Invalid Count": f"{s_space.invalid_count}"}
+            "Invalid Count": f"{s_space.invalid_count}",
+        }
         return out_dict

@@ -13,8 +13,7 @@ from tools.tools import (
 
 # Example script to benchmark causal discovery methods.
 def main(cfg: DictConfig):
-    
-    
+
     if cfg.method.name == "var":
         from tools.baseline_methods import var_baseline as cd_method
     elif cfg.method.name == "tgraank":
@@ -50,7 +49,7 @@ def main(cfg: DictConfig):
 
 if __name__ == "__main__":
     with initialize(version_base=None, config_path="config"):
-        _cfg = compose(config_name='benchmark.yaml')
+        _cfg = compose(config_name="benchmark.yaml")
         print(_cfg)
 
     main(_cfg)

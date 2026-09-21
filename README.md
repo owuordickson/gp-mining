@@ -60,7 +60,8 @@ First and foremost, import the **so4gp** python package via:
 
 ```python
 import so4gp as sgp
-# OR 
+
+# OR
 from so4gp.algorithms import GRAANK, TGRAANK, ClusterGP
 ```
 
@@ -92,7 +93,6 @@ miner_gp = GRAANK(
 results = miner_gp.discover()
 
 print(results)
-
 ```
 
 where you specify the parameters as follows:

@@ -12,8 +12,9 @@ from .graank_base import BaseGrad
 
 
 class GeneticGRAANK(BaseGrad):
-
-    def __init__(self, *args, max_iter=1, n_pop=5, pc=0.5, gamma=1.0, mu=0.9, sigma=0.9, **kwargs):
+    def __init__(
+        self, *args, max_iter=1, n_pop=5, pc=0.5, gamma=1.0, mu=0.9, sigma=0.9, **kwargs
+    ):
         """
         Extract gradual patterns (GPs) from a numeric data source using the Genetic Algorithm approach (proposed
         in a published paper by Dickson Owuor). A GP is a set of gradual items (GI), and its quality is measured by
@@ -54,7 +55,9 @@ class GeneticGRAANK(BaseGrad):
         self._mu: float = mu
         self._sigma: float = sigma
 
-    def _crossover(self, p1: BaseGrad.Candidate, p2: BaseGrad.Candidate) -> tuple[BaseGrad.Candidate, BaseGrad.Candidate]:
+    def _crossover(
+        self, p1: BaseGrad.Candidate, p2: BaseGrad.Candidate
+    ) -> tuple[BaseGrad.Candidate, BaseGrad.Candidate]:
         """
         Crosses over the genes of 2 parents (an individual with a specific position and cost) to generate 2
         different offsprings.
@@ -89,12 +92,17 @@ class GeneticGRAANK(BaseGrad):
             if i[0] == 0:
                 str_y = "".join(("", f"{int(val)}", str_x[1:]))
             else:
-                str_y = "".join((str_x[:i[0] - 1], f"{int(val)}", str_x[i[0]:]))
+                str_y = "".join((str_x[: i[0] - 1], f"{int(val)}", str_x[i[0] :]))
             str_x = str_y
         y.position = int(str_y)
         return y
 
-    def discover(self, target_col: int | None = None, time_data: dict|None= None, exclude_target: bool = False) -> dict:
+    def discover(
+        self,
+        target_col: int | None = None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+    ) -> dict:
         """
         Uses genetic algorithm to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
@@ -116,9 +124,10 @@ class GeneticGRAANK(BaseGrad):
         except ValueError as e:
             return {"Error": e}
 
-        num_children = int(np.round(self._children_pop * self._parent_pop / 2) * 2)  # Number of children np.round is used to get an even number
+        num_children = int(
+            np.round(self._children_pop * self._parent_pop / 2) * 2
+        )  # Number of children np.round is used to get an even number
         while s_space.iter_count < self._max_iteration:
-
             c_pop = []  # Children population
             for _ in range(num_children // 2):
                 # Select Parents
@@ -144,7 +153,7 @@ class GeneticGRAANK(BaseGrad):
             # Merge, Sort and Select
             s_space.pop += c_pop
             s_space.pop = sorted(s_space.pop, key=lambda x: x.cost)
-            s_space.pop = s_space.pop[0:self._parent_pop]
+            s_space.pop = s_space.pop[0 : self._parent_pop]
 
             # Increment iteration count
             s_space.iter_count += 1
@@ -160,5 +169,6 @@ class GeneticGRAANK(BaseGrad):
             "Mutation Sigma": f"{self._sigma}",
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds",
-            "Invalid Count": f"{s_space.invalid_count}"}
+            "Invalid Count": f"{s_space.invalid_count}",
+        }
         return out_dict

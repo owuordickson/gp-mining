@@ -10,7 +10,6 @@ from .graank_base import BaseGrad
 
 
 class RandomGRAANK(BaseGrad):
-
     def __init__(self, *args, max_iter: int = 1, **kwargs):
         """
         Extract gradual patterns (GPs) from a numeric data source using the Random Search Algorithm (LS-GRAANK)
@@ -32,7 +31,12 @@ class RandomGRAANK(BaseGrad):
         self._max_iteration: int = max_iter
         self._n_var: int = 1
 
-    def discover(self, target_col: int | None = None, time_data: dict|None= None, exclude_target: bool = False) -> dict:
+    def discover(
+        self,
+        target_col: int | None = None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+    ) -> dict:
         """
         Uses random search to find GP candidates. The candidates are validated if their computed support is greater
         than or equal to the minimum support threshold specified by the user.
@@ -50,10 +54,12 @@ class RandomGRAANK(BaseGrad):
         if s_space is None:
             return {"Error": "Search space is empty!"}
 
-        candidate =BaseGrad.Candidate()
+        candidate = BaseGrad.Candidate()
         while s_space.iter_count < self._max_iteration:
             # while eval_count < max_evaluations:
-            candidate.position = ((s_space.var_min + random.random()) * (s_space.var_max - s_space.var_min))
+            candidate.position = (s_space.var_min + random.random()) * (
+                s_space.var_max - s_space.var_min
+            )
 
             # Evaluate candidate
             self.evaluate_candidate(candidate, exclude_target, time_data=time_data)
@@ -67,5 +73,6 @@ class RandomGRAANK(BaseGrad):
             # "Memory Usage (MiB)": f{mem_use)}"
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds",
-            "Invalid Count": f"{s_space.invalid_count}"}
+            "Invalid Count": f"{s_space.invalid_count}",
+        }
         return out_dict

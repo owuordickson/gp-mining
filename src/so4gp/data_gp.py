@@ -28,8 +28,14 @@ from .utils import write_file
 
 
 class DataGP:
-
-    def __init__(self, data_source, min_sup=0.5, eq=False, add_time: bool = False, device: str = 'cpu') -> None:
+    def __init__(
+        self,
+        data_source,
+        min_sup=0.5,
+        eq=False,
+        add_time: bool = False,
+        device: str = "cpu",
+    ) -> None:
         """
         A class for creating data-gp objects. A data-gp object is meant to store all the parameters required by GP
         algorithms to extract gradual patterns (GP). It takes a numeric file (in CSV format) as input and converts it
@@ -123,7 +129,7 @@ class DataGP:
     @property
     def display_patterns_as_df(self) -> pd.DataFrame:
         if not self._gradual_patterns:
-            return pd.DataFrame(columns=['Pattern'])
+            return pd.DataFrame(columns=["Pattern"])
 
         all_rows = []
         for gp in self._gradual_patterns:
@@ -182,11 +188,15 @@ class DataGP:
             # d.index = pd.DatetimeIndex(d.index.values, freq=d.index.inferred_freq)
 
             self._data = np.column_stack((self._data, no_time))
-            self._time_cols = np.append(self._time_cols, [len(self._titles) - 1]).astype(int)
+            self._time_cols = np.append(
+                self._time_cols, [len(self._titles) - 1]
+            ).astype(int)
             self._row_count, self._col_count = self._data.shape
         self._attr_cols = get_attr_cols()
 
-    def _compute_pairwise_bitmap( self, attr_values: np.ndarray) -> tuple[np.ndarray, float]:
+    def _compute_pairwise_bitmap(
+        self, attr_values: np.ndarray
+    ) -> tuple[np.ndarray, float]:
         """Compute a pairwise bitmap and its support for one attribute.
 
         Args:
@@ -233,11 +243,22 @@ class DataGP:
         support = float(bitmap.sum() / pair_cnt)
         return bitmap, support
 
-    def _compute_pairwise_bitmap_gpu(self, attr_values: np.ndarray, chunk_size: int = 2048,) -> tuple[np.ndarray, float]:
+    def _compute_pairwise_bitmap_gpu(
+        self,
+        attr_values: np.ndarray,
+        chunk_size: int = 2048,
+    ) -> tuple[np.ndarray, float]:
 
-        values = torch.as_tensor(attr_values, dtype=torch.float32, device="cuda",)
+        values = torch.as_tensor(
+            attr_values,
+            dtype=torch.float32,
+            device="cuda",
+        )
         n = len(values)
-        bitmap = np.empty((n, n), dtype=np.bool_,)
+        bitmap = np.empty(
+            (n, n),
+            dtype=np.bool_,
+        )
         total_true = 0
 
         for start in range(0, n, chunk_size):
@@ -248,7 +269,11 @@ class DataGP:
 
             if self._include_equal_values:
                 chunk = lhs <= rhs
-                rows = torch.arange(start, end, device="cuda",)
+                rows = torch.arange(
+                    start,
+                    end,
+                    device="cuda",
+                )
                 # cols = torch.arange(n,device="cuda",)
                 # Remove diagonal.
                 chunk[torch.arange(end - start, device="cuda"), rows] = False
@@ -279,7 +304,9 @@ class DataGP:
         """Clears the list of gradual patterns."""
         self._gradual_patterns = []
 
-    def remove_subsets(self, gi_arr: set, gradual_patterns: list[GP] | None = None) -> None:
+    def remove_subsets(
+        self, gi_arr: set, gradual_patterns: list[GP] | None = None
+    ) -> None:
         """
         Remove subset GPs from the list.
 
@@ -337,7 +364,10 @@ class DataGP:
         # ------------------------------------------------------------------
         for col in self._attr_cols:
             # Convert only the current attribute to a numeric NumPy array.
-            attr_values = np.asarray(attr_data[col], dtype=np.float64,)
+            attr_values = np.asarray(
+                attr_data[col],
+                dtype=np.float64,
+            )
 
             # Generate the bitmap and calculate its support.
             if self._device == "cuda":
@@ -354,7 +384,11 @@ class DataGP:
             # Positive gradual item
             # --------------------------------------------------------------
             conv_bits = np.packbits(bin_mat.ravel())
-            packed_bits = torch.from_numpy(conv_bits).cuda() if self._device == "cuda" else conv_bits
+            packed_bits = (
+                torch.from_numpy(conv_bits).cuda()
+                if self._device == "cuda"
+                else conv_bits
+            )
             self._valid_bins[f"{col}+"] = PairwiseMatrix(
                 packed_bin_mat=packed_bits,
                 support=support,
@@ -365,7 +399,11 @@ class DataGP:
             # Negative gradual item
             # --------------------------------------------------------------
             conv_bits_t = np.packbits(bin_mat.T.ravel())
-            packed_bits_t = torch.from_numpy(conv_bits_t).cuda() if self._device == "cuda" else conv_bits_t
+            packed_bits_t = (
+                torch.from_numpy(conv_bits_t).cuda()
+                if self._device == "cuda"
+                else conv_bits_t
+            )
             self._valid_bins[f"{col}-"] = PairwiseMatrix(
                 packed_bin_mat=packed_bits_t,
                 support=support,
@@ -399,15 +437,23 @@ class DataGP:
         n = self._row_count
         self._warping_set = {}
         for gi_str, gi_data in self._valid_bins.items():
-            edge_list: np.ndarray|torch.Tensor = GP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
+            edge_list: np.ndarray | torch.Tensor = GP.gen_gradual_warping_set(
+                gi_data.packed_bin_mat, n
+            )
 
             tids_len = edge_list.shape[0]
-            supp = ((tids_len * 0.5) * (tids_len - 1) / GP.pair_count(n))
+            supp = (tids_len * 0.5) * (tids_len - 1) / GP.pair_count(n)
             if supp >= self._thd_supp and self._warping_set is not None:
-                lst_ij = edge_list.cpu().tolist() if isinstance(edge_list, torch.Tensor) else edge_list.tolist()
+                lst_ij = (
+                    edge_list.cpu().tolist()
+                    if isinstance(edge_list, torch.Tensor)
+                    else edge_list.tolist()
+                )
                 self._warping_set[gi_str] = lst_ij
 
-    def generate_output_files(self, alg_data: dict, target_col: int | None = None, save_to_file: bool = True):
+    def generate_output_files(
+        self, alg_data: dict, target_col: int | None = None, save_to_file: bool = True
+    ):
         """
         Generates output of results (as files) for the GP mining algorithm.
 
@@ -418,7 +464,9 @@ class DataGP:
 
         list_gp = self.gradual_patterns
         num_patterns = len(list_gp) if list_gp is not None else 0
-        f_name = str(str(alg_data['Algorithm']) + '_' + str(time.time()).replace('.', '', 1))
+        f_name = str(
+            str(alg_data["Algorithm"]) + "_" + str(time.time()).replace(".", "", 1)
+        )
 
         out_txt = ""
         for key, val in alg_data.items():
@@ -438,29 +486,31 @@ class DataGP:
             else:
                 out_txt += f"{i}. {txt}\n"
 
-        file = 'a dataframe'
+        file = "a dataframe"
         if isinstance(self._data_src, str):
             file = self._data_src
         out_txt += f"\nFile: {file}\n"
-        out_txt += str("\nPattern : Support" + '\n')
+        out_txt += str("\nPattern : Support" + "\n")
 
         list_tgp = self.gradual_patterns
         if list_tgp is not None:
             for tgp in list_tgp:
                 gp_str = f"{tgp.to_string()} :  {tgp.support}"
                 if len(gp_str) > 100:
-                    gp_str = gp_str[:100] + '\n' + gp_str[100:]
+                    gp_str = gp_str[:100] + "\n" + gp_str[100:]
                 out_txt += f"{gp_str}\n"
         if not save_to_file:
             print(out_txt)
 
         if save_to_file:
             gp_df = self.display_patterns_as_df
-            gp_df.to_csv(str(f_name + '.csv'), index=False)
-            write_file(out_txt, str(f_name + '.txt'), wr=True)
+            gp_df.to_csv(str(f_name + ".csv"), index=False)
+            write_file(out_txt, str(f_name + ".txt"), wr=True)
 
     @classmethod
-    def save_pairwise_data(cls, data_src: pd.DataFrame | str, min_sup: float = 0.5, out_dir: str = "") -> bool:
+    def save_pairwise_data(
+        cls, data_src: pd.DataFrame | str, min_sup: float = 0.5, out_dir: str = ""
+    ) -> bool:
         """
         Given a numeric dataset, this method generates all the pairwise matrices for the all the gradual items (GI)
         which are obtained from the dataset's features/columns.
@@ -495,11 +545,17 @@ class DataGP:
             file = os.path.join(out_dir, file_name)
 
             # Note: Changed fmt to '%.0f' to support floats without decimal places safely
-            np.savetxt(file, gp_data.packed_bin_mat, delimiter=',', fmt='%.0f')
+            np.savetxt(file, gp_data.packed_bin_mat, delimiter=",", fmt="%.0f")
         return True
 
     @classmethod
-    def analyze_gps(cls, data_src: pd.DataFrame | str, min_sup: float, est_gps: list[GP], approach: str = 'bfs') -> str:
+    def analyze_gps(
+        cls,
+        data_src: pd.DataFrame | str,
+        min_sup: float,
+        est_gps: list[GP],
+        approach: str = "bfs",
+    ) -> str:
         """
         For each estimated GP, computes its true support using the GRAANK approach and returns the statistics (% error,
         and standard deviation).
@@ -534,18 +590,24 @@ class DataGP:
 
         :return: Tabulated results
         """
-        if approach == 'dfs':
+        if approach == "dfs":
             d_set = cls(data_src, min_sup)
             d_set.fit_warpingset()
         else:
             d_set = cls(data_src, min_sup)
             d_set.fit_bitmap()
-        headers = ["Gradual Pattern", "Estimated Support", "True Support", "Percentage Error", "Standard Deviation"]
+        headers = [
+            "Gradual Pattern",
+            "Estimated Support",
+            "True Support",
+            "Percentage Error",
+            "Standard Deviation",
+        ]
         data = []
         for est_gp in est_gps:
             est_sup = est_gp.support
             est_gp.support = 0
-            if approach == 'dfs':
+            if approach == "dfs":
                 true_gp = est_gp.validate_via_tree(d_set)
             else:
                 true_gp = est_gp.validate_via_graank(d_set, target_col=None)
@@ -560,9 +622,14 @@ class DataGP:
 
             if len(true_gp.gradual_items) == len(est_gp.gradual_items):
                 data.append(
-                    [est_gp.to_string(), round(float(est_sup), 3), round(float(true_sup), 3),
-                     str(round(float(percentage_error), 3)) + '%',
-                     round(float(st_dev), 3)])
+                    [
+                        est_gp.to_string(),
+                        round(float(est_sup), 3),
+                        round(float(true_sup), 3),
+                        str(round(float(percentage_error), 3)) + "%",
+                        round(float(st_dev), 3),
+                    ]
+                )
             else:
                 data.append([est_gp.to_string(), round(est_sup, 3), -1, np.inf, np.inf])
         return tabulate(data, headers=headers)
@@ -587,12 +654,14 @@ class DataGP:
                 _ = data_src.columns.astype(float)
 
                 # Add column values
-                data_src.loc[-1] = data_src.columns.to_numpy(dtype=float)  # adding a row
+                data_src.loc[-1] = data_src.columns.to_numpy(
+                    dtype=float
+                )  # adding a row
                 data_src.index = data_src.index + 1  # shifting index
                 data_src.sort_index(inplace=True)
 
                 # Rename column names
-                header_vals = ['col_' + str(k) for k in range(data_src.shape[1])]
+                header_vals = ["col_" + str(k) for k in range(data_src.shape[1])]
                 data_src.columns = header_vals
             except ValueError:
                 pass
@@ -604,7 +673,7 @@ class DataGP:
             # b. CSV file
             file = data_src if isinstance(data_src, str) else ""
             try:
-                with open(file, 'r') as f:
+                with open(file, "r") as f:
                     dialect = csv.Sniffer().sniff(f.readline(), delimiters=";,' '\t")
                     f.seek(0)
                     reader = csv.reader(f, dialect)
@@ -617,11 +686,17 @@ class DataGP:
                     # print ("Data fetched from CSV file")
                     # 2. Get table headers
                     keys = range(len(raw_data[0]))
-                    if raw_data[0][0].replace('.', '', 1).isdigit() or raw_data[0][0].isdigit():
-                        header_vals = [f'col_{k}' for k in keys]
+                    if (
+                        raw_data[0][0].replace(".", "", 1).isdigit()
+                        or raw_data[0][0].isdigit()
+                    ):
+                        header_vals = [f"col_{k}" for k in keys]
                     else:
-                        if raw_data[0][1].replace('.', '', 1).isdigit() or raw_data[0][1].isdigit():
-                            header_vals = ['col_' + str(k) for k in keys]
+                        if (
+                            raw_data[0][1].replace(".", "", 1).isdigit()
+                            or raw_data[0][1].isdigit()
+                        ):
+                            header_vals = ["col_" + str(k) for k in keys]
                         else:
                             header_vals = raw_data[0]
                             del raw_data[0]

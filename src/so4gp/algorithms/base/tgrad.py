@@ -18,9 +18,15 @@ from .graank_alg import OrigGRAANK
 
 
 class TGrad(OrigGRAANK):
-
-    def __init__(self, *args, min_rep: float = 0.5, mf_shape: str = 'triangular', clustering_algorithm: str = 'fcm',
-                 inference_method: str = 'mamdani', **kwargs):
+    def __init__(
+        self,
+        *args,
+        min_rep: float = 0.5,
+        mf_shape: str = "triangular",
+        clustering_algorithm: str = "fcm",
+        inference_method: str = "mamdani",
+        **kwargs,
+    ):
         """
         TGrad is an algorithm used to extract temporal gradual patterns from numeric datasets. An algorithm for mining
         temporal gradual patterns using fuzzy membership functions. It uses a technique
@@ -48,7 +54,7 @@ class TGrad(OrigGRAANK):
         else:
             # print("Dataset Error")
             self._time_ok: bool = False
-            raise FatalError('No date-time datasets found')
+            raise FatalError("No date-time datasets found")
 
     @property
     def min_rep(self):
@@ -67,7 +73,13 @@ class TGrad(OrigGRAANK):
         if 0 < value <= 1:
             self._min_rep = value
 
-    def discover_tgp(self, target_col: int, search_algorithm: str="apriori", max_iteration: int=3, ignore_time: bool=False) -> dict:
+    def discover_tgp(
+        self,
+        target_col: int,
+        search_algorithm: str = "apriori",
+        max_iteration: int = 3,
+        ignore_time: bool = False,
+    ) -> dict:
         """
         Mine Fuzzy Temporal Gradual Patterns (FTGPs) from a temporal dataset.
 
@@ -162,8 +174,14 @@ class TGrad(OrigGRAANK):
         pattern_data = []
         feature_cols = self.attr_cols
         for step in range(1, self.max_step):
-            transformation_steps: dict = {int(feature_cols[i]): step for i in range(len(feature_cols))}
-            pattern_data.append(self._safe_transform_and_mine(transformation_steps, step, skip_time=ignore_time))
+            transformation_steps: dict = {
+                int(feature_cols[i]): step for i in range(len(feature_cols))
+            }
+            pattern_data.append(
+                self._safe_transform_and_mine(
+                    transformation_steps, step, skip_time=ignore_time
+                )
+            )
 
         # 2. Organize FTGPs into a single list
         for item in pattern_data:
@@ -185,12 +203,15 @@ class TGrad(OrigGRAANK):
             "Maximum Iteration for Search Algorithm": f"{self._algorithm_max_iter}",
             "Minimum Representation": f"{self.min_rep:.2f}",
             "Target Column": f"{target_col}",
-            "Run-time": f"{duration:.6f} seconds"}
+            "Run-time": f"{duration:.6f} seconds",
+        }
         return out_dict
 
-    def transform_data(self, transformation_steps: dict, max_step: int) -> tuple[np.ndarray | None, dict]:
+    def transform_data(
+        self, transformation_steps: dict, max_step: int
+    ) -> tuple[np.ndarray | None, dict]:
         """
-        A method that transforms each attribute's data according to a specific transformation step and 
+        A method that transforms each attribute's data according to a specific transformation step and
         computes the corresponding time-delay values for that attribute.
 
         :param transformation_steps: A dict that indicates column with its corresponding transformation step--{col1: step, ...,}.
@@ -201,14 +222,14 @@ class TGrad(OrigGRAANK):
         def get_time_data(curr_step):
             """
             Retrieves the time array for a given step.
-            
-            Tries to pull data using the first column of a completed step. 
+
+            Tries to pull data using the first column of a completed step.
             If the step hasn't been completed, it calculates the fallback time.
             """
             try:
                 # Get the list of column indices processed in this step
                 completed_cols = completed_steps[curr_step]
-                
+
                 # Fetch the time array associated with the first column of this step
                 time_arr = time_data[completed_cols[0]]
             except KeyError:
@@ -217,21 +238,23 @@ class TGrad(OrigGRAANK):
             return time_arr
 
         if self._time_ok:
-            transformed_data: np.ndarray|None = None
-            time_data: dict[int, np.ndarray] = {}  # {col1: [time-lags], col2: [time-lags]}
-            completed_steps: dict[int, list] = {} # {completed-step: [columns]}
+            transformed_data: np.ndarray | None = None
+            time_data: dict[
+                int, np.ndarray
+            ] = {}  # {col1: [time-lags], col2: [time-lags]}
+            completed_steps: dict[int, list] = {}  # {completed-step: [columns]}
             n = self.row_count
-            k = (n - max_step)  # Number of rows created by the largest step-delay
+            k = n - max_step  # Number of rows created by the largest step-delay
             for col_index in range(self.col_count):
                 if (col_index == self.target_col) or (col_index in self.time_cols):
                     # date-time column OR target column
-                    temp_col = self.full_attr_data[col_index][0: k]
+                    temp_col = self.full_attr_data[col_index][0:k]
                 else:
                     # other attributes
                     step = transformation_steps[col_index]
-                    temp_col = self.full_attr_data[col_index][step: n]
+                    temp_col = self.full_attr_data[col_index][step:n]
                     # Get first k items for delayed data
-                    temp_col = temp_col[0: k]
+                    temp_col = temp_col[0:k]
 
                     # Get time-delay values
                     time_data[col_index] = get_time_data(step)
@@ -246,22 +269,31 @@ class TGrad(OrigGRAANK):
                     #        time_dict[i] = [time_diffs[i]]
                     # print(f"{time_diffs}\n")
                     # WHAT ABOUT TIME DIFFERENCE/DELAY? It is different for every step!!!
-                transformed_data = temp_col if (transformed_data is None) \
+                transformed_data = (
+                    temp_col
+                    if (transformed_data is None)
                     else np.vstack((transformed_data, temp_col))
+                )
             return transformed_data, time_data
         else:
             msg = "Fatal Error: Time format in column could not be processed"
             raise FatalError(msg)
 
-    def _safe_transform_and_mine(self, transformation_steps: dict, max_step: int, skip_time: bool=False):
+    def _safe_transform_and_mine(
+        self, transformation_steps: dict, max_step: int, skip_time: bool = False
+    ):
         """Wrapper to catch exceptions during parallel mining."""
         try:
             # 1. Calculate the time difference using a step
-            transformed_data, time_data = self.transform_data(transformation_steps, max_step)
+            transformed_data, time_data = self.transform_data(
+                transformation_steps, max_step
+            )
             # 2. Execute GRAANK for each transformation
             if skip_time:
                 time_data = None
-            t_gps = self._mine_gps_at_step(time_delay_data=time_data, transformed_data=transformed_data)
+            t_gps = self._mine_gps_at_step(
+                time_delay_data=time_data, transformed_data=transformed_data
+            )
             if len(t_gps) > 0:
                 return t_gps
             return False
@@ -269,7 +301,9 @@ class TGrad(OrigGRAANK):
             print(f"Error at step {max_step}: {e}")
             return None
 
-    def _mine_gps_at_step(self, time_delay_data: dict|None, transformed_data: np.ndarray | None = None) -> list[TGP]:
+    def _mine_gps_at_step(
+        self, time_delay_data: dict | None, transformed_data: np.ndarray | None = None
+    ) -> list[TGP]:
         """
         Uses apriori algorithm to find GP candidates based on the target-attribute. The candidates are validated if
         their computed support is greater than or equal to the minimum support threshold specified by the user.
@@ -284,11 +318,21 @@ class TGrad(OrigGRAANK):
             return []
 
         if time_delay_data is None:
-            time_data: dict = {"time_data": None, "use_gp": False, "fuzzy_mfs": [], "inference": self.inference_method}
+            time_data: dict = {
+                "time_data": None,
+                "use_gp": False,
+                "fuzzy_mfs": [],
+                "inference": self.inference_method,
+            }
         else:
             t_lag_arr: np.ndarray = np.array(list(time_delay_data.values()))
             fuzzy_mfs = self.build_membership_functions(t_lag_arr)
-            time_data: dict = {"time_data": time_delay_data, "use_gp": True, "fuzzy_mfs": fuzzy_mfs, "inference": self.inference_method}
+            time_data: dict = {
+                "time_data": time_delay_data,
+                "use_gp": True,
+                "fuzzy_mfs": fuzzy_mfs,
+                "inference": self.inference_method,
+            }
 
         if type(self) is TGrad:
             time_data["use_gp"] = False
@@ -296,10 +340,15 @@ class TGrad(OrigGRAANK):
         data_df = pd.DataFrame(transformed_data.T, columns=self.titles)
         if data_df.empty:
             return []
-        
+
         mine_obj = GRAANK(data_df, min_sup=self.thd_supp, eq=self._include_equal_values)
-        mine_obj.discover(search_type=self._search_algorithm, target_col=self.target_col, time_data=time_data,
-                          compute_descriptors=False, max_iteration=self._algorithm_max_iter, )
+        mine_obj.discover(
+            search_type=self._search_algorithm,
+            target_col=self.target_col,
+            time_data=time_data,
+            compute_descriptors=False,
+            max_iteration=self._algorithm_max_iter,
+        )
         return mine_obj.mining_engine.gradual_patterns
 
     def get_time_diffs(self, step: int) -> tuple[dict, np.ndarray]:  # optimized
@@ -334,7 +383,7 @@ class TGrad(OrigGRAANK):
                     else:
                         stamp_1 += temp_stamp_1
                         stamp_2 += temp_stamp_2
-                time_diff = (stamp_2 - stamp_1)
+                time_diff = stamp_2 - stamp_1
                 # if time_diff < 0:
                 # Error time CANNOT go backwards,
                 # print(f"Problem {i} and {i + step} - {self.time_cols}")
@@ -344,7 +393,10 @@ class TGrad(OrigGRAANK):
                 time_diffs_arr.append(time_diff_abs)
         return time_diffs, np.array(time_diffs_arr)
 
-    def build_membership_functions(self, time_data: np.ndarray | None, ) -> list[dict]:
+    def build_membership_functions(
+        self,
+        time_data: np.ndarray | None,
+    ) -> list[dict]:
         """Build membership-function parameters from time-delay data.
 
         The number of membership functions is estimated from the dominant
@@ -391,7 +443,7 @@ class TGrad(OrigGRAANK):
             hankel_mat = np.lib.stride_tricks.sliding_window_view(values, window_len).T
 
             singular_values = np.linalg.svd(hankel_mat, compute_uv=False)
-            energy = singular_values ** 2
+            energy = singular_values**2
             total_energy = energy.sum()
 
             if total_energy <= np.finfo(float).eps:
@@ -399,26 +451,55 @@ class TGrad(OrigGRAANK):
 
             cumulative_energy = np.cumsum(energy) / total_energy
             estimated = (
-                    np.searchsorted(cumulative_energy, threshold, side="left", )
-                    + 1)
+                np.searchsorted(
+                    cumulative_energy,
+                    threshold,
+                    side="left",
+                )
+                + 1
+            )
 
             return max(2, int(estimated))
 
-        def compute_kmeans(data: np.ndarray, n_clusters: int, max_iter: int = 100, tolerance: float = 1e-6) -> tuple[
-            np.ndarray, np.ndarray]:
+        def compute_kmeans(
+            data: np.ndarray,
+            n_clusters: int,
+            max_iter: int = 100,
+            tolerance: float = 1e-6,
+        ) -> tuple[np.ndarray, np.ndarray]:
             """Perform vectorized one-dimensional K-Means clustering."""
             minimum, maximum = data.min(), data.max()
-            centers = np.linspace(minimum, maximum, n_clusters, dtype=np.float64, )
+            centers = np.linspace(
+                minimum,
+                maximum,
+                n_clusters,
+                dtype=np.float64,
+            )
             for _ in range(max_iter):
                 distances = np.abs(data[:, None] - centers[None, :])
-                labels = np.argmin(distances, axis=1, )
-                counts = np.bincount(labels, minlength=n_clusters, ).astype(np.float64)
-                sums = np.bincount(labels, weights=data, minlength=n_clusters, )
+                labels = np.argmin(
+                    distances,
+                    axis=1,
+                )
+                counts = np.bincount(
+                    labels,
+                    minlength=n_clusters,
+                ).astype(np.float64)
+                sums = np.bincount(
+                    labels,
+                    weights=data,
+                    minlength=n_clusters,
+                )
 
                 new_centers = centers.copy()
                 non_empty = counts > 0
-                new_centers[non_empty] = (sums[non_empty] / counts[non_empty])
-                if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance, ):
+                new_centers[non_empty] = sums[non_empty] / counts[non_empty]
+                if np.allclose(
+                    centers,
+                    new_centers,
+                    rtol=tolerance,
+                    atol=tolerance,
+                ):
                     centers = new_centers
                     break
                 centers = new_centers
@@ -427,29 +508,50 @@ class TGrad(OrigGRAANK):
             centers = centers[order]
 
             # Reassign after sorting to obtain correctly matched spreads.
-            labels = np.argmin(np.abs(data[:, None] - centers[None, :]), axis=1, )
+            labels = np.argmin(
+                np.abs(data[:, None] - centers[None, :]),
+                axis=1,
+            )
             counts = np.bincount(labels, minlength=n_clusters).astype(np.float64)
             sums = np.bincount(labels, weights=data, minlength=n_clusters)
-            squared_sums = np.bincount(labels, weights=data ** 2, minlength=n_clusters)
+            squared_sums = np.bincount(labels, weights=data**2, minlength=n_clusters)
             spreads = np.zeros(n_clusters, dtype=np.float64)
 
             non_empty = counts > 0
-            means = np.zeros(n_clusters, dtype=np.float64, )
-            means[non_empty] = (sums[non_empty] / counts[non_empty])
+            means = np.zeros(
+                n_clusters,
+                dtype=np.float64,
+            )
+            means[non_empty] = sums[non_empty] / counts[non_empty]
 
             variances = np.zeros(n_clusters, dtype=np.float64)
-            variances[non_empty] = (squared_sums[non_empty] / counts[non_empty] - means[non_empty] ** 2)
+            variances[non_empty] = (
+                squared_sums[non_empty] / counts[non_empty] - means[non_empty] ** 2
+            )
             spreads[non_empty] = np.sqrt(np.maximum(variances[non_empty], 0.0))
 
-            fallback_spread = max(float(np.std(data)), 0.1, )
+            fallback_spread = max(
+                float(np.std(data)),
+                0.1,
+            )
             spreads[~non_empty] = fallback_spread
             return centers, spreads
 
-        def compute_fcm(data: np.ndarray, n_clusters: int, fuzziness: float = 2.0, max_iter: int = 100,
-                        tolerance: float = 1e-6, ) -> tuple[np.ndarray, np.ndarray]:
+        def compute_fcm(
+            data: np.ndarray,
+            n_clusters: int,
+            fuzziness: float = 2.0,
+            max_iter: int = 100,
+            tolerance: float = 1e-6,
+        ) -> tuple[np.ndarray, np.ndarray]:
             """Perform vectorized one-dimensional Fuzzy C-Means clustering."""
             minimum, maximum = data.min(), data.max()
-            centers = np.linspace(minimum, maximum, n_clusters, dtype=np.float64, )
+            centers = np.linspace(
+                minimum,
+                maximum,
+                n_clusters,
+                dtype=np.float64,
+            )
             exponent = 2.0 / (fuzziness - 1.0)
             eps = np.finfo(np.float64).eps
             membership_m = np.array([])
@@ -463,11 +565,13 @@ class TGrad(OrigGRAANK):
                 if np.any(zero_rows):
                     weights[zero_rows] = zero_distance[zero_rows]
 
-                membership = (weights / weights.sum(axis=1, keepdims=True))
-                membership_m = membership ** fuzziness
+                membership = weights / weights.sum(axis=1, keepdims=True)
+                membership_m = membership**fuzziness
                 denominator = membership_m.sum(axis=0)
 
-                new_centers = ((membership_m * data[:, None]).sum(axis=0) / np.maximum(denominator, eps))
+                new_centers = (membership_m * data[:, None]).sum(axis=0) / np.maximum(
+                    denominator, eps
+                )
                 if np.allclose(centers, new_centers, rtol=tolerance, atol=tolerance):
                     centers = new_centers
                     break
@@ -480,9 +584,9 @@ class TGrad(OrigGRAANK):
 
             spreads = np.sqrt(
                 np.maximum(
-                    (membership_m * (data[:, None] - centers[None, :]) ** 2
-                    ).sum(axis=0)
-                    / np.maximum(denominator, eps),0.0,
+                    (membership_m * (data[:, None] - centers[None, :]) ** 2).sum(axis=0)
+                    / np.maximum(denominator, eps),
+                    0.0,
                 )
             )
 
@@ -501,29 +605,51 @@ class TGrad(OrigGRAANK):
         num_clusters = estimate_n_clusters()
 
         # Avoid requesting more clusters than distinct values.
-        num_clusters = min(num_clusters, max(2, np.unique(values).size), )
+        num_clusters = min(
+            num_clusters,
+            max(2, np.unique(values).size),
+        )
 
         # --------------------------------------------------------------
         # Cluster time-delay data.
         # --------------------------------------------------------------
         min_val, max_val = values.min(), values.max()
         if np.isclose(min_val, max_val):
-            peaks = np.full(num_clusters, min_val, dtype=np.float64, )
-            bounds = np.full(num_clusters, 0.1, dtype=np.float64, )
+            peaks = np.full(
+                num_clusters,
+                min_val,
+                dtype=np.float64,
+            )
+            bounds = np.full(
+                num_clusters,
+                0.1,
+                dtype=np.float64,
+            )
         elif self.clustering_algorithm.lower() == "kmeans":
-            peaks, bounds = compute_kmeans(values, num_clusters, )
+            peaks, bounds = compute_kmeans(
+                values,
+                num_clusters,
+            )
         else:
-            peaks, bounds = compute_fcm(values, num_clusters, )
+            peaks, bounds = compute_fcm(
+                values,
+                num_clusters,
+            )
 
         # --------------------------------------------------------------
         # Build membership functions.
         # --------------------------------------------------------------
         shape = self.mf_shape.lower()
 
-        if shape not in {"triangular", "trapezoidal", "gaussian", }:
+        if shape not in {
+            "triangular",
+            "trapezoidal",
+            "gaussian",
+        }:
             raise ValueError(
                 f"Unsupported membership-function shape: {self.mf_shape!r}. Expected 'triangular', "
-                "'trapezoidal', or 'gaussian'.")
+                "'trapezoidal', or 'gaussian'."
+            )
 
         mf_params: list[dict] = []
 
@@ -532,28 +658,47 @@ class TGrad(OrigGRAANK):
             spread = max(float(spread), 0.1)
 
             if shape == "triangular":
-                left = (float(peaks[i - 1]) if i > 0 else center - 3.0 * spread)
-                right = (float(peaks[i + 1]) if i < num_clusters - 1 else center + 3.0 * spread)
+                left = float(peaks[i - 1]) if i > 0 else center - 3.0 * spread
+                right = (
+                    float(peaks[i + 1])
+                    if i < num_clusters - 1
+                    else center + 3.0 * spread
+                )
 
-                mf_params.append({
-                    "shape": "triangular",
-                    "params": [left, center, right],
-                })
+                mf_params.append(
+                    {
+                        "shape": "triangular",
+                        "params": [left, center, right],
+                    }
+                )
 
             elif shape == "trapezoidal":
-                left = (float(peaks[i - 1]) if i > 0 else center - 4.0 * spread)
-                right = (float(peaks[i + 1]) if i < num_clusters - 1 else center + 4.0 * spread)
+                left = float(peaks[i - 1]) if i > 0 else center - 4.0 * spread
+                right = (
+                    float(peaks[i + 1])
+                    if i < num_clusters - 1
+                    else center + 4.0 * spread
+                )
 
-                mf_params.append({
-                    "shape": "trapezoidal",
-                    "params": [left, center - 0.5 * spread, center + 0.5 * spread, right, ],
-                })
+                mf_params.append(
+                    {
+                        "shape": "trapezoidal",
+                        "params": [
+                            left,
+                            center - 0.5 * spread,
+                            center + 0.5 * spread,
+                            right,
+                        ],
+                    }
+                )
 
             else:
-                mf_params.append({
-                    "shape": "gaussian",
-                    "params": [center, spread],
-                })
+                mf_params.append(
+                    {
+                        "shape": "gaussian",
+                        "params": [center, spread],
+                    }
+                )
 
         return mf_params
 

@@ -12,7 +12,6 @@ from ...gradual_patterns import GI, GP, TGP
 
 
 class BaseGrad(DataGP):
-
     @dataclass
     class Candidate:
         """
@@ -49,105 +48,107 @@ class BaseGrad(DataGP):
             algorithms that maximize gradual-pattern support may represent
             higher-quality solutions using lower costs.
         """
-        gp: GP|TGP|None=None
-        position: float|None=None
-        cost: float|None=None
+
+        gp: GP | TGP | None = None
+        position: float | None = None
+        cost: float | None = None
 
     @dataclass
     class SearchSpace:
         """
-            Represent the state of a gradual pattern optimization search space.
+        Represent the state of a gradual pattern optimization search space.
 
-            This class stores the configuration, execution statistics, candidate
-            solutions, and search results maintained during an optimization-based
-            gradual pattern mining process. It provides a common representation of
-            the search state used by algorithms such as Genetic GRAANK, ACO-GRAANK,
-            PSO-GRAANK, Hill-Climbing GRAANK, and Random GRAANK.
+        This class stores the configuration, execution statistics, candidate
+        solutions, and search results maintained during an optimization-based
+        gradual pattern mining process. It provides a common representation of
+        the search state used by algorithms such as Genetic GRAANK, ACO-GRAANK,
+        PSO-GRAANK, Hill-Climbing GRAANK, and Random GRAANK.
 
-            Attributes:
-                var_min:
-                    Minimum valid value or boundary of the search-space variable.
+        Attributes:
+            var_min:
+                Minimum valid value or boundary of the search-space variable.
 
-                var_max:
-                    Maximum valid value or boundary of the search-space variable.
+            var_max:
+                Maximum valid value or boundary of the search-space variable.
 
-                iter_count:
-                    Number of search iterations completed.
+            iter_count:
+                Number of search iterations completed.
 
-                eval_count:
-                    Number of candidate solutions evaluated during the search.
+            eval_count:
+                Number of candidate solutions evaluated during the search.
 
-                invalid_count:
-                    Number of candidate solutions rejected because they do not
-                    satisfy the constraints of the search space or mining process.
+            invalid_count:
+                Number of candidate solutions rejected because they do not
+                satisfy the constraints of the search space or mining process.
 
-                best_candidate:
-                    Candidate solution with the best objective value found so far.
+            best_candidate:
+                Candidate solution with the best objective value found so far.
 
-                loser_gps:
-                    Gradual patterns that were evaluated but did not qualify as
-                    selected or competitive solutions during the search. Elements
-                    may be either regular gradual patterns (``GP``) or temporal
-                    gradual patterns (``TGP``).
+            loser_gps:
+                Gradual patterns that were evaluated but did not qualify as
+                selected or competitive solutions during the search. Elements
+                may be either regular gradual patterns (``GP``) or temporal
+                gradual patterns (``TGP``).
 
-                pop:
-                    Current population of candidate solutions maintained by the
-                    optimization algorithm. Each element is a
-                    :class:`BaseGrad.Candidate`.
+            pop:
+                Current population of candidate solutions maintained by the
+                optimization algorithm. Each element is a
+                :class:`BaseGrad.Candidate`.
 
-            Notes:
-                The interpretation of ``var_min`` and ``var_max`` depends on the
-                optimization algorithm. Likewise, the definition of a "best"
-                candidate depends on the objective function used by the algorithm.
-                For example, some algorithms minimize cost while others maximize
-                gradual-pattern support.
+        Notes:
+            The interpretation of ``var_min`` and ``var_max`` depends on the
+            optimization algorithm. Likewise, the definition of a "best"
+            candidate depends on the objective function used by the algorithm.
+            For example, some algorithms minimize cost while others maximize
+            gradual-pattern support.
         """
+
         var_min: int
         var_max: int
         iter_count: int
         eval_count: int
         invalid_count: int
         best_candidate: BaseGrad.Candidate
-        loser_gps: list[GP|TGP]
+        loser_gps: list[GP | TGP]
         pop: list[BaseGrad.Candidate]
 
     def __init__(self, *args, **kwargs):
         """
-            Initialize the base gradual-pattern optimization algorithm.
+        Initialize the base gradual-pattern optimization algorithm.
 
-            The constructor delegates dataset and gradual-pattern mining
-            initialization to :class:`DataGP` and initializes the state required
-            by optimization-based search algorithms.
+        The constructor delegates dataset and gradual-pattern mining
+        initialization to :class:`DataGP` and initializes the state required
+        by optimization-based search algorithms.
 
-            Args:
-                *args:
-                    Positional arguments forwarded to :class:`DataGP`.
+        Args:
+            *args:
+                Positional arguments forwarded to :class:`DataGP`.
 
-                **kwargs:
-                    Keyword arguments forwarded to :class:`DataGP`. These typically
-                    include the data source and mining parameters such as minimum
-                    support and equality handling.
+            **kwargs:
+                Keyword arguments forwarded to :class:`DataGP`. These typically
+                include the data source and mining parameters such as minimum
+                support and equality handling.
 
-            Attributes:
-                _target_col:
-                    Index of the target attribute used during target-oriented
-                    gradual pattern mining. Initialized to ``None`` until a target
-                    attribute is specified.
+        Attributes:
+            _target_col:
+                Index of the target attribute used during target-oriented
+                gradual pattern mining. Initialized to ``None`` until a target
+                attribute is specified.
 
-                _search_space:
-                    Current optimization search-space state. Initialized to
-                    ``None`` and created when an optimization-based mining
-                    algorithm starts its search.
+            _search_space:
+                Current optimization search-space state. Initialized to
+                ``None`` and created when an optimization-based mining
+                algorithm starts its search.
 
-            Notes:
-                This constructor is intended to initialize shared state for
-                subclasses implementing optimization-based gradual pattern
-                mining strategies such as Genetic GRAANK, ACO-GRAANK,
-                PSO-GRAANK, Hill-Climbing GRAANK, and Random GRAANK.
+        Notes:
+            This constructor is intended to initialize shared state for
+            subclasses implementing optimization-based gradual pattern
+            mining strategies such as Genetic GRAANK, ACO-GRAANK,
+            PSO-GRAANK, Hill-Climbing GRAANK, and Random GRAANK.
         """
         super().__init__(*args, **kwargs)
         self._target_col: int | None = None
-        self._search_space: BaseGrad.SearchSpace|None = None
+        self._search_space: BaseGrad.SearchSpace | None = None
 
     @property
     def target_col(self):
@@ -159,16 +160,18 @@ class BaseGrad(DataGP):
             msg = "Target column should not be a 'date-time' attribute"
             raise ValueError(msg)
         elif (tgt_col < 0) or (tgt_col >= self.col_count):
-            msg = "Target column does not exist\nselect a column value between: " \
-                      "0 and " + str(self.col_count - 1)
+            msg = (
+                "Target column does not exist\nselect a column value between: "
+                "0 and " + str(self.col_count - 1)
+            )
             raise ValueError(msg)
         self._target_col = tgt_col
 
     @property
-    def search_space(self) -> BaseGrad.SearchSpace|None:
+    def search_space(self) -> BaseGrad.SearchSpace | None:
         return self._search_space
 
-    def blank_search_space(self) -> BaseGrad.SearchSpace|None:
+    def blank_search_space(self) -> BaseGrad.SearchSpace | None:
         """Create a blank search space."""
         try:
             self.init_search_space(1)
@@ -206,24 +209,18 @@ class BaseGrad(DataGP):
         attr_keys = list(valid_bins_dict.keys())
 
         # Empty Individual Template
-        empty_candidate = BaseGrad.Candidate (
-            position=None,
-            cost=None
-        )
+        empty_candidate = BaseGrad.Candidate(position=None, cost=None)
 
         # Initialize Population
         var_min = 0
-        var_max = int(''.join(['1'] * len(attr_keys)), 2)
+        var_max = int("".join(["1"] * len(attr_keys)), 2)
         pop = [empty_candidate] * total_pop
         for i in range(total_pop):
             pop[i].position = random.randrange(var_min, var_max)
             pop[i].cost = 1
 
         # Initialize best candidate
-        best_candidate = BaseGrad.Candidate(
-            position=pop[0].position,
-            cost = None
-        )
+        best_candidate = BaseGrad.Candidate(position=pop[0].position, cost=None)
 
         # Initialize SearchSpace parameters
         search_space = BaseGrad.SearchSpace(
@@ -238,7 +235,12 @@ class BaseGrad(DataGP):
         )
         return search_space
 
-    def _cost_function(self, candidate: BaseGrad.Candidate|None, exclude_target: bool = False, time_data: dict|None= None) -> bool:
+    def _cost_function(
+        self,
+        candidate: BaseGrad.Candidate | None,
+        exclude_target: bool = False,
+        time_data: dict | None = None,
+    ) -> bool:
         """Description
 
         Computes the fitness of a GP
@@ -269,7 +271,7 @@ class BaseGrad(DataGP):
                 bin_val = bin_arr[i]
                 if bin_val == 1:
                     temp_gi = GI.from_string(attr_keys[i])
-                    #if not temp_gp.contains_attr(temp_gi):
+                    # if not temp_gp.contains_attr(temp_gi):
                     temp_gp.add_gradual_item(temp_gi)
             return temp_gp
 
@@ -287,7 +289,9 @@ class BaseGrad(DataGP):
         rand_gp = _decode_gp(candidate.position)
 
         # 2. Check is target-column is present in the GP
-        target_col_ok = self.check_target_feature(rand_gp, exclude_target=exclude_target)
+        target_col_ok = self.check_target_feature(
+            rand_gp, exclude_target=exclude_target
+        )
         if not target_col_ok:
             return False
 
@@ -303,14 +307,23 @@ class BaseGrad(DataGP):
                 return False
 
         # 4. validate the GP
-        gen_gp: GP|TGP = rand_gp.validate_via_graank(self, target_col=target_col, time_data=time_data)
+        gen_gp: GP | TGP = rand_gp.validate_via_graank(
+            self, target_col=target_col, time_data=time_data
+        )
 
         # 5. Compute the cost of the GP
-        candidate.cost = (1.0 - gen_gp.support) ** 2  # penalize low-support patterns more strongly
+        candidate.cost = (
+            1.0 - gen_gp.support
+        ) ** 2  # penalize low-support patterns more strongly
         candidate.gp = gen_gp
         return True
 
-    def evaluate_candidate(self, candidate: BaseGrad.Candidate|None, exclude_target: bool, time_data: dict|None= None):
+    def evaluate_candidate(
+        self,
+        candidate: BaseGrad.Candidate | None,
+        exclude_target: bool,
+        time_data: dict | None = None,
+    ):
         """
         Evaluate a gradual-pattern candidate against the mining constraints.
 
@@ -357,24 +370,39 @@ class BaseGrad(DataGP):
             Modifies x (a numeric value) if it exceeds the lower/upper bound of the numeric search space.
             :return: None
             """
-            candidate.position = float(np.maximum(candidate.position if candidate else 0, s_space.var_min if s_space else 0))
-            candidate.position = float(np.minimum(candidate.position if candidate else 0, s_space.var_max if s_space else 0))
+            candidate.position = float(
+                np.maximum(
+                    candidate.position if candidate else 0,
+                    s_space.var_min if s_space else 0,
+                )
+            )
+            candidate.position = float(
+                np.minimum(
+                    candidate.position if candidate else 0,
+                    s_space.var_max if s_space else 0,
+                )
+            )
 
         apply_bound()
         # Update: What about duplicate candidate (position already exists in the search-space)?
-        
-        self._cost_function(candidate, exclude_target=exclude_target, time_data=time_data)
+
+        self._cost_function(
+            candidate, exclude_target=exclude_target, time_data=time_data
+        )
         if candidate.cost == 1:
             s_space.invalid_count += 1
         if candidate.cost is not None:
             # 1. Check if the candidate is better than the current best candidate
-            if s_space.best_candidate.cost is None or candidate.cost < s_space.best_candidate.cost:
+            if (
+                s_space.best_candidate.cost is None
+                or candidate.cost < s_space.best_candidate.cost
+            ):
                 s_space.best_candidate = copy.deepcopy(candidate)
 
             # 2. Check if it is a valid GP and is NOT a duplicate candidate
             if candidate.gp is not None:
                 gen_gp = candidate.gp
-                length_ok = (len(gen_gp.gradual_items) > 1)
+                length_ok = len(gen_gp.gradual_items) > 1
                 if (gen_gp.support >= self.thd_supp) and length_ok:
                     is_present = gen_gp.is_duplicate(self.gradual_patterns)
                     is_sub = gen_gp.check_am(self.gradual_patterns, subset=True)
@@ -413,7 +441,10 @@ class BaseGrad(DataGP):
         if isinstance(gp_cand, set):
             has_target = np.any(
                 np.array(
-                    [GI.from_string(gi_str).attribute_col == target_col for gi_str in gp_cand],
+                    [
+                        GI.from_string(gi_str).attribute_col == target_col
+                        for gi_str in gp_cand
+                    ],
                     dtype=bool,
                 )
             )
@@ -431,4 +462,3 @@ class BaseGrad(DataGP):
 
         # Accept only candidates containing the target feature.
         return has_target
-

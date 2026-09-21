@@ -12,9 +12,16 @@ from .graank_base import BaseGrad
 
 
 class ParticleGRAANK(BaseGrad):
-
-    def __init__(self, *args, max_iter: int = 1, n_particle: int = 5, vel: float = 0.9,
-                 coeff_p: float = 0.01, coeff_g: float = 0.9, **kwargs):
+    def __init__(
+        self,
+        *args,
+        max_iter: int = 1,
+        n_particle: int = 5,
+        vel: float = 0.9,
+        coeff_p: float = 0.01,
+        coeff_g: float = 0.9,
+        **kwargs,
+    ):
         """
         Extract gradual patterns (GPs) from a numeric data source using the Particle Swarm Optimization Algorithm
         approach (proposed in a published research paper by Dickson Owuor). A GP is a set of gradual items (GI), and its
@@ -42,7 +49,12 @@ class ParticleGRAANK(BaseGrad):
         self._coeff_p: float = coeff_p
         self._coeff_g: float = coeff_g
 
-    def discover(self, target_col: int | None = None, time_data: dict|None= None, exclude_target: bool = False) -> dict:
+    def discover(
+        self,
+        target_col: int | None = None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+    ) -> dict:
         """
         Searches through particle positions to find GP candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
@@ -71,10 +83,16 @@ class ParticleGRAANK(BaseGrad):
             # while eval_count < max_evaluations:
             # while repeated < 1:
             for i in range(self._n_particles):
-                self.evaluate_candidate(s_space.pop[i], exclude_target, time_data=time_data)
+                self.evaluate_candidate(
+                    s_space.pop[i], exclude_target, time_data=time_data
+                )
                 part_cost = s_space.pop[i].cost
                 part_pos = s_space.pop[i].position
-                if part_cost is not None and pbest_pop[i].cost is not None and gbest_particle.cost is not None:
+                if (
+                    part_cost is not None
+                    and pbest_pop[i].cost is not None
+                    and gbest_particle.cost is not None
+                ):
                     if pbest_pop[i].cost > part_cost:
                         pbest_pop[i].cost = part_cost
                         pbest_pop[i].position = part_pos
@@ -84,15 +102,28 @@ class ParticleGRAANK(BaseGrad):
                         gbest_particle.position = part_pos
             # if abs(gbest_fitness_value - self.target) < self.target_error:
             #    break
-            if (gbest_particle.cost is not None and s_space.best_candidate.cost is not None) and (s_space.best_candidate.cost > gbest_particle.cost):
-                s_space.best_candidate = BaseGrad.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
+            if (
+                gbest_particle.cost is not None
+                and s_space.best_candidate.cost is not None
+            ) and (s_space.best_candidate.cost > gbest_particle.cost):
+                s_space.best_candidate = BaseGrad.Candidate(
+                    position=gbest_particle.position, cost=gbest_particle.cost
+                )
 
             for i in range(self._n_particles):
                 part_pos = s_space.pop[i].position
-                if part_pos is not None and pbest_pop[i].position is not None and gbest_particle.position is not None:
-                    new_velocity = (self._velocity * velocity_vector[i]) + \
-                               (self._coeff_p * random.random()) * (pbest_pop[i].position - part_pos) + \
-                               (self._coeff_g * random.random()) * (gbest_particle.position - part_pos)
+                if (
+                    part_pos is not None
+                    and pbest_pop[i].position is not None
+                    and gbest_particle.position is not None
+                ):
+                    new_velocity = (
+                        (self._velocity * velocity_vector[i])
+                        + (self._coeff_p * random.random())
+                        * (pbest_pop[i].position - part_pos)
+                        + (self._coeff_g * random.random())
+                        * (gbest_particle.position - part_pos)
+                    )
                     s_space.pop[i].position = s_space.pop[i].position + new_velocity
 
             # Increment iteration count
@@ -108,5 +139,6 @@ class ParticleGRAANK(BaseGrad):
             "Global coefficient": f"{self._coeff_g}",
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds",
-            "Invalid Count": f"{s_space.invalid_count}"}
+            "Invalid Count": f"{s_space.invalid_count}",
+        }
         return out_dict

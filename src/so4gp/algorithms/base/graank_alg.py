@@ -14,8 +14,7 @@ from .graank_base import BaseGrad
 
 
 class OrigGRAANK(BaseGrad):
-
-    def __init__(self, *args, max_apriori_level: int|None=None, **kwargs):
+    def __init__(self, *args, max_apriori_level: int | None = None, **kwargs):
         """
         Extracts gradual patterns (GPs) from a numeric dataset using the GRAANK algorithm. The algorithm relies on the
         APRIORI approach for generating GP candidates. This work was proposed by Anne Laurent
@@ -34,9 +33,14 @@ class OrigGRAANK(BaseGrad):
 
         """
         super().__init__(*args, **kwargs)
-        self._max_apriori_level: int|None = max_apriori_level
+        self._max_apriori_level: int | None = max_apriori_level
 
-    def _gen_apriori_candidates(self, valid_dict: dict|None, time_data: dict|None= None, exclude_target: bool = False) -> dict:
+    def _gen_apriori_candidates(
+        self,
+        valid_dict: dict | None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+    ) -> dict:
         """
         Generates Apriori GP candidates (w.r.t target-feature/reference-column if provided). If a user wishes to generate
         candidates that do not contain the target-feature, then they do so by specifying the exclude_target parameter.
@@ -68,12 +72,14 @@ class OrigGRAANK(BaseGrad):
                 gp_cand.add_gradual_item(gi)
 
             # 2a. Check if the GP candidate is valid (has more than one GI)
-            length_ok = (len(gp_cand.gradual_items) > 1)
+            length_ok = len(gp_cand.gradual_items) > 1
             # 2b. Check if target-feature is present in the GP candidate
-            target_col_ok = self.check_target_feature(gp_cand, exclude_target=exclude_target)
+            target_col_ok = self.check_target_feature(
+                gp_cand, exclude_target=exclude_target
+            )
             # 2c. Check if the GP candidate is already present in the list of candidates
-            not_exists = (not gp_cand.is_duplicate(all_candidates))
-            is_valid = (length_ok and target_col_ok and not_exists)
+            not_exists = not gp_cand.is_duplicate(all_candidates)
+            is_valid = length_ok and target_col_ok and not_exists
             if not is_valid:
                 continue
 
@@ -87,8 +93,13 @@ class OrigGRAANK(BaseGrad):
                     search_space.invalid_count += 1
         return res_dict
 
-    def discover(self, target_col: int|None = None, time_data: dict|None= None, exclude_target: bool = False,
-                 compute_descriptors: bool = True) -> dict:
+    def discover(
+        self,
+        target_col: int | None = None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+        compute_descriptors: bool = True,
+    ) -> dict:
         """
         Uses apriori algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
         support is greater than or equal to the minimum support threshold specified by the user.
@@ -106,36 +117,45 @@ class OrigGRAANK(BaseGrad):
         s_space = self.blank_search_space()
         if s_space is None:
             return {"Error": "Search space is empty!"}
-        valid_bins_dict: dict|None = copy.deepcopy(self.valid_bins)
+        valid_bins_dict: dict | None = copy.deepcopy(self.valid_bins)
 
         if valid_bins_dict is None:
             return {"Error": "Pairwise matrices not available!"}
 
         candidate_level = 1
         while valid_bins_dict:
-            valid_bins_dict = self._gen_apriori_candidates(valid_bins_dict, time_data=time_data, exclude_target=exclude_target)
+            valid_bins_dict = self._gen_apriori_candidates(
+                valid_bins_dict, time_data=time_data, exclude_target=exclude_target
+            )
 
             for gp_set, gi_data in (valid_bins_dict or {}).items():
                 self.remove_subsets(set(gp_set))
-                gp: GP|TGP = TGP() if time_data is not None else GP()
+                gp: GP | TGP = TGP() if time_data is not None else GP()
 
                 for gi_str in gp_set:
                     gi: GI = GI.from_string(gi_str)
-                    GP.add_gradual_item_strict(gp, gi, target_col=target_col, time_lag=gi_data.time_lag)
+                    GP.add_gradual_item_strict(
+                        gp, gi, target_col=target_col, time_lag=gi_data.time_lag
+                    )
                 gp.support = gi_data.support
                 if compute_descriptors:
                     n = self._attr_size
-                    warping_set_arr: np.ndarray|torch.Tensor = GP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
+                    warping_set_arr: np.ndarray | torch.Tensor = (
+                        GP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
+                    )
                     gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
                 self.add_gradual_pattern(gp)
             candidate_level += 1
-            if (self._max_apriori_level is not None) and candidate_level >= self._max_apriori_level:
+            if (
+                self._max_apriori_level is not None
+            ) and candidate_level >= self._max_apriori_level:
                 break
 
         duration = time.time() - start
-        out_dict: dict[str, str|list]= {
+        out_dict: dict[str, str | list] = {
             "Algorithm": "GRAANK",
             # "Memory Usage (MiB)": f{mem_use)}"
             "Run-time": f"{duration:.6f} seconds",
-            "Invalid Count": f"{s_space.invalid_count}"}
+            "Invalid Count": f"{s_space.invalid_count}",
+        }
         return out_dict

@@ -5,7 +5,7 @@
 
 import json
 
-#import torch
+# import torch
 import numpy as np
 
 from .base.graank_alg import OrigGRAANK
@@ -55,7 +55,9 @@ class GRAANK:
         * Hill Climbing-GRAANK: https://www.sciencedirect.com/science/article/abs/pii/S2210650222001717
     """
 
-    def __init__(self, data_source, min_sup: float = 0.5, eq: bool = False, device: str = "cpu") -> None:
+    def __init__(
+        self, data_source, min_sup: float = 0.5, eq: bool = False, device: str = "cpu"
+    ) -> None:
         """
         Initialize a gradual pattern mining session.
 
@@ -135,12 +137,17 @@ class GRAANK:
     def mining_engine(self):
         return self._mine_obj
 
-    def discover(self,
-                 search_type: str = "apriori",
-                 max_iteration: int | None = None, target_col: int | None = None, exclude_target: bool = False,
-                 time_data: dict | None = None,
-                 compute_descriptors: bool = True, save_results: bool = False,
-                 **kwargs) -> str:
+    def discover(
+        self,
+        search_type: str = "apriori",
+        max_iteration: int | None = None,
+        target_col: int | None = None,
+        exclude_target: bool = False,
+        time_data: dict | None = None,
+        compute_descriptors: bool = True,
+        save_results: bool = False,
+        **kwargs,
+    ) -> str:
         """
         Discover gradual patterns using the selected search strategy.
 
@@ -314,41 +321,101 @@ class GRAANK:
         """
 
         if search_type == "apriori":
-            self._mine_obj = OrigGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_apriori_level=max_iteration, **kwargs)
+            self._mine_obj = OrigGRAANK(
+                self._data_src,
+                min_sup=self._min_supp,
+                eq=self._eq,
+                device=self._device,
+                max_apriori_level=max_iteration,
+                **kwargs,
+            )
         elif search_type == "ga":
             from .base.graank_ga import GeneticGRAANK
+
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = GeneticGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
+            self._mine_obj = GeneticGRAANK(
+                self._data_src,
+                min_sup=self._min_supp,
+                eq=self._eq,
+                device=self._device,
+                max_iter=max_iteration,
+                **kwargs,
+            )
         elif search_type == "aco":
             from .base.graank_aco import AntGRAANK
+
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = AntGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
+            self._mine_obj = AntGRAANK(
+                self._data_src,
+                min_sup=self._min_supp,
+                eq=self._eq,
+                device=self._device,
+                max_iter=max_iteration,
+                **kwargs,
+            )
         elif search_type == "pso":
             from .base.graank_pso import ParticleGRAANK
+
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = ParticleGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
+            self._mine_obj = ParticleGRAANK(
+                self._data_src,
+                min_sup=self._min_supp,
+                eq=self._eq,
+                device=self._device,
+                max_iter=max_iteration,
+                **kwargs,
+            )
         elif search_type == "hc":
             from .base.graank_hc import HillClimbingGRAANK
+
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = HillClimbingGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
+            self._mine_obj = HillClimbingGRAANK(
+                self._data_src,
+                min_sup=self._min_supp,
+                eq=self._eq,
+                device=self._device,
+                max_iter=max_iteration,
+                **kwargs,
+            )
         elif search_type == "random":
             from .base.graank_rand import RandomGRAANK
+
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = RandomGRAANK(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration)
+            self._mine_obj = RandomGRAANK(
+                self._data_src,
+                min_sup=self._min_supp,
+                eq=self._eq,
+                device=self._device,
+                max_iter=max_iteration,
+            )
         elif search_type == "clustergp":
             from .cluster_gp import ClusterGP
+
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = ClusterGP(self._data_src, min_sup=self._min_supp, eq=self._eq, device=self._device, max_iter=max_iteration, **kwargs)
+            self._mine_obj = ClusterGP(
+                self._data_src,
+                min_sup=self._min_supp,
+                eq=self._eq,
+                device=self._device,
+                max_iter=max_iteration,
+                **kwargs,
+            )
         else:
             raise ValueError("Invalid search type!")
 
         if isinstance(self._mine_obj, OrigGRAANK):
-            res_dict = self._mine_obj.discover(target_col=target_col, time_data=time_data,
-                                               exclude_target=exclude_target,
-                                               compute_descriptors=compute_descriptors)
+            res_dict = self._mine_obj.discover(
+                target_col=target_col,
+                time_data=time_data,
+                exclude_target=exclude_target,
+                compute_descriptors=compute_descriptors,
+            )
         else:
-            res_dict = self._mine_obj.discover(target_col=target_col, time_data=time_data,
-                                               exclude_target=exclude_target)
+            res_dict = self._mine_obj.discover(
+                target_col=target_col,
+                time_data=time_data,
+                exclude_target=exclude_target,
+            )
 
         try:
             if save_results:
@@ -356,7 +423,11 @@ class GRAANK:
             res_dict.update({"Patterns": self._mine_obj.display_patterns})
         except Exception as e:
             res_dict.update({"Error": str(e)})
-        out:str = json.dumps(res_dict,indent=4,
-                             default=lambda obj: obj.item() if isinstance(obj, np.generic) else obj.tolist(),)
+        out: str = json.dumps(
+            res_dict,
+            indent=4,
+            default=lambda obj: (
+                obj.item() if isinstance(obj, np.generic) else obj.tolist()
+            ),
+        )
         return out
-

@@ -12,7 +12,6 @@ from .tgrad import TGrad
 
 
 class TGradAMI(TGrad):
-
     def __init__(self, *args, **kwargs):
         """
         Algorithm for estimating time-lag using Average Mutual Information (AMI) and KMeans clustering which is
@@ -43,7 +42,9 @@ class TGradAMI(TGrad):
     def transformation_data(self):
         return self._transformation_data
 
-    def get_mi_transformation_steps(self, error_margin: float) -> tuple[dict[int, int], int]:
+    def get_mi_transformation_steps(
+        self, error_margin: float
+    ) -> tuple[dict[int, int], int]:
         """
         Estimate the optimal transformation step for each feature using
         Average Mutual Information (AMI).
@@ -130,17 +131,27 @@ class TGradAMI(TGrad):
         max_step = int(np.max(optimal_steps_arr)) + 1
 
         # 5. Integrate feature indices with the computed steps
-        steps_dict = {int(feature_cols[i]): int(optimal_steps_arr[i] + 1) for i in range(len(feature_cols))}
+        steps_dict = {
+            int(feature_cols[i]): int(optimal_steps_arr[i] + 1)
+            for i in range(len(feature_cols))
+        }
         return return_results(steps_dict, round(np.min(mse_arr), 5), max_step)
 
-    def discover_tgp_ami(self, target_col: int, search_algorithm: str = "apriori",
-                         max_iteration: int=3, transformation_steps: dict|None = None, ignore_time: bool=False,
-                         error_margin: float = 0.0001, eval_mode: bool = False) -> dict:
+    def discover_tgp_ami(
+        self,
+        target_col: int,
+        search_algorithm: str = "apriori",
+        max_iteration: int = 3,
+        transformation_steps: dict | None = None,
+        ignore_time: bool = False,
+        error_margin: float = 0.0001,
+        eval_mode: bool = False,
+    ) -> dict:
         """
         A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
         transformation that maintains MI and estimate the best time-delay value of the mined Fuzzy Temporal Gradual
         Patterns (FTGPs).
-    
+
         :param target_col: [required] Index of the target attribute/feature/column. Temporal transformations are
         estimated relative to this attribute.
         :param search_algorithm: Gradual pattern mining algorithm to apply to the transformed dataset. Supported values
@@ -162,14 +173,18 @@ class TGradAMI(TGrad):
 
         # 1. Compute and find the lowest mutual information (based) steps
         if transformation_steps is None:
-            transformation_steps, max_step = self.get_mi_transformation_steps(error_margin=error_margin)
+            transformation_steps, max_step = self.get_mi_transformation_steps(
+                error_margin=error_margin
+            )
         else:
             max_step = 0
             for v in transformation_steps.values():
                 max_step = max(max_step, v)
 
         # 3. Discover temporal-GPs from time-delayed data
-        lst_tgp = self._safe_transform_and_mine(transformation_steps, max_step, skip_time=ignore_time)
+        lst_tgp = self._safe_transform_and_mine(
+            transformation_steps, max_step, skip_time=ignore_time
+        )
 
         # 4. Organize FTGPs into a single list
         if lst_tgp:
@@ -185,10 +200,10 @@ class TGradAMI(TGrad):
                 title_row.append(txt)
                 if (col != self.target_col) and (col not in self.time_cols):
                     time_title.append(txt)
-            #str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
+            # str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
             self._transformation_data = {
-                'Patterns': self.display_patterns,
-                'Transformation Steps': transformation_steps,
+                "Patterns": self.display_patterns,
+                "Transformation Steps": transformation_steps,
                 #'Time Data': str_time_data,
                 #'Transformed Data': np.vstack(
                 #    (np.array(title_row), transformed_data.T if transformed_data is not None else np.array([]))),
@@ -204,5 +219,6 @@ class TGradAMI(TGrad):
             "MI Minimum Error": f"{error_margin:.2f}",
             "MI Error": f"{self.mi_error:.2f}",
             "Target Column": f"{self.target_col}",
-            "Run-time": f"{duration:.6f} seconds"}
+            "Run-time": f"{duration:.6f} seconds",
+        }
         return out_dict

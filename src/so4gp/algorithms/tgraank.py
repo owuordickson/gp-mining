@@ -5,13 +5,13 @@
 
 import json
 
-#import torch
+# import torch
 import numpy as np
 import pandas
 
 from .base.tgrad import TGrad
 
-#from .. import get_num_cores
+# from .. import get_num_cores
 
 
 class TGRAANK:
@@ -39,8 +39,17 @@ class TGRAANK:
           https://ieeexplore.ieee.org/abstract/document/11197674/
     """
 
-    def __init__(self, data_source, min_sup: float = 0.5, min_rep: float = 0.5, eq: bool = False,
-                 mf_shape: str="triangular", clustering_algorithm: str = "kmeans", inference_method: str = "mamdani", device: str = "cpu"):
+    def __init__(
+        self,
+        data_source,
+        min_sup: float = 0.5,
+        min_rep: float = 0.5,
+        eq: bool = False,
+        mf_shape: str = "triangular",
+        clustering_algorithm: str = "kmeans",
+        inference_method: str = "mamdani",
+        device: str = "cpu",
+    ):
         """
         Initialize a temporal gradual pattern miner.
 
@@ -132,16 +141,34 @@ class TGRAANK:
         self._clustering_alg = clustering_algorithm
         self._inference_method = inference_method
         self._device = device
-        self._mine_obj = TGrad(data_source, min_sup=min_sup, min_rep=min_rep, eq=eq, mf_shape=mf_shape,
-                               clustering_algorithm=clustering_algorithm, inference_method=inference_method, add_time=True, device=device)
+        self._mine_obj = TGrad(
+            data_source,
+            min_sup=min_sup,
+            min_rep=min_rep,
+            eq=eq,
+            mf_shape=mf_shape,
+            clustering_algorithm=clustering_algorithm,
+            inference_method=inference_method,
+            add_time=True,
+            device=device,
+        )
 
     @property
     def mining_engine(self):
         return self._mine_obj
 
-    def discover(self, target_col: int, transformations: str = 'ami', transformation_steps: dict | None = None,
-                 search_algorithm: str = "apriori", max_iteration: int = 3,
-                 eval_mode: bool = False, compute_causality: bool = False, save_results: bool = False, **kwargs) -> str:
+    def discover(
+        self,
+        target_col: int,
+        transformations: str = "ami",
+        transformation_steps: dict | None = None,
+        search_algorithm: str = "apriori",
+        max_iteration: int = 3,
+        eval_mode: bool = False,
+        compute_causality: bool = False,
+        save_results: bool = False,
+        **kwargs,
+    ) -> str:
         """
         Discover fuzzy temporal gradual patterns.
 
@@ -281,27 +308,50 @@ class TGRAANK:
         """
 
         try:
-
-            if transformations == 'all':
-                self._mine_obj = TGrad(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
-                                       mf_shape=self._mf_shape, clustering_algorithm=self._clustering_alg,
-                                       inference_method=self._inference_method, add_time=True, device=self._device)
+            if transformations == "all":
+                self._mine_obj = TGrad(
+                    self._data_src,
+                    min_sup=self._min_supp,
+                    min_rep=self._min_rep,
+                    eq=self._eq,
+                    mf_shape=self._mf_shape,
+                    clustering_algorithm=self._clustering_alg,
+                    inference_method=self._inference_method,
+                    add_time=True,
+                    device=self._device,
+                )
                 # num_cores = kwargs.get("num_cores", 1)
-                #if num_cores <= 1:
+                # if num_cores <= 1:
                 #    num_cores = get_num_cores()
                 ignore_time = kwargs.get("ignore_time", False)
-                res_dict = self._mine_obj.discover_tgp(target_col=target_col, search_algorithm=search_algorithm,
-                                                       max_iteration=max_iteration, ignore_time=ignore_time)
-            elif transformations == 'ami':
+                res_dict = self._mine_obj.discover_tgp(
+                    target_col=target_col,
+                    search_algorithm=search_algorithm,
+                    max_iteration=max_iteration,
+                    ignore_time=ignore_time,
+                )
+            elif transformations == "ami":
                 from .base.tgrad_ami import TGradAMI
-                self._mine_obj = TGradAMI(self._data_src, min_sup=self._min_supp, min_rep=self._min_rep, eq=self._eq,
-                                       mf_shape=self._mf_shape, clustering_algorithm=self._clustering_alg,
-                                       inference_method=self._inference_method, add_time=True, device=self._device,)
-                res_dict = self._mine_obj.discover_tgp_ami(target_col=target_col,
-                                                            transformation_steps=transformation_steps,
-                                                            max_iteration=max_iteration,
-                                                            search_algorithm = search_algorithm,
-                                                            eval_mode=eval_mode, **kwargs)
+
+                self._mine_obj = TGradAMI(
+                    self._data_src,
+                    min_sup=self._min_supp,
+                    min_rep=self._min_rep,
+                    eq=self._eq,
+                    mf_shape=self._mf_shape,
+                    clustering_algorithm=self._clustering_alg,
+                    inference_method=self._inference_method,
+                    add_time=True,
+                    device=self._device,
+                )
+                res_dict = self._mine_obj.discover_tgp_ami(
+                    target_col=target_col,
+                    transformation_steps=transformation_steps,
+                    max_iteration=max_iteration,
+                    search_algorithm=search_algorithm,
+                    eval_mode=eval_mode,
+                    **kwargs,
+                )
             else:
                 raise ValueError("Invalid transformation algorithm")
 
@@ -312,6 +362,7 @@ class TGRAANK:
             if compute_causality:
                 # Causal Inference
                 from ..gradual_patterns import TGP
+
                 causal_relations = []
                 for tgp in self._mine_obj.gradual_patterns or []:
                     if isinstance(tgp, TGP):
@@ -321,60 +372,69 @@ class TGRAANK:
         except Exception as e:
             res_dict = {"Error": str(e)}
 
-        out: str = json.dumps(res_dict, indent=4,
-                              default=lambda obj: obj.item() if isinstance(obj, np.generic) else obj.tolist(),)
+        out: str = json.dumps(
+            res_dict,
+            indent=4,
+            default=lambda obj: (
+                obj.item() if isinstance(obj, np.generic) else obj.tolist()
+            ),
+        )
         return out
 
     def get_lagged_dependencies(self, max_lag: int = 0) -> pandas.DataFrame:
         """
-        Compute the lagged dependency matrix between all features.
+            Compute the lagged dependency matrix between all features.
 
-        Each feature is treated as the target attribute in turn, and temporal
-        gradual patterns are mined using the selected transformation algorithm.
-        For every discovered causal relationship, the support value is accumulated
-        into an adjacency matrix representing the strength of the dependency from
-        each cause feature to each effect feature.
+            Each feature is treated as the target attribute in turn, and temporal
+            gradual patterns are mined using the selected transformation algorithm.
+            For every discovered causal relationship, the support value is accumulated
+            into an adjacency matrix representing the strength of the dependency from
+            each cause feature to each effect feature.
 
-        The Genetic GRAANK search is configured with a maximum of three
-    optimization iterations for each target feature. This search algorithm is the
-    fastest for mining gradual patterns with a large number of features.
+            The Genetic GRAANK search is configured with a maximum of three
+        optimization iterations for each target feature. This search algorithm is the
+        fastest for mining gradual patterns with a large number of features.
 
-        The resulting matrix is returned as a ``pandas.DataFrame`` whose:
+            The resulting matrix is returned as a ``pandas.DataFrame`` whose:
 
-        - Rows represent **effect** variables.
-        - Columns represent **cause** variables.
-        - Cell ``(i, j)`` contains the cumulative support of all temporal gradual
-          patterns indicating that feature ``j`` influences feature ``i``.
+            - Rows represent **effect** variables.
+            - Columns represent **cause** variables.
+            - Cell ``(i, j)`` contains the cumulative support of all temporal gradual
+              patterns indicating that feature ``j`` influences feature ``i``.
 
-        Args:
-            max_lag:
-                Maximum temporal lag (transformation step) considered during
-                temporal pattern mining. This value determines the minimum
-                representativity threshold used when generating transformed
-                datasets.
+            Args:
+                max_lag:
+                    Maximum temporal lag (transformation step) considered during
+                    temporal pattern mining. This value determines the minimum
+                    representativity threshold used when generating transformed
+                    datasets.
 
-        Returns:
-            pandas.DataFrame:
-                A square dependency matrix indexed by feature names, where rows
-                correspond to effects and columns correspond to causes.
+            Returns:
+                pandas.DataFrame:
+                    A square dependency matrix indexed by feature names, where rows
+                    correspond to effects and columns correspond to causes.
 
-        Raises:
-            ValueError:
-                If ``max_lag`` is negative or greater than or equal to the number
-                of observations in the dataset.
+            Raises:
+                ValueError:
+                    If ``max_lag`` is negative or greater than or equal to the number
+                    of observations in the dataset.
 
-        Notes:
-            Dependency strengths are obtained by summing the support values of
-            all temporal gradual patterns supporting the same cause–effect
-            relationship.
+            Notes:
+                Dependency strengths are obtained by summing the support values of
+                all temporal gradual patterns supporting the same cause–effect
+                relationship.
         """
 
         if not 0 <= max_lag < self._mine_obj.row_count:
-            raise ValueError(f"'max_lag' must be between 0 and {self._mine_obj.row_count - 1}.")
+            raise ValueError(
+                f"'max_lag' must be between 0 and {self._mine_obj.row_count - 1}."
+            )
 
         # Compute minimum representativity from the maximum lag
         if max_lag > 0:
-            self._min_rep = (self._mine_obj.row_count - max_lag) / self._mine_obj.row_count
+            self._min_rep = (
+                self._mine_obj.row_count - max_lag
+            ) / self._mine_obj.row_count
 
         self._min_supp = 0.005
         feature_cols = self._mine_obj.attr_cols
@@ -385,20 +445,27 @@ class TGRAANK:
 
         for target in feature_cols:
             result = json.loads(
-                self.discover(target_col=target, transformations="all", search_algorithm='apriori', max_iteration=1, compute_causality=True, ignore_time=False)
+                self.discover(
+                    target_col=target,
+                    transformations="all",
+                    search_algorithm="apriori",
+                    max_iteration=1,
+                    compute_causality=True,
+                    ignore_time=False,
+                )
             )
-            #print(f"Target: {target}\n{result['Causality']}")
+            # print(f"Target: {target}\n{result['Causality']}")
 
             max_corr = {}
-            for item in result['Causality']:
+            for item in result["Causality"]:
                 key = tuple(item["correlation"])
 
                 if key not in max_corr or item["support"] > max_corr[key]["support"]:
                     max_corr[key] = item
             computed_relations = list(max_corr.values())
-            #print(f"{computed_relations}\n")
+            # print(f"{computed_relations}\n")
 
-            for relation in computed_relations:# result.get("Causality", []):
+            for relation in computed_relations:  # result.get("Causality", []):
                 cause_col, effect_col = relation["correlation"]
                 support = relation["support"]
 

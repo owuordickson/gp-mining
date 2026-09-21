@@ -13,7 +13,6 @@ from .graank_base import BaseGrad
 
 
 class AntGRAANK(BaseGrad):
-
     def __init__(self, *args, max_iter: int = 1, e_factor: float = 0.5, **kwargs):
         """
         Extract gradual patterns (GPs) from a numeric data source using the Ant Colony Optimization approach
@@ -56,16 +55,21 @@ class AntGRAANK(BaseGrad):
 
         # 2. Initialize an empty d-matrix
         n = len(attr_keys)
-        d = np.zeros((n, n), dtype=np.dtype('i8'))  # cumulative sum of all segments
+        d = np.zeros((n, n), dtype=np.dtype("i8"))  # cumulative sum of all segments
         for i in range(n):
             for j in range(n):
-                if GI.from_string(attr_keys[i]).attribute_col == GI.from_string(attr_keys[j]).attribute_col:
+                if (
+                    GI.from_string(attr_keys[i]).attribute_col
+                    == GI.from_string(attr_keys[j]).attribute_col
+                ):
                     # Ignore similar attributes (+ or/and -)
                     continue
                 else:
                     if gi_dict is None:
                         continue
-                    res_pw_mat: PairwiseMatrix = GP.perform_and(gi_dict[attr_keys[i]], gi_dict[attr_keys[j]], n)
+                    res_pw_mat: PairwiseMatrix = GP.perform_and(
+                        gi_dict[attr_keys[i]], gi_dict[attr_keys[j]], n
+                    )
                     # Cumulative sum of all segments for 2x2 (all attributes) gradual items
                     d[i][j] += np.sum(res_pw_mat.packed_bin_mat)
         # print(d)
@@ -92,21 +96,27 @@ class AntGRAANK(BaseGrad):
         for i in range(m):
             combine_feature = np.multiply(v_matrix[i], p_matrix[i])
             total = np.sum(combine_feature)
-            with np.errstate(divide='ignore', invalid='ignore'):
+            with np.errstate(divide="ignore", invalid="ignore"):
                 probability = combine_feature / total
             cum_prob = np.cumsum(probability)
             r = np.random.random_sample()
             try:
                 j = np.nonzero(cum_prob > r)[0][0]
-                gi_str: str = cast(str, self._attribute_keys[j]) if self._attribute_keys is not None else ""
+                gi_str: str = (
+                    cast(str, self._attribute_keys[j])
+                    if self._attribute_keys is not None
+                    else ""
+                )
                 gi: GI = GI.from_string(gi_str)
-                #if not pattern.contains_attr(gi):
+                # if not pattern.contains_attr(gi):
                 pattern.add_gradual_item(gi)
             except IndexError:
                 continue
 
         # 2. Apply target-feature search
-        target_col_ok = self.check_target_feature(pattern, exclude_target=exclude_target)
+        target_col_ok = self.check_target_feature(
+            pattern, exclude_target=exclude_target
+        )
         if not target_col_ok:
             return GP(), p_matrix
 
@@ -114,7 +124,7 @@ class AntGRAANK(BaseGrad):
         p_matrix = (1 - self._evaporation_factor) * p_matrix
         return pattern, p_matrix
 
-    def _update_pheromones(self, pattern: GP|TGP, p_matrix: np.ndarray):
+    def _update_pheromones(self, pattern: GP | TGP, p_matrix: np.ndarray):
         """
         Updates the pheromone level of the pheromone matrix
 
@@ -134,7 +144,12 @@ class AntGRAANK(BaseGrad):
                 p_matrix[j][i] += 1
         return p_matrix
 
-    def discover(self, target_col: int|None = None, time_data: dict|None= None, exclude_target: bool = False) -> dict:
+    def discover(
+        self,
+        target_col: int | None = None,
+        time_data: dict | None = None,
+        exclude_target: bool = False,
+    ) -> dict:
         """
         Applies ant-colony optimization algorithm and uses pheromone levels to find GP candidates. The candidates are
         validated if their computed support is greater than or equal to the minimum support threshold specified by the
@@ -156,7 +171,12 @@ class AntGRAANK(BaseGrad):
 
         d = self._distance_matrix
         if d is None:
-            out_dict = {"Algorithm": "ACO-GRAANK", "Best Patterns": self.display_patterns, "Invalid Count": 0, "Iterations": 0}
+            out_dict = {
+                "Algorithm": "ACO-GRAANK",
+                "Best Patterns": self.display_patterns,
+                "Invalid Count": 0,
+                "Iterations": 0,
+            }
             return out_dict
 
         a = self.attr_size
@@ -164,7 +184,7 @@ class AntGRAANK(BaseGrad):
             return {"Error": "Pairwise matrices not available!"}
 
         # 1. Remove d[i][j] < frequency-count of min_supp
-        fr_count = ((self.thd_supp * a * (a - 1)) / 2)
+        fr_count = (self.thd_supp * a * (a - 1)) / 2
         d[d < fr_count] = 0
 
         # 3. Initialize pheromones (p_matrix)
@@ -182,9 +202,13 @@ class AntGRAANK(BaseGrad):
                     is_sub = rand_gp.check_am(self.gradual_patterns, subset=True)
                     if is_super or is_sub:
                         continue
-                    gen_gp: GP|TGP = rand_gp.validate_via_graank(self, target_col=target_col, time_data=time_data)
+                    gen_gp: GP | TGP = rand_gp.validate_via_graank(
+                        self, target_col=target_col, time_data=time_data
+                    )
                     if gen_gp.support >= self.thd_supp:
-                        is_present = gen_gp.is_duplicate(self.gradual_patterns, s_space.loser_gps)
+                        is_present = gen_gp.is_duplicate(
+                            self.gradual_patterns, s_space.loser_gps
+                        )
                         is_sub = gen_gp.check_am(self.gradual_patterns, subset=True)
                         if not is_present and not is_sub:
                             pheromones = self._update_pheromones(gen_gp, pheromones)
@@ -203,5 +227,6 @@ class AntGRAANK(BaseGrad):
             "Evaporation factor": f"{self._evaporation_factor}",
             "Number of iterations": f"{s_space.iter_count}",
             "Run-time": f"{duration:.6f} seconds",
-            "Invalid Count": f"{s_space.invalid_count}"}
+            "Invalid Count": f"{s_space.invalid_count}",
+        }
         return out_dict
