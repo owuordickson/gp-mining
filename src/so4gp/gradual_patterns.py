@@ -23,7 +23,6 @@ NO_TIME_LABEL = "NoTime"
 
 class FatalError(Exception):
     """Custom exception to handle stoppage in case of missing information or user errors"""
-    pass
 
 
 @dataclass

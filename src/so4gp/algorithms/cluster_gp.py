@@ -8,7 +8,7 @@ import time
 import numpy as np
 from sklearn.cluster import KMeans
 
-from ..gradual_patterns import GI, GP, TGP, TimeDelay, FatalError
+from ..gradual_patterns import GI, GP, TGP, FatalError, TimeDelay
 from .base.graank_base import BaseGrad
 
 

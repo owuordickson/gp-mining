@@ -23,7 +23,7 @@ import torch
 from dateutil.parser import parse
 from tabulate import tabulate
 
-from .gradual_patterns import GI, GP, NO_TIME_LABEL, TGP, PairwiseMatrix, FatalError
+from .gradual_patterns import GI, GP, NO_TIME_LABEL, TGP, FatalError, PairwiseMatrix
 from .utils import write_file
 
 
