@@ -188,8 +188,7 @@ class GradPFS:
         rel_lst = []
         for gp in (grad.gradual_patterns or []):
              rel_attributes = gp.decompose()[0]
-             for attr in rel_attributes:
-                 rel_lst.append(attr)
+             rel_lst = rel_attributes.copy()
         rel_set = set(rel_lst)
         rel_set = rel_set.difference({self.target_col})
 

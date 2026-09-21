@@ -1,4 +1,4 @@
-import datetime
+import time
 
 from hydra import compose, initialize
 from omegaconf import DictConfig
@@ -22,7 +22,7 @@ def main(cfg: DictConfig):
     else:
         raise ValueError("SPECIFY AND LOAD YOUR OWN METHOD HERE")
 
-    start = datetime.datetime.now()
+    start = time.time()
     print("Loading data...")
     # First, we load the full dataset from path and preprocess according to config..
     test_data, test_labels = load_joint_samples(
@@ -39,7 +39,7 @@ def main(cfg: DictConfig):
         remove_autoregressive=cfg.remove_diagonal,
         name=cfg.method.name,
     )
-    stop_time = datetime.datetime.now() - start
+    stop_time = time.time() - start
     print(out)
 
     if cfg.save_full_out:

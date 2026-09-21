@@ -84,9 +84,8 @@ class ParticleGRAANK(BaseGrad):
                         gbest_particle.position = part_pos
             # if abs(gbest_fitness_value - self.target) < self.target_error:
             #    break
-            if gbest_particle.cost is not None and s_space.best_candidate.cost is not None:
-                if s_space.best_candidate.cost > gbest_particle.cost:
-                    s_space.best_candidate = BaseGrad.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
+            if (gbest_particle.cost is not None and s_space.best_candidate.cost is not None) and (s_space.best_candidate.cost > gbest_particle.cost):
+                s_space.best_candidate = BaseGrad.Candidate(position=gbest_particle.position, cost=gbest_particle.cost)
 
             for i in range(self._n_particles):
                 part_pos = s_space.pop[i].position

@@ -1603,12 +1603,11 @@ class TGP(GP):
         swapped = False
         if tgt1 is None or tgt2 is None:
             return False
-        if tgt1 is not None and tgt2 is not None:
-            if tgt1.to_string() != tgt2.to_string():
-                if GI.swap_gi_symbol(tgt1).to_string() != tgt2.to_string():
-                    return False
-                else:
-                    swapped = True
+        if (tgt1 is not None and tgt2 is not None) and (tgt1.to_string() != tgt2.to_string()):
+            if GI.swap_gi_symbol(tgt1).to_string() != tgt2.to_string():
+                return False
+            else:
+                swapped = True
 
         # Compare temporal gradual items
         lst_tgi1 = self.temporal_gradual_items
@@ -1628,11 +1627,9 @@ class TGP(GP):
         # Compare time delays
         td_set1 = {f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi1}
         td_set2 = {f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi2}
-        if td_set1 != td_set2:
-            return False
 
         # All checks passed, patterns are similar
-        return True
+        return td_set1 != td_set2
 
     def get_causal_relations(self, columns: list) -> list[dict[str, object]]:
         """
