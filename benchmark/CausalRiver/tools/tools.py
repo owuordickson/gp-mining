@@ -12,7 +12,7 @@ def remove_trailing_nans(sample_prep):
     Removes samples that were not removed by interpolate.
     """
     check_trailing_nans = np.where(sample_prep.isnull().values.any(axis=1) == 0)[0]
-    if not len(check_trailing_nans) == 0:  # A ts is completely 0:
+    if len(check_trailing_nans) != 0:  # A ts is completely 0:
         sample_prep = sample_prep[
             check_trailing_nans.min() : check_trailing_nans.max() + 1
         ]
@@ -145,7 +145,7 @@ def load_joint_samples(cfg, index_col="datetime", preprocessing=None):
     # To fix double col names due to human readable format.
     Y_names = [[m[1] for m in sample.columns.values] for sample in Y]
     # Get all required ts
-    unique_nodes = list(set([item for sublist in Y_names for item in sublist]))
+    unique_nodes = list({item for sublist in Y_names for item in sublist})
     unique_nodes = (
         ([index_col] + [str(x) for x in unique_nodes])
         if index_col

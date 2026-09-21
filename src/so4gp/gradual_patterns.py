@@ -76,7 +76,7 @@ class GI:
     @property
     def as_tuple(self) -> tuple[int, str]:
         """The Gradual Item (GI) in tuple format"""
-        return tuple((self._attribute_col, self._symbol))
+        return self._attribute_col, self._symbol
 
     def as_string(self, columns: list[str]) -> str:
         """
@@ -970,14 +970,14 @@ class GP:
                 raise ValueError("Packed tensors must be on the same device.")
 
             packed_bit_mat = torch.bitwise_and(packed_1, packed_2)
-            bit_counts = torch.tensor([(i).bit_count() for i in range(256)], dtype=torch.int64, device=packed_bit_mat.device,)
+            bit_counts = torch.tensor([i.bit_count() for i in range(256)], dtype=torch.int64, device=packed_bit_mat.device, )
             sup = (bit_counts[packed_bit_mat.long()].sum().item() / GP.pair_count(n=dim))
         else:
             if isinstance(packed_2, torch.Tensor):
                 raise TypeError("Both packed bitmaps must be either NumPy arrays or PyTorch tensors.")
 
             packed_bit_mat = np.bitwise_and(packed_1, packed_2)
-            bit_counts = np.array([bin(i).count("1") for i in range(256)], dtype=np.uint8,)
+            bit_counts = np.array([i.bit_count() for i in range(256)], dtype=np.uint8, )
             sup = (bit_counts[packed_bit_mat].sum() / GP.pair_count(n=dim))
 
         # Combine gradual items
@@ -1616,9 +1616,9 @@ class TGP(GP):
         if (len(lst_tgi1) != len(lst_tgi2)) and (len(lst_tgi1) <= 0) or (len(lst_tgi2) <= 0):
             return False
 
-        gi_set1 = set([tgi.gradual_item.to_string() for tgi in lst_tgi1])
-        gi_set1_swap = set([GI.swap_gi_symbol(tgi.gradual_item).to_string() for tgi in lst_tgi1])
-        gi_set2 = set([tgi.gradual_item.to_string() for tgi in lst_tgi2])
+        gi_set1 = {tgi.gradual_item.to_string() for tgi in lst_tgi1}
+        gi_set1_swap = {GI.swap_gi_symbol(tgi.gradual_item).to_string() for tgi in lst_tgi1}
+        gi_set2 = {tgi.gradual_item.to_string() for tgi in lst_tgi2}
         if gi_set1 != gi_set2:
             if swapped and gi_set1_swap != gi_set2:
                 return False
@@ -1626,8 +1626,8 @@ class TGP(GP):
                 return False
 
         # Compare time delays
-        td_set1 = set([f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi1])
-        td_set2 = set([f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi2])
+        td_set1 = {f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi1}
+        td_set2 = {f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}" for tgi in lst_tgi2}
         if td_set1 != td_set2:
             return False
 

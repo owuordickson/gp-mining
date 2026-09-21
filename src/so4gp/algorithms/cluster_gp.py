@@ -215,8 +215,8 @@ class ClusterGP(BaseGrad):
                     #t_data = time_data["time_data"]
                     #use_gp = time_data["use_gp"]
                     #fuzzy_mf = time_data["tri_mf"]
-                    gp_set = set([gi.to_string() for gi in cluster_gis])
-                    bin_data = np.ones([self.row_count, self.row_count], dtype=bool)
+                    gp_set = {gi.to_string() for gi in cluster_gis}
+                    np.ones([self.row_count, self.row_count], dtype=bool)
                     selected_rows = GP.get_selected_rows(packed_bit_mat, self.row_count, )
                     time_lag = TimeDelay.approx_time_lag(selected_rows, time_data, gp_set=gp_set)
                     # time_lag = TimeDelay.approx_time_lag(bin_data, t_data, gp_set=gp_set, tri_mf_data=fuzzy_mf)

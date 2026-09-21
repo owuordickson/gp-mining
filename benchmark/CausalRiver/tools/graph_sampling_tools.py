@@ -98,7 +98,7 @@ def get_all_subgraphs(G: nx.Graph, n_vars: int = 5) -> list[set[int]]:
 
     # There might be many double graphs so we remove them by
     # sorting ids and removing doubles via set.
-    return list(set(tuple(sorted(i)) for i in [item for sublist in full_stack for item in sublist]))
+    return list({tuple(sorted(i)) for i in [item for sublist in full_stack for item in sublist]})
 
 
 def get_all_sink_cases(G, n_vars=12, restrict=15):
@@ -132,10 +132,12 @@ def get_longest_path(sub_G, measure="km"):
     return max(lengths)
 
 
-def check_corr_character(sub_G, measure=[["lag_median", 10], ["lag_var", 1000]]):
+def check_corr_character(sub_G, measure=None):
     """
     Check if a candidate graph confirms with specified measurements.
     """
+    if measure is None:
+        measure = [["lag_median", 10], ["lag_var", 1000]]
     for edge in sub_G.edges:
         info = sub_G.edges[edge]
         for category in measure:

@@ -363,7 +363,7 @@ class GradPFS:
         :return: Found a set of features and correlation score.
         """
 
-        row_idx = list(corr_set)[0]
+        row_idx = next(iter(corr_set))
         lst_sim = []
         cor_scores = []
         """:type lst_sim: list"""
