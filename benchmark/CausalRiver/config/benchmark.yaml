@@ -4,11 +4,11 @@ defaults:
   - data_preprocess: default_preprocessing
 
 
-#label_path: "datasets/1_random_3/east.p"
+label_path: "datasets/1_random_3/east.p"
 #label_path: "datasets/1_random_5/east.p"
 #label_path: "datasets/close_3/east.p"
 #label_path: "datasets/close_5/east.p"
-label_path: "datasets/confounder_3/east.p"
+#label_path: "datasets/confounder_3/east.p"
 #label_path: "datasets/confounder_5/east.p"
 #label_path: "datasets/random_3/east.p"
 #label_path: "datasets/random_5/east.p"
