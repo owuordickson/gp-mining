@@ -42,7 +42,7 @@ def f1_max(labs, preds):
     # F1 MAX
     precision, recall, thresholds = precision_recall_curve(labs, preds)
     f1_scores = 2 * recall * precision / (recall + precision)
-    f1_thresh = thresholds[np.argmax(f1_scores)]
+    f1_thresh = thresholds[np.nanargmax(f1_scores)]
     f1_score = np.nanmax(f1_scores)
     return f1_thresh, f1_score
 

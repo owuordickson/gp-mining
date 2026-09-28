@@ -3,6 +3,8 @@ import torch
 
 from so4gp.algorithms import TGRAANK
 
+# make get_selected_rows -- less intensive and fast
+
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"🚀 Running execution pipeline on device: {device.upper()}")
