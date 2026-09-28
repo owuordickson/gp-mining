@@ -14,14 +14,15 @@ Credits:
     Thomas Runkler and Anne Laurent
 """
 
+
 import pandas as pd
-from mcp.server.fastmcp import FastMCP
+#from mcp.server.fastmcp import FastMCP
 
 # 1. Initialize the FastMCP server instance
-mcp = FastMCP("Gradual Pattern Miner")
+#mcp = FastMCP("Gradual Pattern Miner")
 
 
-@mcp.tool()
+#@mcp.tool()
 def mine_gps(
     data: list[list[str | float | int]],
     min_support: float = 0.5,
@@ -107,7 +108,7 @@ def mine_gps(
             mine_obj = ClusterGP(data_df, min_sup=min_support, max_iter=max_iteration)
         else:
             mine_obj = ClusterGP(data_df, min_sup=min_support)
-        return mine_obj.discover(save_results=False)
+        return str(mine_obj.discover(save_results=False))
     elif algorithm == "graank-aco":
         from ..algorithms.graank import GRAANK
 
@@ -137,7 +138,7 @@ def mine_gps(
         raise ValueError("Invalid algorithm!")
 
 
-@mcp.tool()
+#@mcp.tool()
 def mine_tgps(
     data: list[list[str | float | int]],
     target_column: int,
