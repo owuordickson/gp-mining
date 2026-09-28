@@ -1,10 +1,7 @@
 *** ADD SUBMODULE ***
 1. Fork the CausalRivers repo
-2. update .gitmodules to add CausalRivers as a submodule
-3. git submodule sync
-4. git submodule update --init --recursive
-5. cd .\benchmarks\causalrivers\
-6. git remote set-url origin https://github.com/owuordickson/causalrivers.git
+2. git submodule add https://github.com/owuordickson/causalrivers.git benchmarks/causalrivers
+3. Add causalrivers to Git via: Settings -> Version Control -> Directory Mappings
 
 
 *** DOWNLOAD PRODUCT ***
