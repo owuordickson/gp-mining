@@ -6,4 +6,4 @@ scikit-learn~=1.9.1
 seaborn~=0.13.2
 matplotlib~=3.11.2
 python-dateutil~=2.9.0
-torch~=2.14.0
+torch~=2.13.0
