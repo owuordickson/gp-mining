@@ -9,7 +9,7 @@ from itertools import combinations
 import numpy as np
 import torch
 
-from ...gradual_patterns import GI, GP, TGP
+from ...gradual_patterns import GI, GP, TGP, PairwiseMatrix
 from .graank_base import BaseGrad
 
 
@@ -130,14 +130,23 @@ class OrigGRAANK(BaseGrad):
 
             for gp_set, gi_data in (valid_bins_dict or {}).items():
                 self.remove_subsets(set(gp_set))
-                gp: GP | TGP = TGP() if time_data is not None else GP()
 
+                # create GP
+                gp: GP | TGP = TGP() if time_data is not None else GP()
                 for gi_str in gp_set:
                     gi: GI = GI.from_string(gi_str)
                     GP.add_gradual_item_strict(
                         gp, gi, target_col=target_col, time_lag=gi_data.time_lag
                     )
                 gp.support = gi_data.support
+
+                # Compute confidence
+                target_gi = gp.get_target_gi(target_col)
+                target_pw_mat: PairwiseMatrix = self.valid_bins[target_gi.to_string()]
+                conf = gp.support / target_pw_mat.support
+                gp.confidence = conf
+
+                # Compute descriptors
                 if compute_descriptors:
                     n = self._attr_size
                     warping_set_arr: np.ndarray | torch.Tensor = (

@@ -28,10 +28,10 @@ class FatalError(Exception):
 @dataclass
 class PairwiseMatrix:
     """A data-class for storing pairwise (bitmap) matrix as packed-bits and its support value."""
-
     packed_bin_mat: np.ndarray | torch.Tensor
     support: float
     pattern: set[str]
+    confidence: float= 0
     time_lag: TimeDelay | None = None
 
 
@@ -173,6 +173,7 @@ class GP:
         """
         self._gradual_items: list[GI] = []
         self._support: float = 0
+        self._confidence: float = 0
         self._density: float = 0
         self._avg_dev_from_diag: float = 0
         self._rank_dispersion: float = 0
@@ -190,6 +191,14 @@ class GP:
     @support.setter
     def support(self, support: float):
         self._support = round(support, 3) if support <= 1 else support
+
+    @property
+    def confidence(self) -> float:
+        return self._confidence
+
+    @confidence.setter
+    def confidence(self, confidence: float):
+        self._confidence = round(confidence, 3) if confidence <= 1 else confidence
 
     @property
     def density(self) -> float:
@@ -254,14 +263,15 @@ class GP:
         """
         if self.density <= 0:
             params = (
-                [f"sup={self.support}"]
-                if not descriptor_title
-                else [{"Support": f"{self.support}"}]
+                [f"sup={self.support}, conf={self.confidence}"]
+                if not descriptor_title else
+                [{"Support": f"{self.support}"}, {"Confidence": f"{self.confidence}"}]
             )
         else:
             if not descriptor_title:
                 params = [
                     f"sup={self.support}",
+                    f"conf={self.confidence}",
                     f"density={self.density}",
                     f"avg_dev={self.avg_deviation_from_diagonal}",
                     f"dispersion={self.rank_dispersion}",
@@ -271,6 +281,7 @@ class GP:
             else:
                 params = [
                     {"Support": f"{self.support}"},
+                    {"Confidence": f"{self.confidence}"},
                     {"Density": f"{self.density}"},
                     {
                         "Avg. Deviation from Diagonal": f"{self.avg_deviation_from_diagonal}"
@@ -312,6 +323,22 @@ class GP:
             if gi.attribute_col == gi_obj.attribute_col:
                 return True
         return False
+
+    def get_target_gi(self, target_col: int|None) -> GI:
+        """
+        Find the target gradual item (GI) in the gradual pattern (GP)
+
+        :param target_col: target column
+        :return: the target GI or the first GI in the GP.
+
+        """
+        target_gi = self.gradual_items[0]
+        if target_col is not None:
+            if f"{target_col}+" in self.as_set:
+                target_gi = GI(target_col, "+")
+            elif f"{target_col}-" in self.as_set:
+                target_gi = GI(target_col, "-")
+        return target_gi
 
     def to_string(self) -> list[str]:
         """
@@ -367,14 +394,10 @@ class GP:
         gi_dict = copy.deepcopy(data_gp.valid_bins)
 
         gen_pattern: GP | TGP = TGP() if time_data is not None else GP()
-        target_gi = self.gradual_items[0]
-        if target_col is not None:
-            if f"{target_col}+" in self.as_set:
-                target_gi = GI(target_col, "+")
-            elif f"{target_col}-" in self.as_set:
-                target_gi = GI(target_col, "-")
+        target_gi = self.get_target_gi(target_col)
 
         pw_mat_1: PairwiseMatrix = gi_dict[target_gi.to_string()]
+        target_gi_supp = copy.copy(pw_mat_1.support)
         time_lag = gi_dict[target_gi.to_string()].time_lag
         GP.add_gradual_item_strict(
             gen_pattern, target_gi, target_col=target_col, time_lag=time_lag
@@ -400,6 +423,8 @@ class GP:
             # if compute_descriptors:
             #    warping_set_arr: np.ndarray = np.array(DataGP.gen_gradual_warping_set(pw_mat.bin_mat, as_array=True))
             #    rand_gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
+            conf = gen_pattern.support / target_gi_supp
+            gen_pattern.confidence = conf
             return gen_pattern
 
     def validate_via_tree(self, d_gp):
@@ -1062,7 +1087,7 @@ class GP:
 
         if bin_data_1 is None or bin_data_2 is None:
             return PairwiseMatrix(
-                packed_bin_mat=np.zeros((dim, dim)), support=0, pattern=set()
+                packed_bin_mat=np.zeros((dim, dim)), support=0, confidence=0, pattern=set()
             )
 
         # Intersection of packed bitmaps -- Supports NumPy arrays and PyTorch tensors (CPU or CUDA)

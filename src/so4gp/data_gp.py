@@ -490,12 +490,12 @@ class DataGP:
         if isinstance(self._data_src, str):
             file = self._data_src
         out_txt += f"\nFile: {file}\n"
-        out_txt += str("\nPattern : Support" + "\n")
+        out_txt += str("\nPattern : Support, Confidence" + "\n")
 
         list_tgp = self.gradual_patterns
         if list_tgp is not None:
             for tgp in list_tgp:
-                gp_str = f"{tgp.to_string()} :  {tgp.support}"
+                gp_str = f"{tgp.to_string()} :  {tgp.support}, {tgp.confidence}"
                 if len(gp_str) > 100:
                     gp_str = gp_str[:100] + "\n" + gp_str[100:]
                 out_txt += f"{gp_str}\n"

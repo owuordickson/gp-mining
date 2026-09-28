@@ -155,7 +155,10 @@ class BaseGrad(DataGP):
         return self._target_col
 
     @target_col.setter
-    def target_col(self, tgt_col: int):
+    def target_col(self, tgt_col: int|None):
+        if tgt_col is None:
+            return
+
         if tgt_col in self.time_cols:
             msg = "Target column should not be a 'date-time' attribute"
             raise ValueError(msg)
