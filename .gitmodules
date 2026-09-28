@@ -1,7 +1,5 @@
 [submodule "benchmarks/causalrivers"]
 	path = benchmarks/causalrivers
-	url = https://github.com/CausalRivers/causalrivers.git
+	url = https://github.com/owuordickson/causalrivers.git
 	branch = main
 	shallow = true
-	update = none
-	ignore = all
