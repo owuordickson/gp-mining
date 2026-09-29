@@ -1,4 +1,0 @@
-name: tgraank
-max_lag: 3
-var_absolute_values: True
-map_to_summary_graph: "max"

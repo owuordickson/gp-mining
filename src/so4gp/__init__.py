@@ -30,7 +30,7 @@ def save_pairwise_data(
 
 
 # Project Details
-__version__ = "1.0.9"
+__version__ = "1.1.0"
 __title__ = f"so4gp (v{__version__})"
 __author__ = "Dickson Owuor"
 __credits__ = "Montpellier University"
