@@ -38,8 +38,8 @@ def run_granger_causality(df, max_lag=3, alpha=0.05):
         p_values = [res[lag][0]["ssr_ftest"][1] for lag in range(1, max_lag + 1)]
         if min(p_values) < alpha:
             adj_matrix[0, 1] = 1
-    except:
-        pass
+    except RuntimeError as e:
+        print(f"Granger Causality Error: {e}")
     return adj_matrix
 
 

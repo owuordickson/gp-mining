@@ -1,22 +1,22 @@
 # Configuration file for the Sphinx documentation builder.
 
-import os
-import sys
+#import os
+#import sys
 import time
 
 # -- Path setup --------------------------------------------------------------
 
 # Add project root so autodoc can find the package
-try:
-    import so4gp
-except ImportError:
-    sys.path.insert(0, os.path.abspath("../src"))
+#try:
+#    import so4gp
+#except ImportError:
+#    sys.path.insert(0, os.path.abspath("../src"))
 
 # -- Project information -----------------------------------------------------
 
 project = "so4gp"
 author = "Dickson Owuor"
-copyright = f"{time.localtime().tm_year}, Dickson Owuor"
+copyright_text = f"{time.localtime().tm_year}, Dickson Owuor"
 
 # Full version
 release = "0.2.5"
@@ -74,7 +74,7 @@ autodoc_preserve_defaults = True
 
 
 # Remove duplicate constructor documentation
-def remove_lines_before_parameters(app, what, name, obj, options, lines):
+def remove_lines_before_parameters(what, lines):
     if what == "class":
         first_idx = next(
             (i for i, line in enumerate(lines) if line.startswith(":param")),

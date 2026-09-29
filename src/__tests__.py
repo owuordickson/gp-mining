@@ -1,7 +1,7 @@
 import pandas
 import torch
 
-from so4gp.algorithms import TGRAANK, GRAANK
+from so4gp.algorithms import TGRAANK
 
 # make get_selected_rows -- less intensive and fast
 

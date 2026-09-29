@@ -240,10 +240,7 @@ class ClusterGP(BaseGrad):
                     # fuzzy_mf = time_data["tri_mf"]
                     gp_set = {gi.to_string() for gi in cluster_gis}
                     np.ones([self.row_count, self.row_count], dtype=bool)
-                    selected_rows = GP.get_selected_rows(
-                        packed_bit_mat,
-                        self.row_count,
-                    )
+                    selected_rows = np.ndarray([])  # GP.get_selected_rows(packed_bit_mat, self.row_count, )
                     time_lag = TimeDelay.approx_time_lag(
                         selected_rows, time_data, gp_set=gp_set
                     )

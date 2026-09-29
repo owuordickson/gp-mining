@@ -702,7 +702,7 @@ class DataGP:
                             del raw_data[0]
                     d_frame = pd.DataFrame(raw_data, columns=header_vals)
                     return DataGP.clean_data(d_frame)
-            except Exception as error:
+            except RuntimeError as error:
                 raise FatalError("Error: " + str(error))
 
     @staticmethod

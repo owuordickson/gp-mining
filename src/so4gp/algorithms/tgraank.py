@@ -369,7 +369,7 @@ class TGRAANK:
                         res = tgp.get_causal_relations(self._mine_obj.titles)
                         causal_relations.extend(res)
                 res_dict.update({"Causality": causal_relations})
-        except Exception as e:
+        except RuntimeError as e:
             res_dict = {"Error": str(e)}
 
         out: str = json.dumps(

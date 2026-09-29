@@ -297,7 +297,7 @@ class TGrad(OrigGRAANK):
             if len(t_gps) > 0:
                 return t_gps
             return False
-        except Exception as e:
+        except FatalError as e:
             print(f"Error at step {max_step}: {e}")
             return None
 
