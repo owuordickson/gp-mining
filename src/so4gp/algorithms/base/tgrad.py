@@ -257,7 +257,7 @@ class TGrad(OrigGRAANK):
                     temp_col = temp_col[0:k]
 
                     # Get time-delay values
-                    time_data[col_index] = get_time_data(step)
+                    time_data[col_index] = get_time_data(step)[0:k]
 
                     # Save step so that we do not repeat get_time_diffs for a similar step
                     completed_steps.setdefault(step, []).append(col_index)
