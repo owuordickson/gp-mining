@@ -26,8 +26,8 @@ class TGradAMI(TGrad):
         Instead of min-representativity value, the algorithm relies on the error-margin between MIs.
 
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
-        :param kwargs: [required] target-column or attribute or feature, [optional] minimum representativity,
-        [optional] MF shape, [optional] clustering algorithm, [optional] inference method.
+        :param kwargs: [optional] minimum representativity, [optional] MF shape, [optional] clustering algorithm,
+        [optional] inference method.
 
         """
         super().__init__(*args, **kwargs)
