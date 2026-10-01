@@ -142,6 +142,7 @@ class TGradAMI(TGrad):
         target_col: int,
         search_algorithm: str = "apriori",
         max_iteration: int|None = None,
+        compute_descriptors: bool = False,
         transformation_steps: dict | None = None,
         ignore_time: bool = False,
         error_margin: float = 0.0001,
@@ -157,6 +158,7 @@ class TGradAMI(TGrad):
         :param search_algorithm: Gradual pattern mining algorithm to apply to the transformed dataset. Supported values
         are ``apriori``, ``ga``, ``aco``, ``pso``, ``hc``, ``random``, and ``clustergp``. Defaults to ``"apriori"``.
         :param max_iteration: Maximum number of iterations to run the search algorithm.
+        :param compute_descriptors: If ``True``, compute descriptors for the mined gradual patterns. Defaults to ``False``.
         :param transformation_steps: Data transformation steps (used to override the computed transformation steps).
         :param ignore_time: Mine TGPs but skip the calculation and estimation of time delay.
         :param error_margin: [optional] minimum Mutual Information error margin.
@@ -169,6 +171,7 @@ class TGradAMI(TGrad):
         self.target_col = target_col
         self._search_algorithm = search_algorithm
         self._algorithm_max_iter = max_iteration
+        self._compute_descriptors = compute_descriptors
         self.clear_gradual_patterns()
 
         # 1. Compute and find the lowest mutual information (based) steps

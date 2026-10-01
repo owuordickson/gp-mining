@@ -42,6 +42,7 @@ class TGrad(OrigGRAANK):
         super().__init__(*args, **kwargs)
         self._search_algorithm: str = "apriori"
         self._algorithm_max_iter: int|None = None
+        self._compute_descriptors: bool = False
         self._min_rep: float = min_rep
         self._max_step: int = self.row_count - int(min_rep * self.row_count)
         self.mf_shape = mf_shape.lower()
@@ -78,6 +79,7 @@ class TGrad(OrigGRAANK):
         target_col: int,
         search_algorithm: str = "apriori",
         max_iteration: int|None = None,
+        compute_descriptors: bool = False,
         ignore_time: bool = False,
     ) -> dict:
         """
@@ -136,6 +138,10 @@ class TGrad(OrigGRAANK):
             max_iteration:
                 The maximum number of iterations to run the search algorithm.
 
+            compute_descriptors:
+                If ``True``, compute descriptors for the mined gradual patterns.
+                Defaults to ``False``.
+
             ignore_time:
                 Mine TGPs but skip the calculation and estimation of time delay.
 
@@ -165,6 +171,7 @@ class TGrad(OrigGRAANK):
         self.target_col = target_col
         self._search_algorithm = search_algorithm
         self._algorithm_max_iter = max_iteration
+        self._compute_descriptors = compute_descriptors
         self.clear_gradual_patterns()
 
         # 1. Mine FTGPs (using parallel multiprocessing)
@@ -346,7 +353,7 @@ class TGrad(OrigGRAANK):
             search_type=self._search_algorithm,
             target_col=self.target_col,
             time_data=time_data,
-            compute_descriptors=False,
+            compute_descriptors=self._compute_descriptors,
             max_iteration=self._algorithm_max_iter,
         )
         return mine_obj.mining_engine.gradual_patterns
