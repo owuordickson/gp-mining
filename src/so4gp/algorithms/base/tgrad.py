@@ -22,8 +22,8 @@ class TGrad(OrigGRAANK):
         self,
         *args,
         min_rep: float = 0.5,
-        mf_shape: str = "triangular",
-        clustering_algorithm: str = "fcm",
+        mf_shape: str = "gaussian",
+        clustering_algorithm: str = "kmeans",
         inference_method: str = "mamdani",
         **kwargs,
     ):

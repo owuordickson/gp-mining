@@ -1869,8 +1869,8 @@ class TGP(GP):
         }
         gi_set2 = {tgi.gradual_item.to_string() for tgi in lst_tgi2}
         if gi_set1 != gi_set2:
-            if swapped and gi_set1_swap != gi_set2:
-                return False
+            if swapped and gi_set1_swap == gi_set2:
+                pass
             else:
                 return False
 
@@ -1885,7 +1885,7 @@ class TGP(GP):
         }
 
         # All checks passed, patterns are similar
-        return td_set1 != td_set2
+        return td_set1 == td_set2
 
     def get_causal_relations(self, columns: list) -> list[dict[str, object]]:
         """
