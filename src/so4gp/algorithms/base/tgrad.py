@@ -41,7 +41,7 @@ class TGrad(OrigGRAANK):
         """
         super().__init__(*args, **kwargs)
         self._search_algorithm: str = "apriori"
-        self._algorithm_max_iter: int = 3
+        self._algorithm_max_iter: int|None = None
         self._min_rep: float = min_rep
         self._max_step: int = self.row_count - int(min_rep * self.row_count)
         self.mf_shape = mf_shape.lower()
@@ -77,7 +77,7 @@ class TGrad(OrigGRAANK):
         self,
         target_col: int,
         search_algorithm: str = "apriori",
-        max_iteration: int = 3,
+        max_iteration: int|None = None,
         ignore_time: bool = False,
     ) -> dict:
         """

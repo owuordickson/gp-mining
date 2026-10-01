@@ -141,7 +141,7 @@ class TGradAMI(TGrad):
         self,
         target_col: int,
         search_algorithm: str = "apriori",
-        max_iteration: int = 3,
+        max_iteration: int|None = None,
         transformation_steps: dict | None = None,
         ignore_time: bool = False,
         error_margin: float = 0.0001,
