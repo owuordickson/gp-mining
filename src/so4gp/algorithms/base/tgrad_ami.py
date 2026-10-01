@@ -200,13 +200,14 @@ class TGradAMI(TGrad):
                 title_row.append(txt)
                 if (col != self.target_col) and (col not in self.time_cols):
                     time_title.append(txt)
-            # str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
+            transformed_data, time_data = self.transform_data(transformation_steps, max_step)
+            str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
             self._transformation_data = {
                 "Patterns": self.display_patterns,
                 "Transformation Steps": transformation_steps,
-                #'Time Data': str_time_data,
-                #'Transformed Data': np.vstack(
-                #    (np.array(title_row), transformed_data.T if transformed_data is not None else np.array([]))),
+                'Time Data': str_time_data,
+                'Transformed Data': np.vstack(
+                    (np.array(title_row), transformed_data.T if transformed_data is not None else np.array([]))),
             }
 
         duration = time.time() - start
