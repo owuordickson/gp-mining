@@ -1454,9 +1454,7 @@ class TimeDelay:
                     dtype=np.float64,
                 )
 
-                # ------------------------------------------------------
                 # Triangular MF
-                # ------------------------------------------------------
                 if shape == "triangular":
                     if params.size != 3:
                         raise ValueError(
@@ -1471,9 +1469,7 @@ class TimeDelay:
                         np.minimum(rising, falling),
                     )
 
-                # ------------------------------------------------------
                 # Trapezoidal MF
-                # ------------------------------------------------------
                 elif shape == "trapezoidal":
                     if params.size != 4:
                         raise ValueError(
@@ -1491,9 +1487,7 @@ class TimeDelay:
                         ),
                     )
 
-                # ------------------------------------------------------
                 # Gaussian MF
-                # ------------------------------------------------------
                 elif shape == "gaussian":
                     if params.size != 2:
                         raise ValueError(
