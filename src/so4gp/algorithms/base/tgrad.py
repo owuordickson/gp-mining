@@ -8,6 +8,8 @@ import time
 
 import numpy as np
 import pandas as pd
+from sklearn.cluster import MiniBatchKMeans
+from sklearn.metrics import silhouette_score
 
 from ...data_gp import DataGP
 from ...gradual_patterns import NO_TIME_LABEL, TGP, FatalError
@@ -439,7 +441,7 @@ class TGrad(OrigGRAANK):
             return []
 
         def estimate_n_clusters(threshold: float = 0.90) -> int:
-            """Estimate the number of latent temporal components."""
+            """Estimate the number of groups/clusters in a set of time-delay values."""
             total_count = values.size
 
             if total_count < 3:
@@ -467,6 +469,117 @@ class TGrad(OrigGRAANK):
             )
 
             return max(2, int(estimated))
+
+        def estimate_n_clusters_silhouette(
+                max_clusters: int = 10,
+                sample_size: int = 2000,
+                random_state: int = 42,
+        ) -> int:
+            """Estimate the number of clusters using the silhouette coefficient.
+
+            The function evaluates candidate cluster counts using MiniBatchKMeans
+            and selects the number of clusters that maximizes the silhouette score.
+
+            Parameters
+            ----------
+            max_clusters : int, default=10
+                Maximum number of clusters to evaluate.
+
+            sample_size : int, default=2000
+                Maximum number of observations used to compute the silhouette score.
+                Sampling keeps the computation efficient for large datasets.
+
+            random_state : int, default=42
+                Random seed used for reproducible clustering and sampling.
+
+            Returns
+            -------
+            int
+                Estimated number of clusters. The minimum returned value is 2.
+
+            Notes
+            -----
+            The silhouette coefficient measures how well each observation fits
+            within its assigned cluster relative to the nearest alternative
+            cluster. Higher values indicate better-defined clustering.
+
+            For a candidate number of clusters ``k``:
+
+                s(i) = (b(i) - a(i)) / max(a(i), b(i))
+
+            where ``a(i)`` is the mean distance from observation ``i`` to
+            observations in its own cluster and ``b(i)`` is the smallest mean
+            distance from ``i`` to observations in another cluster.
+
+            The value of ``k`` that maximizes the mean silhouette coefficient
+            is selected.
+            """
+
+            n = values.size
+            # Not enough observations for meaningful clustering.
+            if n < 3:
+                return 2
+
+            # Number of distinct values limits the maximum possible k.
+            n_unique = np.unique(values).size
+
+            if n_unique < 2:
+                return 2
+
+            max_k = min(max_clusters, n_unique, n - 1)
+
+            if max_k < 2:
+                return 2
+
+            # Silhouette scores require at least one observation from each cluster and therefore k <= n - 1.
+            vals = values.reshape(-1, 1)
+
+            # For large datasets, use a representative sample when evaluating
+            # the silhouette score. Clustering itself still uses all observations.
+            if n > sample_size:
+                rng = np.random.default_rng(random_state)
+                sample_idx = rng.choice(n, size=sample_size, replace=False)
+                x_score = vals[sample_idx]
+            else:
+                x_score = vals
+
+            best_k = 2
+            best_score = -np.inf
+
+            for k in range(2, max_k + 1):
+
+                # Efficient clustering for one-dimensional time-delay data.
+                model = MiniBatchKMeans(
+                    n_clusters=k,
+                    random_state=random_state,
+                    batch_size=min(1024, n),
+                    n_init="auto",
+                )
+
+                labels = model.fit_predict(vals)
+
+                # A valid silhouette score requires at least two clusters.
+                if np.unique(labels).size < 2:
+                    continue
+
+                # If a sample is used, predict its cluster assignments using
+                # the model fitted to the complete dataset.
+                if x_score is not vals:
+                    score_labels = model.predict(x_score)
+                else:
+                    score_labels = labels
+
+                # The silhouette score is calculated on the representative sample.
+                score = silhouette_score(
+                    x_score,
+                    score_labels,
+                )
+
+                if score > best_score:
+                    best_score = score
+                    best_k = k
+
+            return int(best_k)
 
         def compute_kmeans(
             data: np.ndarray,
