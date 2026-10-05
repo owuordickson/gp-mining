@@ -451,60 +451,163 @@ class DataGP:
                 )
                 self._warping_set[gi_str] = lst_ij
 
-    def compute_attribute_descriptors(self):
-        """"""
+    def compute_attribute_descriptors(self) -> pd.DataFrame:
+        """Compute structural descriptors for all valid gradual attributes.
 
-        def create_df(lst_descriptors):
-            # 2. Parse text blocks into unified dictionaries
+        The method computes and consolidates a set of descriptors for each
+        valid gradual item (GI) in the current gradual pattern mining
+        result. The descriptors are computed from the corresponding
+        gradual warping sets and include support, confidence, density,
+        average deviation from the diagonal, rank dispersion, graph
+        connectivity, and singularity.
+
+        For each gradual item in ``self.warping_set``, a temporary
+        :class:`GP` object is created and populated with the GI, its
+        support and confidence values. The GI's warping set is then used
+        to compute the structural graph descriptors through
+        ``GP.compute_descriptors()``.
+
+        The resulting descriptor records are converted into a
+        :class:`pandas.DataFrame`, with ``Pattern`` as the first column.
+        The ``Confidence`` column is reset to ``NaN`` because confidence
+        is not treated as an attribute-level descriptor in the resulting
+        descriptor table.
+
+        The descriptor table contains the following columns:
+
+            Pattern
+                String representation of the gradual attribute, including
+                its direction symbol.
+
+            Support
+                Support of the gradual item in its corresponding valid
+                bin.
+
+            Confidence
+                Placeholder column set to ``NaN`` in the final attribute
+                descriptor table.
+
+            Density
+                Density of the gradual warping graph.
+
+            Avg. Deviation from Diagonal
+                Mean deviation of the gradual relationships from the
+                diagonal of the pairwise object matrix.
+
+            Rank Dispersion
+                Dispersion of the ranks represented by the gradual
+                relationships.
+
+            Graph Connectivity
+                Connectivity structure of the graph induced by the
+                gradual warping set.
+
+            Singularity Score
+                Degree-based measure describing the concentration or
+                irregularity of the gradual warping graph.
+
+        The method returns an empty DataFrame when either
+        ``self.warping_set`` or ``self.valid_bins`` is unavailable.
+
+        Returns:
+            pd.DataFrame:
+                A table containing the computed descriptors for each valid
+                gradual attribute. ``Pattern`` is the first column and all
+                descriptor columns are converted to numeric values where
+                applicable.
+
+        Notes:
+            The gradual warping set associated with each gradual item is
+            expected to be stored in ``self.warping_set`` using the string
+            representation of the gradual item as its key. The
+            corresponding support and confidence values are obtained from
+            ``self.valid_bins`` using the same key.
+        """
+
+        def create_df(lst_descriptors: list[list]) -> pd.DataFrame:
+            """Convert descriptor records into a normalized DataFrame.
+
+            Args:
+                lst_descriptors:
+                    List of descriptor records. Each record may contain
+                    dictionaries or string representations of dictionaries.
+
+            Returns:
+                A DataFrame containing one row per gradual attribute with
+                numeric descriptor columns and ``Pattern`` as the first
+                column.
+            """
             parsed_rows = []
+
             for block in lst_descriptors:
                 row_dict = {}
+
                 for item in block:
                     if isinstance(item, str):
                         cleaned_str = item.strip('"{ }')
-                        key, val = cleaned_str.split(':')
-                        extracted_dict = {key.strip("' "): val.strip("' ")}
+                        key, val = cleaned_str.split(':', 1)
+                        extracted_dict = {
+                            key.strip("' "): val.strip("' ")
+                        }
                     else:
                         extracted_dict = item
+
                     row_dict.update(extracted_dict)
+
                 parsed_rows.append(row_dict)
 
-            # 3. Create DataFrame
             df = pd.DataFrame(parsed_rows)
 
-            # 4. Clean numeric types
             numeric_cols = [
-                'Support', 'Confidence', 'Density', 'Avg. Deviation from Diagonal',
-                'Rank Dispersion', 'Graph Connectivity', 'Singularity Score'
+                "Support",
+                "Confidence",
+                "Density",
+                "Avg. Deviation from Diagonal",
+                "Rank Dispersion",
+                "Graph Connectivity",
+                "Singularity Score",
             ]
-            df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
 
-            # 5. Move 'Pattern' to the first column
-            data_cols = ['Pattern'] + [col for col in df.columns if col != 'Pattern']
+            df[numeric_cols] = df[numeric_cols].apply(
+                pd.to_numeric
+            )
+
+            data_cols = [
+                "Pattern",
+                *[col for col in df.columns if col != "Pattern"],
+            ]
+
             df = df[data_cols]
-            df['Confidence'] = np.nan
+
+            # Confidence is intentionally excluded from the final
+            # attribute-level descriptor representation.
+            df["Confidence"] = np.nan
+
             return df
 
         lst_rows = []
+
         w_set = self.warping_set
         v_bins = self.valid_bins
 
         if v_bins is None or w_set is None:
             return pd.DataFrame()
 
-        for gi_str in list(w_set.keys() or {}):
+        for gi_str in w_set.keys():
             gp = GP()
             gi = GI.from_string(gi_str)
             col_name = f"{self.titles[gi.attribute_col]}{gi.symbol}"
+
             gp.add_gradual_item(gi)
             gp.support = v_bins[gi_str].support
             gp.confidence = v_bins[gi_str].confidence
-            gp.compute_descriptors(np.array(w_set[gi_str]), obj_count=self.row_count)
+            gp.compute_descriptors(np.asarray(w_set[gi_str]), obj_count=self.row_count,)
+
             temp_row = gp.get_computed_descriptors(descriptor_title=True)
             temp_row.append("{'Pattern': " + col_name + "}")
             lst_rows.append(temp_row)
-        desc_df = create_df(lst_rows)
-        return desc_df
+
+        return create_df(lst_rows)
 
     def generate_output_files(
         self, alg_data: dict, target_col: int | None = None, save_to_file: bool = True
