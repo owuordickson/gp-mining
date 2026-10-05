@@ -253,7 +253,7 @@ class GP:
         gp = GP.swap_gp_symbols(self)
         return set(gp.to_string())
 
-    def get_computed_descriptors(self, descriptor_title) -> list[str] | list[dict]:
+    def get_computed_descriptors(self, descriptor_title: bool=False) -> list[str] | list[dict]:
         """
         Returns the computed descriptors of the gradual pattern (GP)
 
