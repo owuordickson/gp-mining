@@ -451,6 +451,61 @@ class DataGP:
                 )
                 self._warping_set[gi_str] = lst_ij
 
+    def compute_attribute_descriptors(self):
+        """"""
+
+        def create_df(lst_descriptors):
+            # 2. Parse text blocks into unified dictionaries
+            parsed_rows = []
+            for block in lst_descriptors:
+                row_dict = {}
+                for item in block:
+                    if isinstance(item, str):
+                        cleaned_str = item.strip('"{ }')
+                        key, val = cleaned_str.split(':')
+                        extracted_dict = {key.strip("' "): val.strip("' ")}
+                    else:
+                        extracted_dict = item
+                    row_dict.update(extracted_dict)
+                parsed_rows.append(row_dict)
+
+            # 3. Create DataFrame
+            df = pd.DataFrame(parsed_rows)
+
+            # 4. Clean numeric types
+            numeric_cols = [
+                'Support', 'Confidence', 'Density', 'Avg. Deviation from Diagonal',
+                'Rank Dispersion', 'Graph Connectivity', 'Singularity Score'
+            ]
+            df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
+
+            # 5. Move 'Pattern' to the first column
+            data_cols = ['Pattern'] + [col for col in df.columns if col != 'Pattern']
+            df = df[data_cols]
+            df['Confidence'] = np.nan
+            return df
+
+        lst_rows = []
+        w_set = self.warping_set
+        v_bins = self.valid_bins
+
+        if v_bins is None or w_set is None:
+            return pd.DataFrame()
+
+        for gi_str in list(w_set.keys() or {}):
+            gp = GP()
+            gi = GI.from_string(gi_str)
+            col_name = f"{self.titles[gi.attribute_col]}{gi.symbol}"
+            gp.add_gradual_item(gi)
+            gp.support = v_bins[gi_str].support
+            gp.confidence = v_bins[gi_str].confidence
+            gp.compute_descriptors(np.array(w_set[gi_str]), obj_count=self.row_count)
+            temp_row = gp.get_computed_descriptors(descriptor_title=True)
+            temp_row.append("{'Pattern': " + col_name + "}")
+            lst_rows.append(temp_row)
+        desc_df = create_df(lst_rows)
+        return desc_df
+
     def generate_output_files(
         self, alg_data: dict, target_col: int | None = None, save_to_file: bool = True
     ):
