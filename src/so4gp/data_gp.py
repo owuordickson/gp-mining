@@ -593,7 +593,8 @@ class DataGP:
         if v_bins is None or w_set is None:
             return pd.DataFrame()
 
-        for gi_str in w_set.keys():
+        lst_gi = list(w_set.keys())
+        for gi_str in lst_gi:
             gp = GP()
             gi = GI.from_string(gi_str)
             col_name = f"{self.titles[gi.attribute_col]}{gi.symbol}"
