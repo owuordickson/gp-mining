@@ -381,9 +381,9 @@ class TGRAANK:
         )
         return out
 
-    def get_lagged_dependencies(self, max_lag: int = 0) -> pandas.DataFrame:
+    def discover_causal_relationships(self, max_lag: int = 0) -> pandas.DataFrame:
         """
-            Compute the lagged dependency matrix between all features.
+            Compute the temporal dependency matrix that identifies the causal relationship between all features.
 
             Each feature is treated as the target attribute in turn, and temporal
             gradual patterns are mined using the selected transformation algorithm.
