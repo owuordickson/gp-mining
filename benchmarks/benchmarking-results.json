@@ -1,0 +1,231 @@
+{
+  "scope": "Export of saved notebook output; no mining or notebook execution performed",
+  "source_notebook": {
+    "filepath": "benchmarks/benchmarking.ipynb",
+    "sha256": "7ae4c498f75605c0e5427684d6f2733e89bcb3cb0ce3aecd18a6725732ca7410"
+  },
+  "leaderboard": {
+    "url": "https://raw.githubusercontent.com/CausalRivers/CausalRivers.github.io/22ffa6bdc7cb3ac6b1947c743677c35a473aa459/scoring.csv",
+    "revision": "22ffa6bdc7cb3ac6b1947c743677c35a473aa459",
+    "captured_on": "2026-10-13",
+    "filepath": "benchmarks/causalrivers-leaderboard.csv",
+    "sha256": "03609056700d0789db52420f28282802bd64bf930c43babd58b157cefea78d0c"
+  },
+  "causalrivers": [
+    {
+      "graph_set": "Close 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.677891,
+        "PCMCI": 0.639,
+        "PC": 0.501,
+        "VARLiNGAM": 0.786,
+        "DYNOTEARS": 0.501
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_close_3/20260821124601/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.6778913347309574
+    },
+    {
+      "graph_set": "Close 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.654067,
+        "PCMCI": 0.617,
+        "PC": 0.514,
+        "VARLiNGAM": 0.773,
+        "DYNOTEARS": 0.499
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_close_5/20260830185811/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.654066775061673
+    },
+    {
+      "graph_set": "Root cause 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.7008,
+        "PCMCI": 0.696,
+        "PC": 0.501,
+        "VARLiNGAM": 0.772,
+        "DYNOTEARS": 0.503
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_root_cause_3/20260825173222/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.7008003766478343
+    },
+    {
+      "graph_set": "Root cause 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.704923,
+        "PCMCI": 0.737,
+        "PC": 0.517,
+        "VARLiNGAM": 0.769,
+        "DYNOTEARS": 0.564
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_root_cause_5/20260902024058/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.7049233460559796
+    },
+    {
+      "graph_set": "Random+1 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.828725,
+        "PCMCI": 0.831,
+        "PC": 0.498,
+        "VARLiNGAM": 0.84,
+        "DYNOTEARS": 0.519
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_1_random_3/20260819161921/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.8287250384024577
+    },
+    {
+      "graph_set": "Random+1 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.734016,
+        "PCMCI": 0.735,
+        "PC": 0.513,
+        "VARLiNGAM": 0.788,
+        "DYNOTEARS": 0.608
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_1_random_5/20260921025013/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.7342750171305081
+    },
+    {
+      "graph_set": "Confounder 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.651331,
+        "PCMCI": 0.663,
+        "PC": 0.49,
+        "VARLiNGAM": 0.675,
+        "DYNOTEARS": 0.525
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_confounder_3/20260926075557/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.6513310185185185
+    },
+    {
+      "graph_set": "Confounder 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.58642,
+        "PCMCI": 0.64,
+        "PC": 0.514,
+        "VARLiNGAM": 0.698,
+        "DYNOTEARS": 0.532
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_confounder_5/20260827034153/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.5864198736974013
+    },
+    {
+      "graph_set": "Random 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.669843,
+        "PCMCI": 0.655,
+        "PC": 0.501,
+        "VARLiNGAM": 0.787,
+        "DYNOTEARS": 0.503
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_random_3/20260825054633/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.669842762913415
+    },
+    {
+      "graph_set": "Random 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.640697,
+        "PCMCI": 0.653,
+        "PC": 0.506,
+        "VARLiNGAM": 0.755,
+        "DYNOTEARS": 0.608
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_random_5/20260926033539/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.6406972164447483
+    },
+    {
+      "graph_set": "Disjoint 10",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": null,
+        "PCMCI": 0.802,
+        "PC": null,
+        "VARLiNGAM": 0.827,
+        "DYNOTEARS": 0.606
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_disjoint_10/20260929125251/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": null
+    }
+  ],
+  "synthetic_mock_results": {
+    "metric_order": [
+      "Precision",
+      "Recall",
+      "F1"
+    ],
+    "dataset_order": [
+      "CausalRivers mock",
+      "TimeGraph mock"
+    ],
+    "results": {
+      "Classical Statistics": [
+        [
+          0.5,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.67,
+          0.0
+        ]
+      ],
+      "Granger Causality": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "PC Algorithm": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ]
+      ],
+      "T-GRAANK (Our Proposed)": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "Tigramite / PCMCI": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ]
+    }
+  }
+}
