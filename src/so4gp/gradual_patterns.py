@@ -190,7 +190,7 @@ class GP:
 
     @support.setter
     def support(self, support: float):
-        self._support = round(support, 3) if support <= 1 else support
+        self._support = round(support, 3)
 
     @property
     def confidence(self) -> float:
@@ -198,7 +198,7 @@ class GP:
 
     @confidence.setter
     def confidence(self, confidence: float):
-        self._confidence = round(confidence, 3) if confidence <= 1 else confidence
+        self._confidence = round(confidence, 3)
 
     @property
     def density(self) -> float:
@@ -391,7 +391,9 @@ class GP:
         # pattern = [('2', "+"), ('4', "+")]
         min_supp = data_gp.thd_supp
         n = data_gp.attr_size
-        gi_dict = copy.deepcopy(data_gp.valid_bins)
+        gi_dict: dict|None = copy.deepcopy(data_gp.valid_bins)
+        if gi_dict is None:
+            return self
 
         gen_pattern: GP | TGP = TGP() if time_data is not None else GP()
         target_gi = self.get_target_gi(target_col)
@@ -423,7 +425,7 @@ class GP:
             # if compute_descriptors:
             #    warping_set_arr: np.ndarray = np.array(DataGP.gen_gradual_warping_set(pw_mat.bin_mat, as_array=True))
             #    rand_gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
-            conf = gen_pattern.support / target_gi_supp
+            conf = gen_pattern.support / round(target_gi_supp, 3)
             gen_pattern.confidence = conf
             return gen_pattern
 
@@ -442,7 +444,7 @@ class GP:
             return self
 
         min_supp = d_gp.thd_supp
-        n = d_gp.row_count
+        n = d_gp.attr_size
         gen_pattern = GP()
         """type gen_pattern: GP"""
         temp_tids = None

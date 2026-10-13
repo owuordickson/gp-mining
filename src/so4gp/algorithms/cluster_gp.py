@@ -199,7 +199,7 @@ class ClusterGP(BaseGrad):
             """
 
             # Estimate support - use different score-vectors to construct pairs
-            n = self.row_count
+            n = self.attr_size
             bin_mat = np.ones((n, n), dtype=bool)
             for vec in score_vecs:
                 temp_bin = vec < vec[:, np.newaxis]

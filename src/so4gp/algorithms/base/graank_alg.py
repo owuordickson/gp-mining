@@ -118,8 +118,9 @@ class OrigGRAANK(BaseGrad):
         if s_space is None:
             return {"Error": "Search space is empty!"}
         valid_bins_dict: dict | None = copy.deepcopy(self.valid_bins)
+        target_gi_dict: dict | None = copy.deepcopy(self.valid_bins)
 
-        if valid_bins_dict is None:
+        if valid_bins_dict is None or target_gi_dict is None:
             return {"Error": "Pairwise matrices not available!"}
 
         candidate_level = 1
@@ -142,8 +143,8 @@ class OrigGRAANK(BaseGrad):
 
                 # Compute confidence
                 target_gi = gp.get_target_gi(target_col)
-                target_pw_mat: PairwiseMatrix = self.valid_bins[target_gi.to_string()]
-                conf = gp.support / target_pw_mat.support
+                target_pw_mat: PairwiseMatrix = target_gi_dict[target_gi.to_string()]
+                conf = gp.support / round(target_pw_mat.support, 3)
                 gp.confidence = conf
 
                 # Compute descriptors

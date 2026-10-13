@@ -196,7 +196,7 @@ class DataGP:
 
     def _compute_pairwise_bitmap(
         self, attr_values: np.ndarray
-    ) -> tuple[np.ndarray, float]:
+    ) -> np.ndarray:
         """Compute a pairwise bitmap and its support for one attribute.
 
         Args:
@@ -209,8 +209,6 @@ class DataGP:
 
             - ``bitmap``: Boolean pairwise comparison matrix with shape
               ``(n_samples, n_samples)``.
-            - ``support``: Proportion of valid object pairs satisfying the
-              gradual relationship.
 
         Notes:
             The bitmap requires O(n²) memory, where n is the number of samples.
@@ -218,8 +216,7 @@ class DataGP:
             O(n² × m) memory requirement of constructing a bitmap tensor for all
             m attributes simultaneously.
         """
-        n_samples = len(attr_values)
-        pair_cnt = GP.pair_count(n_samples)
+        n_samples = self.attr_size
 
         # Pairwise comparison:
         #
@@ -240,26 +237,25 @@ class DataGP:
             else:
                 bitmap = rhs > lhs
 
-        support = float(bitmap.sum() / pair_cnt)
-        return bitmap, support
+        return bitmap
 
     def _compute_pairwise_bitmap_gpu(
         self,
         attr_values: np.ndarray,
         chunk_size: int = 2048,
-    ) -> tuple[np.ndarray, float]:
+    ) -> np.ndarray:
 
         values = torch.as_tensor(
             attr_values,
             dtype=torch.float32,
             device="cuda",
         )
-        n = len(values)
+        n = self.attr_size
         bitmap = np.empty(
             (n, n),
             dtype=np.bool_,
         )
-        total_true = 0
+        # total_true = 0
 
         for start in range(0, n, chunk_size):
             end = min(start + chunk_size, n)
@@ -280,11 +276,10 @@ class DataGP:
             else:
                 chunk = rhs > lhs
 
-            total_true += int(chunk.sum().item())
+            # total_true += int(chunk.sum().item())
             bitmap[start:end] = chunk.cpu().numpy()
 
-        support = total_true / GP.pair_count(n)
-        return bitmap, support
+        return bitmap
 
     def add_gradual_pattern(self, pattern) -> None:
         """
@@ -349,9 +344,19 @@ class DataGP:
             Bitmap generation has O(n²) time and memory complexity per attribute.
             Only attributes satisfying ``self._thd_supp`` are retained.
         """
-        # ------------------------------------------------------------------
+
+        def get_largest_triangle_sum():
+            # Sum the upper triangle (excluding the main diagonal, k=1)
+            upper_sum = np.sum(np.triu(bin_mat, k=1))
+
+            # Sum the lower triangle (excluding the main diagonal, k=-1)
+            lower_sum = np.sum(np.tril(bin_mat, k=-1))
+
+            # Find the largest of the two
+            largest_sum = max(upper_sum, lower_sum)
+            return largest_sum
+
         # 1. Prepare attribute data
-        # ------------------------------------------------------------------
         if attr_data is None:
             attr_data = self._data.T
             self._attr_size = self._row_count
@@ -359,9 +364,7 @@ class DataGP:
             self._attr_size = len(attr_data[self._attr_cols[0]])
         self._valid_bins = {}
 
-        # ------------------------------------------------------------------
         # 2. Generate one bitmap at a time
-        # ------------------------------------------------------------------
         for col in self._attr_cols:
             # Convert only the current attribute to a numeric NumPy array.
             attr_values = np.asarray(
@@ -371,18 +374,19 @@ class DataGP:
 
             # Generate the bitmap and calculate its support.
             if self._device == "cuda":
-                bin_mat, support = self._compute_pairwise_bitmap_gpu(attr_values)
+                bin_mat = self._compute_pairwise_bitmap_gpu(attr_values)
             else:
-                bin_mat, support = self._compute_pairwise_bitmap(attr_values)
+                bin_mat = self._compute_pairwise_bitmap(attr_values)
 
             # Discard unsupported attributes immediately.
+            n_samples = self.attr_size
+            pair_cnt = GP.pair_count(n_samples)
+            support = float(get_largest_triangle_sum() / pair_cnt)
             if support < self._thd_supp or self._valid_bins is None:
                 del bin_mat
                 continue
 
-            # --------------------------------------------------------------
             # Positive gradual item
-            # --------------------------------------------------------------
             conv_bits = np.packbits(bin_mat.ravel())
             packed_bits = (
                 torch.from_numpy(conv_bits).cuda()
@@ -395,9 +399,7 @@ class DataGP:
                 pattern={f"{col}+"},
             )
 
-            # --------------------------------------------------------------
             # Negative gradual item
-            # --------------------------------------------------------------
             conv_bits_t = np.packbits(bin_mat.T.ravel())
             packed_bits_t = (
                 torch.from_numpy(conv_bits_t).cuda()
@@ -410,9 +412,7 @@ class DataGP:
                 pattern={f"{col}-"},
             )
 
-        # ------------------------------------------------------------------
         # 3. Require a minimum number of valid gradual items
-        # ------------------------------------------------------------------
         valid_bins_len = len(self._valid_bins) if self._valid_bins is not None else 0
         if valid_bins_len < 3:
             self._valid_bins = None
