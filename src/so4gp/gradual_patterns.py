@@ -198,6 +198,7 @@ class GP:
 
     @confidence.setter
     def confidence(self, confidence: float):
+        confidence = confidence if confidence <= 1 else 1
         self._confidence = round(confidence, 3)
 
     @property
