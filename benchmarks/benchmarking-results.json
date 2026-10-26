@@ -1,8 +1,8 @@
 {
-  "scope": "Export of saved notebook output; no mining or notebook execution performed",
+  "scope": "Current notebook comparison displays refreshed from the completed Disjoint-10 scoring artifact; other saved results retained; no mining, rescoring or full notebook execution performed",
   "source_notebook": {
     "filepath": "benchmarks/benchmarking.ipynb",
-    "sha256": "7ae4c498f75605c0e5427684d6f2733e89bcb3cb0ce3aecd18a6725732ca7410"
+    "sha256": "3d2b7e67d1f5047e169b46af3bd923140f1e9212a72c415619536e848d0416c1"
   },
   "leaderboard": {
     "url": "https://raw.githubusercontent.com/CausalRivers/CausalRivers.github.io/22ffa6bdc7cb3ac6b1947c743677c35a473aa459/scoring.csv",
@@ -135,14 +135,31 @@
     {
       "graph_set": "Disjoint 10",
       "saved_notebook_mean_per_graph_auroc": {
-        "TGRAANK": null,
+        "TGRAANK": 0.815098,
         "PCMCI": 0.802,
         "PC": null,
         "VARLiNGAM": 0.827,
         "DYNOTEARS": 0.606
       },
-      "notebook_scoring_path": "causalrivers/results/tgraank_disjoint_10/20260929125251/scoring.csv",
-      "current_scoring_mean_per_graph_auroc": null
+      "notebook_scoring_path": "causalrivers/results/tgraank_disjoint_10/20261019151559/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.8150984685418272,
+      "completed_run": {
+        "artifact_commit": "318e88ff4b5fc9b146999ac1baf480715f155961",
+        "run_path": "results/tgraank_disjoint_10/20261019151559",
+        "hash_bytes": "git-blob",
+        "artifact_sha256": {
+          "scoring.csv": "6c612124df1b5ef48968b1dafe1b2d9e8e9cbb1196ce14a106f9d380e67cc838",
+          "config.yaml": "dfe6c51811d31b20bf04267fae0a586ce5b94d48fed42d0d24486140259a944d",
+          "runtime.csv": "15958ee480baac4d8d60bb75e72485edb4d72f176eca7d6149587dbe2298423d",
+          "preds.p": "151c818765dd6f5207c9b9d3790cb69c6706eecc7c5a7ac9a7ec38898c100c81"
+        },
+        "mean_per_graph_auroc": 0.8150984685418272,
+        "pooled_auroc": 0.7904192479040301,
+        "runtime_seconds": 1202563.4971263409,
+        "pcmci_reference_mean_per_graph_auroc": 0.8017869429388739,
+        "absolute_auroc_gain_over_pcmci": 0.013311525602953345,
+        "provenance_scope": "Published run outputs and configuration; producer source/environment and evaluated graph count were not recorded. No execution or independent rescoring is claimed by this publication update."
+      }
     }
   ],
   "synthetic_mock_results": {
@@ -227,5 +244,11 @@
         ]
       ]
     }
+  },
+  "updated_on": "2026-10-26",
+  "previous_notebook_snapshot": {
+    "git_commit": "896075293f0be530f63df1e249d81ea282e09a92",
+    "sha256": "7ae4c498f75605c0e5427684d6f2733e89bcb3cb0ce3aecd18a6725732ca7410",
+    "url": "https://github.com/theseedship/deposium_geoai/blob/896075293f0be530f63df1e249d81ea282e09a92/benchmarks/benchmarking.ipynb"
   }
 }
