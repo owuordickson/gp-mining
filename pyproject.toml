@@ -56,3 +56,19 @@ where = ["src"]  # list of folders that contain the packages (["."] by default)
 include = ["*"]  # package names should match these glob patterns (["*"] by default)
 exclude = ["tests*"]  # exclude packages matching these glob patterns (empty by default)
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+[tool.ruff]
+# Target the Python version you are using
+target-version = "py314"
+
+# Line length matching your team preference (default is 88)
+line-length = 88
+
+[tool.ruff.lint]
+# Choose which rules to enforce
+# E = Pycodestyle errors, F = Pyflakes (basic syntax/logic bugs)
+# I = Isort (import sorting)
+select = ["E", "F", "I"]
+
+# Rules you want to completely ignore
+ignore = []

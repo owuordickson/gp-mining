@@ -16,20 +16,28 @@ from .graank_base import BaseGrad
 class OrigGRAANK(BaseGrad):
     def __init__(self, *args, max_apriori_level: int | None = None, **kwargs):
         """
-        Extracts gradual patterns (GPs) from a numeric dataset using the GRAANK algorithm. The algorithm relies on the
-        APRIORI approach for generating GP candidates. This work was proposed by Anne Laurent
+        Extracts gradual patterns (GPs) from a numeric dataset using the GRAANK
+        algorithm. The algorithm relies on the
+        APRIORI approach for generating GP candidates. This work was proposed by Anne
+        Laurent
         and published in: https://link.springer.com/chapter/10.1007/978-3-642-04957-6_33.
 
-             A GP is a set of gradual items (GI), and its quality is measured by its computed support value. For example,
-             given a data set with 3 columns (age, salary, cars) and 10 objects. A GP may take the form: {age+, salary-}
-             with a support of 0.8. This implies that 8 out of 10 objects have the values of column age 'increasing' and
+             A GP is a set of gradual items (GI), and its quality is measured by its
+             computed support value. For example,
+             given a data set with 3 columns (age, salary, cars) and 10 objects. A GP
+             may take the form: {age+, salary-}
+             with a support of 0.8. This implies that 8 out of 10 objects have the
+             values of column age 'increasing' and
              column 'salary' decreasing.
 
-        This class extends class DataGP which is responsible for generating the GP bitmaps.
+        This class extends class DataGP which is responsible for generating the GP
+        bitmaps.
 
-        :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
+        :param args: [required] data source path of Pandas DataFrame, [optional]
+            minimum-support, [optional] eq
 
-        :param max_apriori_level: [optional] Maximum APRIORI level for generating candidates.
+        :param max_apriori_level: [optional] Maximum APRIORI level for generating
+            candidates.
 
         """
         super().__init__(*args, **kwargs)
@@ -42,11 +50,14 @@ class OrigGRAANK(BaseGrad):
         exclude_target: bool = False,
     ) -> dict:
         """
-        Generates Apriori GP candidates (w.r.t target-feature/reference-column if provided). If a user wishes to generate
-        candidates that do not contain the target-feature, then they do so by specifying the exclude_target parameter.
+        Generates Apriori GP candidates (w.r.t target-feature/reference-column if
+        provided). If a user wishes to generate
+        candidates that do not contain the target-feature, then they do so by specifying
+        the exclude_target parameter.
 
         :param valid_dict: List of GIs/GPs together with bitmap arrays.
-        :param exclude_target: Only accepts GP candidates that do not contain the target feature.
+        :param exclude_target: Only accepts GP candidates that do not contain the target
+            feature.
 
         :return: List of extracted GPs.
         """
@@ -101,13 +112,17 @@ class OrigGRAANK(BaseGrad):
         compute_descriptors: bool = True,
     ) -> dict:
         """
-        Uses apriori algorithm to find gradual pattern (GP) candidates. The candidates are validated if their computed
-        support is greater than or equal to the minimum support threshold specified by the user.
+        Uses apriori algorithm to find gradual pattern (GP) candidates. The candidates
+        are validated if their computed
+        support is greater than or equal to the minimum support threshold specified by
+        the user.
 
         :param target_col: Target feature's column index.
         :param time_data: (optional) time data for estimating time lag.
-        :param exclude_target: Only accept GP candidates that do not contain the target feature.
-        :param compute_descriptors: [optional] compute descriptors for each GP candidate.
+        :param exclude_target: Only accept GP candidates that do not contain the target
+            feature.
+        :param compute_descriptors: [optional] compute descriptors for each GP
+            candidate.
 
         :return: A dict object
         """

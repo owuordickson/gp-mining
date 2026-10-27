@@ -20,14 +20,14 @@ The library combines classical gradual pattern mining algorithms with modern opt
 
 ## Key Features
 
-- 🚀 High-performance gradual pattern mining
-- 📈 Temporal gradual pattern mining
-- 🧬 Metaheuristic optimization algorithms
-- 🎯 Gradual pattern-based feature selection
-- 🔍 Pattern descriptors and statistical analysis
-- 📊 Support for CSV files and Pandas DataFrames
-- 🐍 Simple Python API
-- 📖 Fully documented API and tutorials
+- High-performance gradual pattern mining
+- Temporal gradual pattern mining
+- Metaheuristic optimization algorithms
+- Gradual pattern-based feature selection
+- Pattern descriptors and statistical analysis
+- Support for CSV files and Pandas DataFrames
+- Simple Python API
+- Fully documented API and tutorials
 
 ---
 
@@ -60,9 +60,9 @@ Datasets should primarily contain numerical attributes. Temporal algorithms addi
 
 If you are new to SO4GP, follow the documentation in the following order:
 
-1. **Quick Start** – Install the package and run your first mining example.
-2. **API Reference** – Explore the available classes, methods, and functions.
-3. **Tutorials** – Learn practical workflows for feature selection and temporal mining.
+1. [Introduction and Quick Start](introduction/basic_usage.md) – Learn the terminology, install the package, and run your first mining example.
+2. **Tutorials** – Try [feature selection](tutorials/feature_selection.md), [joint GP descriptors](tutorials/timeseries_analysis.md), and [causal discovery](tutorials/causal_discovery.md).
+3. **API Reference** – Explore [algorithms](api/algorithms.rst), [classes](api/classes.rst), and [functions](api/functions.rst) as needed.
 
 ---
 
@@ -96,15 +96,6 @@ introduction/basic_usage
 
 ```{toctree}
 :hidden:
-:caption: API
-
-api/algorithms
-api/classes
-api/functions
-```
-
-```{toctree}
-:hidden:
 :caption: Tutorials
 
 tutorials/feature_selection
@@ -114,9 +105,18 @@ tutorials/causal_discovery
 
 ```{toctree}
 :hidden:
+:caption: API
+
+api/algorithms
+api/classes
+api/functions
+```
+
+```{toctree}
+:hidden:
 :caption: Development
 
-Github <https://github.com/owuordickson/gp-mining>
+GitHub <https://github.com/owuordickson/gp-mining>
 Owuor Lab <https://owuordickson.github.io/lab/>
 release_notes/index
 ```

@@ -2,11 +2,11 @@
 title: Studying Joint Effects with GP Descriptors
 ---
 
-# Studying Joint Effects with GP Descriptors
+# Analyzing Joint Effects with GPs
 
 A gradual item (GI) describes an attribute and a direction, such as `A+` for increasing values. A gradual pattern (GP) combines several GIs by retaining the observation pairs that satisfy all their directions. Comparing the individual GIs with their GP lets us study how attributes behave jointly.
 
-The idea is to look for a more coherent, DTW-like progression of index relationships: **one connected component**, **low singularity**, and **low rank-gap variance**.
+The coherence hypothesis is that combining GIs can produce a progression of index relationships resembling dynamic time warping (DTW): **one connected component**, **low singularity**, and **low rank-gap variance**.
 
 $$
 \kappa_g \rightarrow 1,\qquad Si_g \rightarrow 0,\qquad \sigma_g^2 \rightarrow 0.
@@ -14,9 +14,9 @@ $$
 
 | Descriptor | What it tells us |
 |---|---|
-| Connectivity | The number of connected components; the target is **1**. |
-| Singularity | How unevenly observations participate in the relationships; smaller means more even participation. |
-| Rank-gap variance | How much the absolute index distances vary; smaller means more consistent separations. |
+| Connectivity ($\kappa_g$) | The number of connected components; the target is **1**. |
+| Singularity ($Si_g$) | How unevenly observations participate in the relationships; smaller means more even participation. |
+| Rank-gap variance ($\sigma_g^2$) | How much the absolute index distances vary; smaller means more consistent separations. |
 
 These are structural indicators to examine together. They do not establish that the relationships form a valid DTW alignment.
 
@@ -76,7 +76,7 @@ result = pd.DataFrame(rows)
 print(result.round(3).to_string(index=False))
 ```
 
-SO4GP's `rank_dispersion` reports the standard deviation of the absolute index gaps. Here, `np.var` computes the variance directly to match the hypothesis's squared notation.
+SO4GP's `rank_dispersion` reports the standard deviation of the absolute index gaps. Here, `np.var` computes variance rather than standard deviation, matching the $\sigma_g^2$ notation above.
 
 Expected results:
 

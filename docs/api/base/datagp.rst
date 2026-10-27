@@ -1,7 +1,7 @@
 DataGP
 ======
 
-.. autoclass:: so4gp.data_gp.DataGP
+.. autoclass:: so4gp.DataGP
    :members:
    :undoc-members:
    :show-inheritance:

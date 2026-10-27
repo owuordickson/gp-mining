@@ -1,7 +1,7 @@
 Gradual Pattern
 ===============
 
-.. autoclass:: so4gp.gradual_patterns.GP
+.. autoclass:: so4gp.GP
    :members:
    :undoc-members:
    :show-inheritance:

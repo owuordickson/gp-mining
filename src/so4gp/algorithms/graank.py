@@ -62,7 +62,7 @@ class GRAANK:
         Initialize a gradual pattern mining session.
 
         This constructor prepares the mining engine and creates a default
-        :class:`OrigGRAANK` instance that performs classical APRIORI-based gradual
+        ``OrigGRAANK`` instance that performs classical APRIORI-based gradual
         pattern mining. Alternative search algorithms can later be selected by
         calling `discover()` with the appropriate search type.
 
@@ -102,7 +102,7 @@ class GRAANK:
 
         Attributes:
             mining_engine:
-                Active mining engine used by discover()`.
+                Active mining engine used by ``discover()``.
 
         Raises:
             ValueError:
@@ -234,17 +234,21 @@ class GRAANK:
                   accepted.
 
             time_data:
-                Time delay data required to compute the time lag of the gradual patterns. It consists of a dictionary
+                Time delay data required to compute the time lag of the gradual
+                patterns. It consists of a dictionary
                 with the following keys:
 
                 * ``"time_delay_data"``:
-                The time delays after transformation of the data at specific steps. It is either a dictionary or NumPy array.
+                  The time delays after transformation of the data at specific steps.
+                  It is either a dictionary or NumPy array.
 
                 * ``"tri_mf"``:
-                The triangular membership function used to compute the time lag. It is either None or a NumPy array.
+                  The triangular membership function used to compute the time lag.
+                  It is either None or a NumPy array.
 
                 * ``"use_gp"``:
-                Whether to use the gradual items of the GP to compute the time lag. It is a boolean.
+                  Whether to use the gradual items of the GP to compute the time lag.
+                  It is a boolean.
 
 
             compute_descriptors:
@@ -303,7 +307,7 @@ class GRAANK:
                 **ClusterGP (`search_type="clustergp"`):**
 
                 * **e_prob** (*float*, default=0.01):
-                Erasure probability.
+                  Erasure probability.
 
         Returns:
             JSON-formatted string containing the mining results, including the

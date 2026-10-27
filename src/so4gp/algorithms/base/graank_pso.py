@@ -23,18 +23,28 @@ class ParticleGRAANK(BaseGrad):
         **kwargs,
     ):
         """
-        Extract gradual patterns (GPs) from a numeric data source using the Particle Swarm Optimization Algorithm
-        approach (proposed in a published research paper by Dickson Owuor). A GP is a set of gradual items (GI), and its
-        quality is measured by its computed support value. For example, given a data set with 3 columns (age, salary,
-        cars) and 10 objects. A GP may take the form: {age+, salary-} with a support of 0.8. This implies that 8 out of
-        10 objects have the values of column age 'increasing' and column 'salary' decreasing.
+        Extract gradual patterns (GPs) from a numeric data source using the Particle
+        Swarm Optimization Algorithm
+        approach (proposed in a published research paper by Dickson Owuor). A GP is a
+        set of gradual items (GI), and its
+        quality is measured by its computed support value. For example, given a data set
+        with 3 columns (age, salary,
+        cars) and 10 objects. A GP may take the form: {age+, salary-} with a support of
+        0.8. This implies that 8 out of
+        10 objects have the values of column age 'increasing' and column 'salary'
+        decreasing.
 
-            In this approach, it is assumed that every GP candidate may be represented as a particle that has a unique
-            position and fitness. The fitness is derived from the computed support of that candidate, the higher the
-            support value, the higher the fitness. The aim of the algorithm is to search through a population of particles
-            (or candidates) and find those with the highest fitness as efficiently as possible.
+            In this approach, it is assumed that every GP candidate may be represented
+            as a particle that has a unique
+            position and fitness. The fitness is derived from the computed support of
+            that candidate, the higher the
+            support value, the higher the fitness. The aim of the algorithm is to search
+            through a population of particles
+            (or candidates) and find those with the highest fitness as efficiently as
+            possible.
 
-        :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
+        :param args: [required] data source path of Pandas DataFrame, [optional]
+            minimum-support, [optional] eq
         :param max_iter: [optional] maximum_iteration, default is 1
         :param n_particle: [optional] initial particle population, default is 5
         :param vel: [optional] velocity, default is 0.9
@@ -56,12 +66,15 @@ class ParticleGRAANK(BaseGrad):
         exclude_target: bool = False,
     ) -> dict:
         """
-        Searches through particle positions to find GP candidates. The candidates are validated if their computed
-        support is greater than or equal to the minimum support threshold specified by the user.
+        Searches through particle positions to find GP candidates. The candidates are
+        validated if their computed
+        support is greater than or equal to the minimum support threshold specified by
+        the user.
 
         :param target_col: Target feature's column index.
         :param time_data: (optional) time data for estimating time lag.
-        :param exclude_target: Only accept GP candidates that do not contain the target feature.
+        :param exclude_target: Only accept GP candidates that do not contain the target
+            feature.
 
         :return: A dict object
         """
