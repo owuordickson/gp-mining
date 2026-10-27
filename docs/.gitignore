@@ -3,3 +3,6 @@ __pycache__
 .vscode/
 build/
 _build/
+
+# Local Superpowers workflow artifacts
+.superpowers/

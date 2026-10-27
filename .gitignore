@@ -9,3 +9,6 @@ token*
 dist/
 
 generated*
+
+# Local Superpowers workflow artifacts
+.superpowers/
