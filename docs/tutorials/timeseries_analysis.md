@@ -104,4 +104,4 @@ Rerun the mining and descriptor steps. Use `keys = ("0+", "1+")` to study increa
 
 Handle missing values before mining and choose a support threshold appropriate to your data. Index gaps measure row separations; they represent equal time intervals only when observations are regularly spaced.
 
-For plots, matched GI-to-GP comparisons, and the rainfall/EVI analysis, see [ftgp_composition.ipynb](https://github.com/owuordickson/gp-mining/blob/main/applications/ftgp_composition.ipynb).
+For plots, matched GI-to-GP comparisons, and the rainfall/EVI analysis, see [ftgp_composition.ipynb](https://github.com/owuordickson/gp-mining/blob/main/examples/ftgp_composition.ipynb).

@@ -1,0 +1,79 @@
+{
+  "project": "Deposium GeoAI",
+  "repository": "https://github.com/theseedship/deposium_geoai",
+  "source_revision": "44619b95ad8cfeab64f66fa654d5e40c1a0a3120",
+  "source_file": "research-data/pilots/fos_sur_mer.parquet",
+  "source_sha256": "1d1bba9cd2125fe51e7665f4d2e382c127b12b5ea831ac8dd7c9bd3ae3f21d39",
+  "preparation_provenance_sha256": "63b82bb624dd07d56171529b10657b418c11c0ec853d60d001f7d5da03bf38e6",
+  "snapshot_file": "deposium_fos_sur_mer.csv",
+  "snapshot_sha256": "4bb2d62e0b0d576f7e9a551853830e0b9718746c6b0c5f19ec6c8e593417e13d",
+  "rows": 48,
+  "columns": [
+    "Date",
+    "solar_radiation",
+    "ndvi_mean"
+  ],
+  "period": [
+    "2021-01-24",
+    "2024-12-29"
+  ],
+  "source_releases": [
+    "https://github.com/theseedship/deposium_geoai/releases/tag/era5-holdout-handoff-2026-09-19",
+    "https://github.com/theseedship/deposium_geoai/releases/tag/b3-ndvi-verification-2026-09-05"
+  ],
+  "alignment": "Nearest ERA5 date within +/-3 days, prepared separately by period; all retained matches in this snapshot have day_delta=0.",
+  "archived_validation": [
+    {
+      "Confidence threshold": 0.7,
+      "Status": "Original",
+      "Spatial candidates": 10,
+      "Spatial passing at least 4/5 folds": 0,
+      "Passing spatial fold entries": 2,
+      "Failing spatial fold entries": 40,
+      "Not selected spatial fold entries": 8,
+      "Temporal candidates": 52,
+      "Temporal passes": 6,
+      "Temporal failures": 46
+    },
+    {
+      "Confidence threshold": 0.5,
+      "Status": "Post hoc sensitivity",
+      "Spatial candidates": 10,
+      "Spatial passing at least 4/5 folds": 2,
+      "Passing spatial fold entries": 26,
+      "Failing spatial fold entries": 16,
+      "Not selected spatial fold entries": 8,
+      "Temporal candidates": 52,
+      "Temporal passes": 40,
+      "Temporal failures": 12
+    }
+  ],
+  "evidence_sha256": {
+    "docs/research/heldout-validation-2026-10-13/evidence/spatial/result.json": "c6d1479724821b3f91a835405dd03b0782279861b5294b0f293ade4cb372844b",
+    "docs/research/heldout-validation-2026-10-13/evidence/temporal/result.json": "518ec52245ba213c9b0bdca9c1930db792ed98af724e4198f408aac7f4561b3d",
+    "docs/research/heldout-validation-2026-10-13-confidence-050/evidence/spatial/result.json": "2a63cc7a24bd82c0c42915dad820190ac485ba3782ede771185ad22894d33c20",
+    "docs/research/heldout-validation-2026-10-13-confidence-050/evidence/temporal/result.json": "748172c3b51b046437bfbc3ab1077f3a99a2ae7ccbec0d5222003360f4b65492"
+  },
+  "recorded_software_checks": {
+    "pull_request": 290,
+    "passed": 3250,
+    "skipped": 4,
+    "coverage_percent": 88.5,
+    "scope": "Archived synchronized-head CI, not rerun by this tutorial"
+  },
+  "historical_recurrence": {
+    "eligible_zones": 14,
+    "folds": 5,
+    "graank_patterns": 30,
+    "tgrad_patterns": 149,
+    "scope": "Separate historical Q3 2023 recurrence study, not held-out causal graph recovery"
+  },
+  "limits": [
+    "Spatial validation uses five overlap-grouped folds over 14 eligible Q3 zones.",
+    "Temporal selection uses 2021-2022, then evaluation uses 2023-2024 for three French pilots.",
+    "The 0.50 confidence bar is a post hoc exploratory sensitivity analysis.",
+    "Inverse signed spatial entries represent one association, not independent discoveries.",
+    "Observation-step lags have variable elapsed days; no causal ground truth or calibrated forecast skill is supplied.",
+    "Notebook candidate matrices are new illustrative mining runs with current SO4GP, not a rerun of the archived CV campaign."
+  ]
+}
