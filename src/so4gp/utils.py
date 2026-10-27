@@ -12,10 +12,11 @@
 A collection of miscellaneous classes and methods.
 """
 
+from typing import Any
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import Any
-import matplotlib.pyplot as plt
 
 
 def write_file(data, path, wr=True) -> None:
