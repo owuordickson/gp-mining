@@ -259,12 +259,12 @@ class GP:
 
     @property
     def as_set(self) -> set[str]:
-        """Returns the gradual pattern (GP) as a set of strings: {'1+', '2-'}"""
+        """Return the gradual items as strings, for example ``{'1+', '2-'}``."""
         return set(self.to_string())
 
     @property
     def as_swapped_set(self) -> set[str]:
-        """Returns the gradual pattern (GP) as a set of strings: {'1-', '2+'}"""
+        """Return the sign-reversed items as strings, such as ``{'1-', '2+'}``."""
         gp = GP.swap_gp_symbols(self)
         return set(gp.to_string())
 
@@ -412,7 +412,7 @@ class GP:
         approach to compute support.
 
         :param data_gp: a :class:`so4gp.DataGP` object
-        :type data_gp: so4gp.DataGP # noinspection PyTypeChecker
+        :type data_gp: so4gp.DataGP
         :param target_col: (optional) target column for estimating time lag.
         :param time_data: (optional) time data for estimating time lag.
 
@@ -470,7 +470,7 @@ class GP:
         to compute support.
 
         :param d_gp: Data_GP object
-        :type d_gp: so4gp.DataGP # noinspection PyTypeChecker
+        :type d_gp: so4gp.DataGP
 
         :return: A valid GP or an empty GP
         """
@@ -1320,146 +1320,43 @@ class TimeDelay:
         fuzzy_mfs: list[dict],
         inference_method: str,
     ) -> float:
-        """Predict time using a multi-antecedent fuzzy inference system.
+        """Predict a time delay using multi-input fuzzy inference.
 
-        Each crisp input is first fuzzified against the same set of
-        membership functions. The membership degree corresponding to each
-        MF is then combined across *all* inputs using the fuzzy AND
-        operator (minimum).
-
-        The method therefore implements a multi-antecedent rule of the
-        form:
-
-            Input 1 is MF_i
-            AND Input 2 is MF_i
-            AND ...
-            AND Input n is MF_i
-            --------------------------------
-            Output is Aggregate(MF_i, ..., MF_i)
-
-        More generally, the activated membership functions identified by
-        the inputs can be viewed as a single multi-input fuzzy rule. The
-        implementation does **not** explicitly construct the combinatorial
-        ``M^n`` rule base. Instead, it directly computes the AND activation
-        of the membership functions selected by the crisp inputs.
-
-        For ``n`` inputs and ``M`` membership functions, the fuzzification
-        matrix has shape ``(n, M)``:
-
-            Input 1 -> [mu_10, mu_11, ..., mu_1M]
-            Input 2 -> [mu_20, mu_21, ..., mu_2M]
-            ...
-            Input n -> [mu_n0, mu_n1, ..., mu_nM]
-
-        The fuzzy AND is then applied column-wise:
-
-            firing_strength[i]
-                = min(
-                    mu_1i,
-                    mu_2i,
-                    ...,
-                    mu_ni
-                  )
-
-        Thus, if three inputs activate ``MF_i``, ``MF_j`` and ``MF_k``,
-        respectively, their membership degrees are combined as:
-
-            w = AND(
-                mu_i(x_1),
-                mu_j(x_2),
-                mu_k(x_3)
-            )
-
-        The corresponding output membership functions are aggregated
-        before applying the rule firing strength:
-
-            Output_MF(t)
-                = Aggregate(
-                    MF_i(t),
-                    MF_j(t),
-                    MF_k(t)
-                  )
-
-        where aggregation is performed using the maximum operator:
-
-            mu_Output(t)
-                = max(
-                    mu_i(t),
-                    mu_j(t),
-                    mu_k(t)
-                  )
-
-        The resulting output is then inferred using either Mamdani or
-        Larsen implication:
-
-        Mamdani:
-
-            mu_rule(t) = min(
-                firing_strength,
-                mu_Output(t)
-            )
-
-        Larsen:
-
-            mu_rule(t) = firing_strength * mu_Output(t)
-
-        Finally, the outputs are aggregated using the maximum operator
-        and converted to a crisp prediction using centroid
-        defuzzification.
-
-        Importantly, the implementation avoids constructing all possible
-        ``M^n`` combinations of membership functions. Only the membership
-        functions actually activated by the supplied crisp inputs
-        participate in the inference.
+        Each input is evaluated against every membership function. For each
+        membership function, the minimum membership across all inputs gives its
+        firing strength. Mamdani inference clips its output membership function
+        at that strength; Larsen inference multiplies by it. The maximum of the
+        activated output functions is defuzzified using a discrete centroid.
 
         Args:
             crisp_inputs:
-                One-dimensional sequence containing the crisp input
-                values. All supplied inputs participate in the same
-                multi-antecedent fuzzy AND rule.
-
+                One-dimensional array of finite input time delays.
             time_values:
-                One-dimensional array of observed time-delay values.
-                These values define the universe of discourse for the
-                output variable.
-
+                Nonempty one-dimensional array of finite observed time delays,
+                used to define the output universe.
             fuzzy_mfs:
-                Membership-function specifications generated by
-                ``build_membership_functions()``. Each specification must
-                contain:
-
-                    {
-                        "shape": "triangular"
-                                 | "trapezoidal"
-                                 | "gaussian",
-                        "params": [...]
-                    }
-
+                Membership-function dictionaries containing ``shape`` and
+                ``params``. Triangular functions use three parameters,
+                trapezoidal functions use four, and Gaussian functions use
+                ``[center, sigma]``.
             inference_method:
-                The technique to use for fuzzy inference. Either 'mamdani' or 'larsen'.
+                Either ``"mamdani"`` or ``"larsen"``.
 
         Returns:
-            The predicted time value obtained through centroid
-            defuzzification.
+            float:
+                Predicted time delay. Empty inputs, time values, or membership
+                functions return zero. If no output membership is activated,
+                the mean of the crisp inputs is returned.
 
         Raises:
             ValueError:
-                If no crisp inputs, time values, or membership functions
-                are provided; if the inputs contain non-finite values; if
-                an unsupported membership-function shape is supplied; or
-                if an invalid inference method is specified.
+                If a membership-function shape, parameter count, or inference
+                method is unsupported.
 
         Notes:
-            The computational complexity of the inference stage is
-            approximately ``O(n * M + M * U)``, where:
-
-                n = number of crisp inputs,
-                M = number of membership functions,
-                U = number of output-universe samples.
-
-            This avoids the ``O(M^n)`` combinatorial explosion that would
-            result from explicitly constructing every possible
-            multi-antecedent rule.
+            The inference costs ``O(n * M + M * U)`` for ``n`` inputs, ``M``
+            membership functions, and ``U`` output-universe samples. It does not
+            construct all ``M**n`` combinations of membership functions.
         """
 
         # Validate inputs
@@ -1963,14 +1860,15 @@ class TGP(GP):
         :param columns: Column names of the dataset
 
         Returns:
-            A list of dictionaries, where each dictionary contains:
+            list[dict[str, object]]:
+                A list of dictionaries with the following fields:
 
-            - ``causality``: A pair of attribute indices in the form
-              ``[target_attribute, related_attribute]``.
-            - ``direction``: ``"+"`` if both gradual items have the same trend
-              (increasing/increasing or decreasing/decreasing), otherwise ``"-"``.
-            - ``time_lag``: Human-readable estimated time lag.
-            - ``support``: Support value of the temporal gradual pattern.
+                * ``causality``: A pair of attribute indices in the form
+                  ``[target_attribute, related_attribute]``.
+                * ``direction``: ``"+"`` if both gradual items have the same trend
+                  (increasing/increasing or decreasing/decreasing), otherwise ``"-"``.
+                * ``time_lag``: Human-readable estimated time lag.
+                * ``support``: Support value of the temporal gradual pattern.
 
         Notes:
             The returned relationships describe inferred temporal associations.

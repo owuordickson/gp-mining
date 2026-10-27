@@ -229,9 +229,9 @@ def classify_ftgps(lst_test_data, lst_ground_truth, threshold=0.5) -> dict:
     lst_ground_truth : list
         FTGPs extracted from the reference (proxy ground-truth) dataset.
 
-    threshold : float, default=0.5
+    threshold : float, optional
         Support threshold used to distinguish supported and unsupported
-        FTGPs.
+        FTGPs. Defaults to 0.5.
 
     Returns
     -------

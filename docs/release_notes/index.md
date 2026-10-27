@@ -9,5 +9,5 @@ title: Release Notes
 .. changelog::
     :github: https://github.com/owuordickson/gp-mining/releases
     :pypi: https://pypi.org/project/so4gp/
-    :changelog-url:
+    :changelog-url: https://github.com/owuordickson/gp-mining/releases
 ```

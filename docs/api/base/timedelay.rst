@@ -1,7 +1,7 @@
 Time Delay
 ==========
 
-.. autoclass:: so4gp.gradual_patterns.TimeDelay
+.. autoclass:: so4gp.TimeDelay
    :members:
    :undoc-members:
    :show-inheritance:

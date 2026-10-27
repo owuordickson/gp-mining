@@ -45,7 +45,7 @@ class DataGP:
 
         :param data_source: [required] a data source, it can either be a 'file in csv
             format' or a 'Pandas DataFrame'
-        :type data_source: pd.DataFrame | str
+        :type data_source: pandas.DataFrame | str
 
         :param min_sup: [optional] minimum support threshold, the default is 0.5
         :type min_sup: float
@@ -201,7 +201,7 @@ class DataGP:
         self._attr_cols = get_attr_cols()
 
     def _compute_pairwise_bitmap(self, attr_values: np.ndarray) -> np.ndarray:
-        """Compute a pairwise bitmap and its support for one attribute.
+        """Compute a pairwise bitmap for one attribute.
 
         Args:
             attr_values:
@@ -209,10 +209,9 @@ class DataGP:
                 attribute.
 
         Returns:
-            A tuple containing:
-
-            - ``bitmap``: Boolean pairwise comparison matrix with shape
-              ``(n_samples, n_samples)``.
+            numpy.ndarray:
+                Boolean pairwise comparison matrix with shape
+                ``(n_samples, n_samples)``.
 
         Notes:
             The bitmap requires O(n²) memory, where n is the number of samples.
@@ -471,7 +470,7 @@ class DataGP:
         connectivity, and singularity.
 
         For each gradual item in ``self.warping_set``, a temporary
-        :class:`GP` object is created and populated with the GI, its
+        :class:`so4gp.GP` object is created and populated with the GI, its
         support and confidence values. The GI's warping set is then used
         to compute the structural graph descriptors through
         ``GP.compute_descriptors()``.
@@ -519,7 +518,7 @@ class DataGP:
         ``self.warping_set`` or ``self.valid_bins`` is unavailable.
 
         Returns:
-            pd.DataFrame:
+            pandas.DataFrame:
                 A table containing the computed descriptors for each valid
                 gradual attribute. ``Pattern`` is the first column and all
                 descriptor columns are converted to numeric values where
@@ -834,7 +833,7 @@ class DataGP:
 
         :param data_src: A data source, it can either be a 'file in csv format' or a
             'Pandas DataFrame'
-        :type data_src: pd.DataFrame | str
+        :type data_src: pandas.DataFrame | str
 
         :return: The title, column objects
         """
@@ -936,10 +935,8 @@ class DataGP:
             df: Input pandas DataFrame.
 
         Returns:
-            A tuple containing:
-
-            - List of column names.
-            - NumPy array of the cleaned data.
+            tuple:
+                A list of column names and a NumPy array of the cleaned data.
 
         Raises:
             Exception:
