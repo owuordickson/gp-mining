@@ -1,0 +1,2 @@
+# Preserve the byte identity checked by the causal-discovery example.
+examples/datasets/deposium_fos_sur_mer.csv text eol=lf

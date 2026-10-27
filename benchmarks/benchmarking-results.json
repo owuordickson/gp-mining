@@ -1,0 +1,254 @@
+{
+  "scope": "Current notebook comparison displays refreshed from the completed Disjoint-10 scoring artifact; other saved results retained; no mining, rescoring or full notebook execution performed",
+  "source_notebook": {
+    "filepath": "benchmarks/benchmarking.ipynb",
+    "sha256": "3d2b7e67d1f5047e169b46af3bd923140f1e9212a72c415619536e848d0416c1"
+  },
+  "leaderboard": {
+    "url": "https://raw.githubusercontent.com/CausalRivers/CausalRivers.github.io/22ffa6bdc7cb3ac6b1947c743677c35a473aa459/scoring.csv",
+    "revision": "22ffa6bdc7cb3ac6b1947c743677c35a473aa459",
+    "captured_on": "2026-10-13",
+    "filepath": "benchmarks/causalrivers-leaderboard.csv",
+    "sha256": "03609056700d0789db52420f28282802bd64bf930c43babd58b157cefea78d0c"
+  },
+  "causalrivers": [
+    {
+      "graph_set": "Close 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.677891,
+        "PCMCI": 0.639,
+        "PC": 0.501,
+        "VARLiNGAM": 0.786,
+        "DYNOTEARS": 0.501
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_close_3/20260821124601/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.6778913347309574
+    },
+    {
+      "graph_set": "Close 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.654067,
+        "PCMCI": 0.617,
+        "PC": 0.514,
+        "VARLiNGAM": 0.773,
+        "DYNOTEARS": 0.499
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_close_5/20260830185811/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.654066775061673
+    },
+    {
+      "graph_set": "Root cause 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.7008,
+        "PCMCI": 0.696,
+        "PC": 0.501,
+        "VARLiNGAM": 0.772,
+        "DYNOTEARS": 0.503
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_root_cause_3/20260825173222/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.7008003766478343
+    },
+    {
+      "graph_set": "Root cause 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.704923,
+        "PCMCI": 0.737,
+        "PC": 0.517,
+        "VARLiNGAM": 0.769,
+        "DYNOTEARS": 0.564
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_root_cause_5/20260902024058/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.7049233460559796
+    },
+    {
+      "graph_set": "Random+1 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.828725,
+        "PCMCI": 0.831,
+        "PC": 0.498,
+        "VARLiNGAM": 0.84,
+        "DYNOTEARS": 0.519
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_1_random_3/20260819161921/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.8287250384024577
+    },
+    {
+      "graph_set": "Random+1 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.734016,
+        "PCMCI": 0.735,
+        "PC": 0.513,
+        "VARLiNGAM": 0.788,
+        "DYNOTEARS": 0.608
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_1_random_5/20260921025013/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.7342750171305081
+    },
+    {
+      "graph_set": "Confounder 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.651331,
+        "PCMCI": 0.663,
+        "PC": 0.49,
+        "VARLiNGAM": 0.675,
+        "DYNOTEARS": 0.525
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_confounder_3/20260926075557/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.6513310185185185
+    },
+    {
+      "graph_set": "Confounder 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.58642,
+        "PCMCI": 0.64,
+        "PC": 0.514,
+        "VARLiNGAM": 0.698,
+        "DYNOTEARS": 0.532
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_confounder_5/20260827034153/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.5864198736974013
+    },
+    {
+      "graph_set": "Random 3",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.669843,
+        "PCMCI": 0.655,
+        "PC": 0.501,
+        "VARLiNGAM": 0.787,
+        "DYNOTEARS": 0.503
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_random_3/20260825054633/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.669842762913415
+    },
+    {
+      "graph_set": "Random 5",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.640697,
+        "PCMCI": 0.653,
+        "PC": 0.506,
+        "VARLiNGAM": 0.755,
+        "DYNOTEARS": 0.608
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_random_5/20260926033539/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.6406972164447483
+    },
+    {
+      "graph_set": "Disjoint 10",
+      "saved_notebook_mean_per_graph_auroc": {
+        "TGRAANK": 0.815098,
+        "PCMCI": 0.802,
+        "PC": null,
+        "VARLiNGAM": 0.827,
+        "DYNOTEARS": 0.606
+      },
+      "notebook_scoring_path": "causalrivers/results/tgraank_disjoint_10/20261019151559/scoring.csv",
+      "current_scoring_mean_per_graph_auroc": 0.8150984685418272,
+      "completed_run": {
+        "artifact_commit": "318e88ff4b5fc9b146999ac1baf480715f155961",
+        "run_path": "results/tgraank_disjoint_10/20261019151559",
+        "hash_bytes": "git-blob",
+        "artifact_sha256": {
+          "scoring.csv": "6c612124df1b5ef48968b1dafe1b2d9e8e9cbb1196ce14a106f9d380e67cc838",
+          "config.yaml": "dfe6c51811d31b20bf04267fae0a586ce5b94d48fed42d0d24486140259a944d",
+          "runtime.csv": "15958ee480baac4d8d60bb75e72485edb4d72f176eca7d6149587dbe2298423d",
+          "preds.p": "151c818765dd6f5207c9b9d3790cb69c6706eecc7c5a7ac9a7ec38898c100c81"
+        },
+        "mean_per_graph_auroc": 0.8150984685418272,
+        "pooled_auroc": 0.7904192479040301,
+        "runtime_seconds": 1202563.4971263409,
+        "pcmci_reference_mean_per_graph_auroc": 0.8017869429388739,
+        "absolute_auroc_gain_over_pcmci": 0.013311525602953345,
+        "provenance_scope": "Published run outputs and configuration; producer source/environment and evaluated graph count were not recorded. No execution or independent rescoring is claimed by this publication update."
+      }
+    }
+  ],
+  "synthetic_mock_results": {
+    "metric_order": [
+      "Precision",
+      "Recall",
+      "F1"
+    ],
+    "dataset_order": [
+      "CausalRivers mock",
+      "TimeGraph mock"
+    ],
+    "results": {
+      "Classical Statistics": [
+        [
+          0.5,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          0.67,
+          0.0
+        ]
+      ],
+      "Granger Causality": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "PC Algorithm": [
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ]
+      ],
+      "T-GRAANK (Our Proposed)": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "Tigramite / PCMCI": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ]
+    }
+  },
+  "updated_on": "2026-10-26",
+  "previous_notebook_snapshot": {
+    "git_commit": "896075293f0be530f63df1e249d81ea282e09a92",
+    "sha256": "7ae4c498f75605c0e5427684d6f2733e89bcb3cb0ce3aecd18a6725732ca7410",
+    "url": "https://github.com/theseedship/deposium_geoai/blob/896075293f0be530f63df1e249d81ea282e09a92/benchmarks/benchmarking.ipynb"
+  }
+}

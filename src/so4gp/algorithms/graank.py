@@ -421,7 +421,7 @@ class GRAANK:
             if save_results:
                 self._mine_obj.generate_output_files(res_dict, target_col=target_col)
             res_dict.update({"Patterns": self._mine_obj.display_patterns})
-        except Exception as e:
+        except RuntimeError as e:
             res_dict.update({"Error": str(e)})
         out: str = json.dumps(
             res_dict,

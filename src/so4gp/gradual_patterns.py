@@ -28,10 +28,10 @@ class FatalError(Exception):
 @dataclass
 class PairwiseMatrix:
     """A data-class for storing pairwise (bitmap) matrix as packed-bits and its support value."""
-
     packed_bin_mat: np.ndarray | torch.Tensor
     support: float
     pattern: set[str]
+    confidence: float= 0
     time_lag: TimeDelay | None = None
 
 
@@ -173,6 +173,7 @@ class GP:
         """
         self._gradual_items: list[GI] = []
         self._support: float = 0
+        self._confidence: float = 0
         self._density: float = 0
         self._avg_dev_from_diag: float = 0
         self._rank_dispersion: float = 0
@@ -189,7 +190,16 @@ class GP:
 
     @support.setter
     def support(self, support: float):
-        self._support = round(support, 3) if support <= 1 else support
+        self._support = round(support, 3)
+
+    @property
+    def confidence(self) -> float:
+        return self._confidence
+
+    @confidence.setter
+    def confidence(self, confidence: float):
+        confidence = confidence if confidence <= 1 else 1
+        self._confidence = round(confidence, 3)
 
     @property
     def density(self) -> float:
@@ -244,7 +254,7 @@ class GP:
         gp = GP.swap_gp_symbols(self)
         return set(gp.to_string())
 
-    def get_computed_descriptors(self, descriptor_title) -> list[str] | list[dict]:
+    def get_computed_descriptors(self, descriptor_title: bool=False) -> list[str] | list[dict]:
         """
         Returns the computed descriptors of the gradual pattern (GP)
 
@@ -254,14 +264,15 @@ class GP:
         """
         if self.density <= 0:
             params = (
-                [f"sup={self.support}"]
-                if not descriptor_title
-                else [{"Support": f"{self.support}"}]
+                [f"sup={self.support}, conf={self.confidence}"]
+                if not descriptor_title else
+                [{"Support": f"{self.support}"}, {"Confidence": f"{self.confidence}"}]
             )
         else:
             if not descriptor_title:
                 params = [
                     f"sup={self.support}",
+                    f"conf={self.confidence}",
                     f"density={self.density}",
                     f"avg_dev={self.avg_deviation_from_diagonal}",
                     f"dispersion={self.rank_dispersion}",
@@ -271,6 +282,7 @@ class GP:
             else:
                 params = [
                     {"Support": f"{self.support}"},
+                    {"Confidence": f"{self.confidence}"},
                     {"Density": f"{self.density}"},
                     {
                         "Avg. Deviation from Diagonal": f"{self.avg_deviation_from_diagonal}"
@@ -312,6 +324,22 @@ class GP:
             if gi.attribute_col == gi_obj.attribute_col:
                 return True
         return False
+
+    def get_target_gi(self, target_col: int|None) -> GI:
+        """
+        Find the target gradual item (GI) in the gradual pattern (GP)
+
+        :param target_col: target column
+        :return: the target GI or the first GI in the GP.
+
+        """
+        target_gi = self.gradual_items[0]
+        if target_col is not None:
+            if f"{target_col}+" in self.as_set:
+                target_gi = GI(target_col, "+")
+            elif f"{target_col}-" in self.as_set:
+                target_gi = GI(target_col, "-")
+        return target_gi
 
     def to_string(self) -> list[str]:
         """
@@ -364,17 +392,15 @@ class GP:
         # pattern = [('2', "+"), ('4', "+")]
         min_supp = data_gp.thd_supp
         n = data_gp.attr_size
-        gi_dict = copy.deepcopy(data_gp.valid_bins)
+        gi_dict: dict|None = copy.deepcopy(data_gp.valid_bins)
+        if gi_dict is None:
+            return self
 
         gen_pattern: GP | TGP = TGP() if time_data is not None else GP()
-        target_gi = self.gradual_items[0]
-        if target_col is not None:
-            if f"{target_col}+" in self.as_set:
-                target_gi = GI(target_col, "+")
-            elif f"{target_col}-" in self.as_set:
-                target_gi = GI(target_col, "-")
+        target_gi = self.get_target_gi(target_col)
 
         pw_mat_1: PairwiseMatrix = gi_dict[target_gi.to_string()]
+        target_gi_supp = copy.copy(pw_mat_1.support)
         time_lag = gi_dict[target_gi.to_string()].time_lag
         GP.add_gradual_item_strict(
             gen_pattern, target_gi, target_col=target_col, time_lag=time_lag
@@ -400,6 +426,8 @@ class GP:
             # if compute_descriptors:
             #    warping_set_arr: np.ndarray = np.array(DataGP.gen_gradual_warping_set(pw_mat.bin_mat, as_array=True))
             #    rand_gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
+            conf = gen_pattern.support / round(target_gi_supp, 3)
+            gen_pattern.confidence = conf
             return gen_pattern
 
     def validate_via_tree(self, d_gp):
@@ -417,7 +445,7 @@ class GP:
             return self
 
         min_supp = d_gp.thd_supp
-        n = d_gp.row_count
+        n = d_gp.attr_size
         gen_pattern = GP()
         """type gen_pattern: GP"""
         temp_tids = None
@@ -1062,7 +1090,7 @@ class GP:
 
         if bin_data_1 is None or bin_data_2 is None:
             return PairwiseMatrix(
-                packed_bin_mat=np.zeros((dim, dim)), support=0, pattern=set()
+                packed_bin_mat=np.zeros((dim, dim)), support=0, confidence=0, pattern=set()
             )
 
         # Intersection of packed bitmaps -- Supports NumPy arrays and PyTorch tensors (CPU or CUDA)
@@ -1429,9 +1457,7 @@ class TimeDelay:
                     dtype=np.float64,
                 )
 
-                # ------------------------------------------------------
                 # Triangular MF
-                # ------------------------------------------------------
                 if shape == "triangular":
                     if params.size != 3:
                         raise ValueError(
@@ -1446,9 +1472,7 @@ class TimeDelay:
                         np.minimum(rising, falling),
                     )
 
-                # ------------------------------------------------------
                 # Trapezoidal MF
-                # ------------------------------------------------------
                 elif shape == "trapezoidal":
                     if params.size != 4:
                         raise ValueError(
@@ -1466,9 +1490,7 @@ class TimeDelay:
                         ),
                     )
 
-                # ------------------------------------------------------
                 # Gaussian MF
-                # ------------------------------------------------------
                 elif shape == "gaussian":
                     if params.size != 2:
                         raise ValueError(
@@ -1844,8 +1866,8 @@ class TGP(GP):
         }
         gi_set2 = {tgi.gradual_item.to_string() for tgi in lst_tgi2}
         if gi_set1 != gi_set2:
-            if swapped and gi_set1_swap != gi_set2:
-                return False
+            if swapped and gi_set1_swap == gi_set2:
+                pass
             else:
                 return False
 
@@ -1860,7 +1882,7 @@ class TGP(GP):
         }
 
         # All checks passed, patterns are similar
-        return td_set1 != td_set2
+        return td_set1 == td_set2
 
     def get_causal_relations(self, columns: list) -> list[dict[str, object]]:
         """

@@ -30,7 +30,9 @@ This expression reveals that in **83.3% of the dataset** (5 out of 6 objects), a
 * Comparing o<sub>2</sub> → o<sub>3</sub>: Age increases (27 → 31), Salary decreases (51k → 50k). **(Valid)**
 * Comparing o<sub>3</sub> → o<sub>4</sub>: Age increases (31 → 36), Salary decreases (50k → 48k). **(Valid)**
 * Comparing o<sub>4</sub> → o<sub>5</sub>: Age increases (36 → 40), Salary decreases (48k → 47k). **(Valid)**
-* Comparing o<sub>5</sub> → o<sub>6</sub>: Age stays the same (40 → 40), but Salary decreases (47k → 45k). Depending on your variation definition (strict vs. non-strict inequality), this step sequence validates 5 out of 6 objects.
+* Comparing o<sub>5</sub> → o<sub>6</sub>: Age stays the same (40 → 40), but Salary decreases (47k → 45k). **(Invalid)**
+  
+  Depending on your variation definition (strict vs. non-strict inequality), this pairwise comparison is (strictly) **Invalid**.
 
 
 
@@ -38,9 +40,7 @@ This expression reveals that in **83.3% of the dataset** (5 out of 6 objects), a
 
 ## Installation
 
-`so4gp` is available on **PyPI**.
-
-Install the latest stable release using:
+`so4gp` is available on **PyPI**. Install the latest stable release using:
 
 ```shell
 pip install so4gp
@@ -80,13 +80,11 @@ Most `so4gp` algorithms accept either:
 - a `pandas.DataFrame`
 - the path to a CSV file containing numerical data
 
-Datasets should contain numerical attributes. For temporal gradual pattern
-mining (`TGRAANK`), the dataset should additionally contain a timestamp or
-ordered temporal attribute.
+Datasets should contain numerical attributes. For temporal gradual pattern mining (`TGRAANK`), the dataset should additionally contain a timestamp or ordered temporal attribute.
 
 ---
 
-#### Example: Gradual Pattern Mining
+#### Example 01: Gradual Pattern Mining
 
 The example below extracts gradual patterns using the classical APRIORI-based
 GRAANK algorithm.
@@ -119,9 +117,28 @@ print(results)
 The `discover()` method returns a JSON-formatted string containing the mined
 gradual patterns, their support values, and additional metadata.
 
+- **Choosing a Mining Algorithm:**
+
+    `GRAANK` supports multiple search strategies through the `discover()` method.
+
+    ```python
+    results = miner_gp.discover(search_type="ga")
+    ```
+
+    Supported search algorithms include:
+    
+    | Algorithm | Description |
+    |-----------|-------------|
+    | `apriori` | Classical exhaustive level-wise search |
+    | `ga` | Genetic Algorithm |
+    | `aco` | Ant Colony Optimization |
+    | `pso` | Particle Swarm Optimization |
+    | `hc` | Hill Climbing |
+    | `random` | Random Search |
+
 ---
 
-#### Example: Temporal Gradual Pattern Mining
+#### Example 02: Temporal Gradual Pattern Mining
 
 The following example discovers fuzzy temporal gradual patterns using the
 default Mutual Information (AMI) transformation algorithm.
@@ -154,26 +171,7 @@ print(results)
 
 ---
 
-## Choosing a Mining Algorithm
-
-`GRAANK` supports multiple search strategies through the `discover()` method.
-
-```python
-results = miner_gp.discover(search_type="ga")
-```
-
-Supported search algorithms include:
-
-| Algorithm | Description |
-|-----------|-------------|
-| `apriori` | Classical exhaustive level-wise search |
-| `ga` | Genetic Algorithm |
-| `aco` | Ant Colony Optimization |
-| `pso` | Particle Swarm Optimization |
-| `hc` | Hill Climbing |
-| `random` | Random Search |
-
-Similarly, `TGRAANK` supports multiple temporal transformation algorithms.
+`TGRAANK` supports multiple temporal transformation algorithms.
 
 ```python
 results = miner_tgp.discover(transformations="ami")
@@ -187,6 +185,13 @@ Supported transformation algorithms include:
 | `all` | Classical TGrad fuzzy temporal transformation |
 
 ---
+
+`TGRAANK` also allows causal discovery using the `discover_causal_relationships` method.
+
+```python
+res_df = miner_tgp.discover_causal_relationships(max_lag=3)
+```
+
 
 ## Learn More
 

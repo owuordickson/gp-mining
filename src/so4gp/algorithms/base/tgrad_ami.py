@@ -26,8 +26,8 @@ class TGradAMI(TGrad):
         Instead of min-representativity value, the algorithm relies on the error-margin between MIs.
 
         :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
-        :param kwargs: [required] target-column or attribute or feature, [optional] minimum representativity,
-        [optional] MF shape, [optional] clustering algorithm, [optional] inference method.
+        :param kwargs: [optional] minimum representativity, [optional] MF shape, [optional] clustering algorithm,
+        [optional] inference method.
 
         """
         super().__init__(*args, **kwargs)
@@ -141,7 +141,8 @@ class TGradAMI(TGrad):
         self,
         target_col: int,
         search_algorithm: str = "apriori",
-        max_iteration: int = 3,
+        max_iteration: int|None = None,
+        compute_descriptors: bool = False,
         transformation_steps: dict | None = None,
         ignore_time: bool = False,
         error_margin: float = 0.0001,
@@ -157,6 +158,7 @@ class TGradAMI(TGrad):
         :param search_algorithm: Gradual pattern mining algorithm to apply to the transformed dataset. Supported values
         are ``apriori``, ``ga``, ``aco``, ``pso``, ``hc``, ``random``, and ``clustergp``. Defaults to ``"apriori"``.
         :param max_iteration: Maximum number of iterations to run the search algorithm.
+        :param compute_descriptors: If ``True``, compute descriptors for the mined gradual patterns. Defaults to ``False``.
         :param transformation_steps: Data transformation steps (used to override the computed transformation steps).
         :param ignore_time: Mine TGPs but skip the calculation and estimation of time delay.
         :param error_margin: [optional] minimum Mutual Information error margin.
@@ -169,6 +171,7 @@ class TGradAMI(TGrad):
         self.target_col = target_col
         self._search_algorithm = search_algorithm
         self._algorithm_max_iter = max_iteration
+        self._compute_descriptors = compute_descriptors
         self.clear_gradual_patterns()
 
         # 1. Compute and find the lowest mutual information (based) steps
@@ -200,13 +203,14 @@ class TGradAMI(TGrad):
                 title_row.append(txt)
                 if (col != self.target_col) and (col not in self.time_cols):
                     time_title.append(txt)
-            # str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
+            transformed_data, time_data = self.transform_data(transformation_steps, max_step)
+            str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
             self._transformation_data = {
                 "Patterns": self.display_patterns,
                 "Transformation Steps": transformation_steps,
-                #'Time Data': str_time_data,
-                #'Transformed Data': np.vstack(
-                #    (np.array(title_row), transformed_data.T if transformed_data is not None else np.array([]))),
+                'Time Data': str_time_data,
+                'Transformed Data': np.vstack(
+                    (np.array(title_row), transformed_data.T if transformed_data is not None else np.array([]))),
             }
 
         duration = time.time() - start

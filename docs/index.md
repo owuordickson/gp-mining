@@ -109,6 +109,7 @@ api/functions
 
 tutorials/feature_selection
 tutorials/timeseries_analysis
+tutorials/causal_discovery
 ```
 
 ```{toctree}
@@ -116,5 +117,6 @@ tutorials/timeseries_analysis
 :caption: Development
 
 Github <https://github.com/owuordickson/gp-mining>
+Owuor Lab <https://owuordickson.github.io/lab/>
 release_notes/index
 ```

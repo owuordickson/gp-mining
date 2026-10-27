@@ -4,7 +4,6 @@
 
 import gc
 import time
-from typing import cast
 
 import numpy as np
 
@@ -54,7 +53,7 @@ class AntGRAANK(BaseGrad):
         attr_keys = [GI.from_string(gi_str).to_string() for gi_str in gi_key_list]
 
         # 2. Initialize an empty d-matrix
-        n = len(attr_keys)
+        n = self.attr_size  #len(attr_keys)
         d = np.zeros((n, n), dtype=np.dtype("i8"))  # cumulative sum of all segments
         for i in range(n):
             for j in range(n):
@@ -103,7 +102,7 @@ class AntGRAANK(BaseGrad):
             try:
                 j = np.nonzero(cum_prob > r)[0][0]
                 gi_str: str = (
-                    cast(str, self._attribute_keys[j])
+                    self._attribute_keys[j]
                     if self._attribute_keys is not None
                     else ""
                 )

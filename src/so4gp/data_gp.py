@@ -196,7 +196,7 @@ class DataGP:
 
     def _compute_pairwise_bitmap(
         self, attr_values: np.ndarray
-    ) -> tuple[np.ndarray, float]:
+    ) -> np.ndarray:
         """Compute a pairwise bitmap and its support for one attribute.
 
         Args:
@@ -209,8 +209,6 @@ class DataGP:
 
             - ``bitmap``: Boolean pairwise comparison matrix with shape
               ``(n_samples, n_samples)``.
-            - ``support``: Proportion of valid object pairs satisfying the
-              gradual relationship.
 
         Notes:
             The bitmap requires O(n²) memory, where n is the number of samples.
@@ -218,8 +216,7 @@ class DataGP:
             O(n² × m) memory requirement of constructing a bitmap tensor for all
             m attributes simultaneously.
         """
-        n_samples = len(attr_values)
-        pair_cnt = GP.pair_count(n_samples)
+        n_samples = self.attr_size
 
         # Pairwise comparison:
         #
@@ -240,26 +237,25 @@ class DataGP:
             else:
                 bitmap = rhs > lhs
 
-        support = float(bitmap.sum() / pair_cnt)
-        return bitmap, support
+        return bitmap
 
     def _compute_pairwise_bitmap_gpu(
         self,
         attr_values: np.ndarray,
         chunk_size: int = 2048,
-    ) -> tuple[np.ndarray, float]:
+    ) -> np.ndarray:
 
         values = torch.as_tensor(
             attr_values,
             dtype=torch.float32,
             device="cuda",
         )
-        n = len(values)
+        n = self.attr_size
         bitmap = np.empty(
             (n, n),
             dtype=np.bool_,
         )
-        total_true = 0
+        # total_true = 0
 
         for start in range(0, n, chunk_size):
             end = min(start + chunk_size, n)
@@ -280,11 +276,10 @@ class DataGP:
             else:
                 chunk = rhs > lhs
 
-            total_true += int(chunk.sum().item())
+            # total_true += int(chunk.sum().item())
             bitmap[start:end] = chunk.cpu().numpy()
 
-        support = total_true / GP.pair_count(n)
-        return bitmap, support
+        return bitmap
 
     def add_gradual_pattern(self, pattern) -> None:
         """
@@ -349,9 +344,19 @@ class DataGP:
             Bitmap generation has O(n²) time and memory complexity per attribute.
             Only attributes satisfying ``self._thd_supp`` are retained.
         """
-        # ------------------------------------------------------------------
+
+        def get_largest_triangle_sum():
+            # Sum the upper triangle (excluding the main diagonal, k=1)
+            upper_sum = np.sum(np.triu(bin_mat, k=1))
+
+            # Sum the lower triangle (excluding the main diagonal, k=-1)
+            lower_sum = np.sum(np.tril(bin_mat, k=-1))
+
+            # Find the largest of the two
+            largest_sum = max(upper_sum, lower_sum)
+            return largest_sum
+
         # 1. Prepare attribute data
-        # ------------------------------------------------------------------
         if attr_data is None:
             attr_data = self._data.T
             self._attr_size = self._row_count
@@ -359,9 +364,7 @@ class DataGP:
             self._attr_size = len(attr_data[self._attr_cols[0]])
         self._valid_bins = {}
 
-        # ------------------------------------------------------------------
         # 2. Generate one bitmap at a time
-        # ------------------------------------------------------------------
         for col in self._attr_cols:
             # Convert only the current attribute to a numeric NumPy array.
             attr_values = np.asarray(
@@ -371,18 +374,19 @@ class DataGP:
 
             # Generate the bitmap and calculate its support.
             if self._device == "cuda":
-                bin_mat, support = self._compute_pairwise_bitmap_gpu(attr_values)
+                bin_mat = self._compute_pairwise_bitmap_gpu(attr_values)
             else:
-                bin_mat, support = self._compute_pairwise_bitmap(attr_values)
+                bin_mat = self._compute_pairwise_bitmap(attr_values)
 
             # Discard unsupported attributes immediately.
+            n_samples = self.attr_size
+            pair_cnt = GP.pair_count(n_samples)
+            support = float(get_largest_triangle_sum() / pair_cnt)
             if support < self._thd_supp or self._valid_bins is None:
                 del bin_mat
                 continue
 
-            # --------------------------------------------------------------
             # Positive gradual item
-            # --------------------------------------------------------------
             conv_bits = np.packbits(bin_mat.ravel())
             packed_bits = (
                 torch.from_numpy(conv_bits).cuda()
@@ -395,9 +399,7 @@ class DataGP:
                 pattern={f"{col}+"},
             )
 
-            # --------------------------------------------------------------
             # Negative gradual item
-            # --------------------------------------------------------------
             conv_bits_t = np.packbits(bin_mat.T.ravel())
             packed_bits_t = (
                 torch.from_numpy(conv_bits_t).cuda()
@@ -410,9 +412,7 @@ class DataGP:
                 pattern={f"{col}-"},
             )
 
-        # ------------------------------------------------------------------
         # 3. Require a minimum number of valid gradual items
-        # ------------------------------------------------------------------
         valid_bins_len = len(self._valid_bins) if self._valid_bins is not None else 0
         if valid_bins_len < 3:
             self._valid_bins = None
@@ -450,6 +450,165 @@ class DataGP:
                     else edge_list.tolist()
                 )
                 self._warping_set[gi_str] = lst_ij
+
+    def compute_attribute_descriptors(self) -> pd.DataFrame:
+        """Compute structural descriptors for all valid gradual attributes.
+
+        The method computes and consolidates a set of descriptors for each
+        valid gradual item (GI) in the current gradual pattern mining
+        result. The descriptors are computed from the corresponding
+        gradual warping sets and include support, confidence, density,
+        average deviation from the diagonal, rank dispersion, graph
+        connectivity, and singularity.
+
+        For each gradual item in ``self.warping_set``, a temporary
+        :class:`GP` object is created and populated with the GI, its
+        support and confidence values. The GI's warping set is then used
+        to compute the structural graph descriptors through
+        ``GP.compute_descriptors()``.
+
+        The resulting descriptor records are converted into a
+        :class:`pandas.DataFrame`, with ``Pattern`` as the first column.
+        The ``Confidence`` column is reset to ``NaN`` because confidence
+        is not treated as an attribute-level descriptor in the resulting
+        descriptor table.
+
+        The descriptor table contains the following columns:
+
+            Pattern
+                String representation of the gradual attribute, including
+                its direction symbol.
+
+            Support
+                Support of the gradual item in its corresponding valid
+                bin.
+
+            Confidence
+                Placeholder column set to ``NaN`` in the final attribute
+                descriptor table.
+
+            Density
+                Density of the gradual warping graph.
+
+            Avg. Deviation from Diagonal
+                Mean deviation of the gradual relationships from the
+                diagonal of the pairwise object matrix.
+
+            Rank Dispersion
+                Dispersion of the ranks represented by the gradual
+                relationships.
+
+            Graph Connectivity
+                Connectivity structure of the graph induced by the
+                gradual warping set.
+
+            Singularity Score
+                Degree-based measure describing the concentration or
+                irregularity of the gradual warping graph.
+
+        The method returns an empty DataFrame when either
+        ``self.warping_set`` or ``self.valid_bins`` is unavailable.
+
+        Returns:
+            pd.DataFrame:
+                A table containing the computed descriptors for each valid
+                gradual attribute. ``Pattern`` is the first column and all
+                descriptor columns are converted to numeric values where
+                applicable.
+
+        Notes:
+            The gradual warping set associated with each gradual item is
+            expected to be stored in ``self.warping_set`` using the string
+            representation of the gradual item as its key. The
+            corresponding support and confidence values are obtained from
+            ``self.valid_bins`` using the same key.
+        """
+
+        def create_df(lst_descriptors: list[list]) -> pd.DataFrame:
+            """Convert descriptor records into a normalized DataFrame.
+
+            Args:
+                lst_descriptors:
+                    List of descriptor records. Each record may contain
+                    dictionaries or string representations of dictionaries.
+
+            Returns:
+                A DataFrame containing one row per gradual attribute with
+                numeric descriptor columns and ``Pattern`` as the first
+                column.
+            """
+            parsed_rows = []
+
+            for block in lst_descriptors:
+                row_dict = {}
+
+                for item in block:
+                    if isinstance(item, str):
+                        cleaned_str = item.strip('"{ }')
+                        key, val = cleaned_str.split(':', 1)
+                        extracted_dict = {
+                            key.strip("' "): val.strip("' ")
+                        }
+                    else:
+                        extracted_dict = item
+
+                    row_dict.update(extracted_dict)
+
+                parsed_rows.append(row_dict)
+
+            df = pd.DataFrame(parsed_rows)
+
+            numeric_cols = [
+                "Support",
+                "Confidence",
+                "Density",
+                "Avg. Deviation from Diagonal",
+                "Rank Dispersion",
+                "Graph Connectivity",
+                "Singularity Score",
+            ]
+
+            df[numeric_cols] = df[numeric_cols].apply(
+                pd.to_numeric
+            )
+
+            data_cols = [
+                "Pattern",
+                *[col for col in df.columns if col != "Pattern"],
+            ]
+
+            df = df[data_cols]
+
+            # Confidence is intentionally excluded from the final
+            # attribute-level descriptor representation.
+            df["Confidence"] = np.nan
+
+            return df
+
+        lst_rows = []
+
+        w_set = self.warping_set
+        v_bins = self.valid_bins
+
+        if v_bins is None or w_set is None:
+            return pd.DataFrame()
+
+        lst_gi = list(w_set.keys())
+        for gi_str in lst_gi:
+            gp = GP()
+            gi = GI.from_string(gi_str)
+            col_name = f"{self.titles[gi.attribute_col]}{gi.symbol}"
+
+            gp.add_gradual_item(gi)
+            gp.support = v_bins[gi_str].support
+            gp.confidence = v_bins[gi_str].confidence
+            gp.compute_descriptors(np.asarray(w_set[gi_str]), obj_count=self.row_count,)
+
+            temp_row = gp.get_computed_descriptors(descriptor_title=True)
+            temp_row.append("{'Pattern': " + col_name + "}")
+            lst_rows.append(temp_row)
+
+        return create_df(lst_rows)
 
     def generate_output_files(
         self, alg_data: dict, target_col: int | None = None, save_to_file: bool = True
@@ -490,12 +649,12 @@ class DataGP:
         if isinstance(self._data_src, str):
             file = self._data_src
         out_txt += f"\nFile: {file}\n"
-        out_txt += str("\nPattern : Support" + "\n")
+        out_txt += str("\nPattern : Support, Confidence" + "\n")
 
         list_tgp = self.gradual_patterns
         if list_tgp is not None:
             for tgp in list_tgp:
-                gp_str = f"{tgp.to_string()} :  {tgp.support}"
+                gp_str = f"{tgp.to_string()} :  {tgp.support}, {tgp.confidence}"
                 if len(gp_str) > 100:
                     gp_str = gp_str[:100] + "\n" + gp_str[100:]
                 out_txt += f"{gp_str}\n"
@@ -702,7 +861,7 @@ class DataGP:
                             del raw_data[0]
                     d_frame = pd.DataFrame(raw_data, columns=header_vals)
                     return DataGP.clean_data(d_frame)
-            except Exception as error:
+            except RuntimeError as error:
                 raise FatalError("Error: " + str(error))
 
     @staticmethod

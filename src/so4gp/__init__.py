@@ -4,7 +4,7 @@ import pandas as pd
 
 from .data_gp import DataGP
 from .gradual_patterns import GI, GP, TGP, PairwiseMatrix, TimeDelay
-from .utils import get_num_cores, get_slurm_cores
+from .utils import gp_spider_plot, classify_ftgps
 
 
 @wraps(DataGP.analyze_gps)
@@ -30,7 +30,7 @@ def save_pairwise_data(
 
 
 # Project Details
-__version__ = "1.0.7"
+__version__ = "1.1.3"
 __title__ = f"so4gp (v{__version__})"
 __author__ = "Dickson Owuor"
 __credits__ = "Montpellier University"
@@ -44,7 +44,7 @@ __all__ = [
     "PairwiseMatrix",
     "TimeDelay",
     "analyze_gps",
-    "get_num_cores",
-    "get_slurm_cores",
+    "gp_spider_plot",
+    "classify_ftgps",
     "save_pairwise_data",
 ]
