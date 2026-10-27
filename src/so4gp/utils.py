@@ -36,7 +36,7 @@ def write_file(data, path, wr=True) -> None:
         pass
 
 
-def gp_descriptor_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: list[str], grid_levels: int = 6) -> plt.Figure:
+def gp_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: list[str], grid_levels: int = 6) -> plt.Figure:
     """
     Modified to accept a list of DataFrames (e.g., [stats_rain, stats_evi])
     and plot their mean/std comparisons.

@@ -4,7 +4,7 @@ import pandas as pd
 
 from .data_gp import DataGP
 from .gradual_patterns import GI, GP, TGP, PairwiseMatrix, TimeDelay
-from .utils import gp_descriptor_spider_plot, classify_ftgps
+from .utils import gp_spider_plot, classify_ftgps
 
 
 @wraps(DataGP.analyze_gps)
@@ -44,7 +44,7 @@ __all__ = [
     "PairwiseMatrix",
     "TimeDelay",
     "analyze_gps",
-    "gp_descriptor_spider_plot",
+    "gp_spider_plot",
     "classify_ftgps",
     "save_pairwise_data",
 ]

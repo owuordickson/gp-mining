@@ -8,3 +8,4 @@ These are the available functions in the ``so4gp`` library.
 
    base/analyzegps
    base/savedata
+   base/spiderplot
