@@ -14,21 +14,32 @@ from .graank_base import BaseGrad
 class AntGRAANK(BaseGrad):
     def __init__(self, *args, max_iter: int = 1, e_factor: float = 0.5, **kwargs):
         """
-        Extract gradual patterns (GPs) from a numeric data source using the Ant Colony Optimization approach
-        (proposed in a published paper by Dickson Owuor). A GP is a set of gradual items (GI), and its quality is
-        measured by its computed support value. For example, given a data set with 3 columns (age, salary, cars) and 10
-        objects. A GP may take the form: {age+, salary-} with a support of 0.8. This implies that 8 out of 10 objects
+        Extract gradual patterns (GPs) from a numeric data source using the Ant Colony
+        Optimization approach
+        (proposed in a published paper by Dickson Owuor). A GP is a set of gradual items
+        (GI), and its quality is
+        measured by its computed support value. For example, given a data set with 3
+        columns (age, salary, cars) and 10
+        objects. A GP may take the form: {age+, salary-} with a support of 0.8. This
+        implies that 8 out of 10 objects
         have the values of column age 'increasing' and column 'salary' decreasing.
 
-        In this approach, it is assumed that every column can be converted into a gradual item (GI). If the GI is valid
-        (i.e., its computed support is greater than the minimum support threshold), then it is either increasing or
-        decreasing (+ or -), otherwise it is irrelevant (x). Therefore, a pheromone matrix is built using the number of
-        columns and the possible variations (increasing, decreasing, irrelevant) or (+, -, x). The algorithm starts by
-        randomly generating GP candidates using the pheromone matrix, each candidate is validated by confirming that
-        its computed support is greater or equal to the minimum support threshold. The valid GPs are used to update the
+        In this approach, it is assumed that every column can be converted into a
+        gradual item (GI). If the GI is valid
+        (i.e., its computed support is greater than the minimum support threshold), then
+        it is either increasing or
+        decreasing (+ or -), otherwise it is irrelevant (x). Therefore, a pheromone
+        matrix is built using the number of
+        columns and the possible variations (increasing, decreasing, irrelevant) or (+,
+        -, x). The algorithm starts by
+        randomly generating GP candidates using the pheromone matrix, each candidate is
+        validated by confirming that
+        its computed support is greater or equal to the minimum support threshold. The
+        valid GPs are used to update the
         pheromone levels and better candidates are generated.
 
-        :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
+        :param args: [required] data source path of Pandas DataFrame, [optional]
+            minimum-support, [optional] eq
         :param max_iter: [optional] maximum_iteration, default is 1
         :param e_factor: [optional] evaporation factor, default is 0.5
 
@@ -53,7 +64,7 @@ class AntGRAANK(BaseGrad):
         attr_keys = [GI.from_string(gi_str).to_string() for gi_str in gi_key_list]
 
         # 2. Initialize an empty d-matrix
-        n = self.attr_size  #len(attr_keys)
+        n = self.attr_size  # len(attr_keys)
         d = np.zeros((n, n), dtype=np.dtype("i8"))  # cumulative sum of all segments
         for i in range(n):
             for j in range(n):
@@ -69,7 +80,8 @@ class AntGRAANK(BaseGrad):
                     res_pw_mat: PairwiseMatrix = GP.perform_and(
                         gi_dict[attr_keys[i]], gi_dict[attr_keys[j]], n
                     )
-                    # Cumulative sum of all segments for 2x2 (all attributes) gradual items
+                    # Cumulative sum of all segments for 2x2 (all attributes) gradual
+                    # items
                     d[i][j] += np.sum(res_pw_mat.packed_bin_mat)
         # print(d)
         self._distance_matrix = d
@@ -81,7 +93,8 @@ class AntGRAANK(BaseGrad):
         Generates GP candidates based on the pheromone levels
 
         :param p_matrix: The pheromone matrix
-        :param exclude_target: Only accepts GP candidates that do not contain the target feature
+        :param exclude_target: Only accepts GP candidates that do not contain the target
+            feature
 
         :return: pheromone matrix (ndarray)
         """
@@ -102,9 +115,7 @@ class AntGRAANK(BaseGrad):
             try:
                 j = np.nonzero(cum_prob > r)[0][0]
                 gi_str: str = (
-                    self._attribute_keys[j]
-                    if self._attribute_keys is not None
-                    else ""
+                    self._attribute_keys[j] if self._attribute_keys is not None else ""
                 )
                 gi: GI = GI.from_string(gi_str)
                 # if not pattern.contains_attr(gi):
@@ -150,13 +161,16 @@ class AntGRAANK(BaseGrad):
         exclude_target: bool = False,
     ) -> dict:
         """
-        Applies ant-colony optimization algorithm and uses pheromone levels to find GP candidates. The candidates are
-        validated if their computed support is greater than or equal to the minimum support threshold specified by the
+        Applies ant-colony optimization algorithm and uses pheromone levels to find GP
+        candidates. The candidates are
+        validated if their computed support is greater than or equal to the minimum
+        support threshold specified by the
         user.
 
         :param target_col: Target feature's column index.
         :param time_data: (optional) time data for estimating time lag.
-        :param exclude_target: Only accept GP candidates that do not contain the target feature.
+        :param exclude_target: Only accept GP candidates that do not contain the target
+            feature.
 
         :return: A dict object
         """

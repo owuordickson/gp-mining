@@ -30,20 +30,25 @@ class TGrad(OrigGRAANK):
         **kwargs,
     ):
         """
-        TGrad is an algorithm used to extract temporal gradual patterns from numeric datasets. An algorithm for mining
+        TGrad is an algorithm used to extract temporal gradual patterns from numeric
+        datasets. An algorithm for mining
         temporal gradual patterns using fuzzy membership functions. It uses a technique
         published in: https://ieeexplore.ieee.org/abstract/document/8858883.
 
-        :param args: [required] a data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
+        :param args: [required] a data source path of Pandas DataFrame, [optional]
+            minimum-support, [optional] eq
         :param min_rep: [optional] minimum representativity value.
-        :param mf_shape: [optional] shape of the fuzzy membership function. Options are: 'triangular', 'trapezoidal', 'gaussian'.
-        :param clustering_algorithm: [optional] clustering algorithm for estimating the MFs. Options are: 'kmeans', 'fcm'.
-        :param inference_method: [optional] inference method for estimating the MFs. Options: 'mamdani', larsen'.
+        :param mf_shape: [optional] shape of the fuzzy membership function. Options are:
+            'triangular', 'trapezoidal', 'gaussian'.
+        :param clustering_algorithm: [optional] clustering algorithm for estimating the
+            MFs. Options are: 'kmeans', 'fcm'.
+        :param inference_method: [optional] inference method for estimating the MFs.
+            Options: 'mamdani', larsen'.
 
         """
         super().__init__(*args, **kwargs)
         self._search_algorithm: str = "apriori"
-        self._algorithm_max_iter: int|None = None
+        self._algorithm_max_iter: int | None = None
         self._compute_descriptors: bool = False
         self._min_rep: float = min_rep
         self._max_step: int = self.row_count - int(min_rep * self.row_count)
@@ -80,7 +85,7 @@ class TGrad(OrigGRAANK):
         self,
         target_col: int,
         search_algorithm: str = "apriori",
-        max_iteration: int|None = None,
+        max_iteration: int | None = None,
         compute_descriptors: bool = False,
         ignore_time: bool = False,
     ) -> dict:
@@ -220,10 +225,12 @@ class TGrad(OrigGRAANK):
         self, transformation_steps: dict, max_step: int
     ) -> tuple[np.ndarray | None, dict]:
         """
-        A method that transforms each attribute's data according to a specific transformation step and
+        A method that transforms each attribute's data according to a specific
+        transformation step and
         computes the corresponding time-delay values for that attribute.
 
-        :param transformation_steps: A dict that indicates column with its corresponding transformation step--{col1: step, ...,}.
+        :param transformation_steps: A dict that indicates column with its corresponding
+            transformation step--{col1: step, ...,}.
         :param max_step: Largest data transformation step.
         :return: Combined transformed dataset with corresponding time-delay values.
         """
@@ -268,7 +275,8 @@ class TGrad(OrigGRAANK):
                     # Get time-delay values
                     time_data[col_index] = get_time_data(step)[0:k]
 
-                    # Save step so that we do not repeat get_time_diffs for a similar step
+                    # Save step so that we do not repeat get_time_diffs for a similar
+                    # step
                     completed_steps.setdefault(step, []).append(col_index)
 
                     # for i in range(k):
@@ -277,7 +285,8 @@ class TGrad(OrigGRAANK):
                     #    else:
                     #        time_dict[i] = [time_diffs[i]]
                     # print(f"{time_diffs}\n")
-                    # WHAT ABOUT TIME DIFFERENCE/DELAY? It is different for every step!!!
+                    # WHAT ABOUT TIME DIFFERENCE/DELAY? It is different for every
+                    # step!!!
                 transformed_data = (
                     temp_col
                     if (transformed_data is None)
@@ -314,8 +323,10 @@ class TGrad(OrigGRAANK):
         self, time_delay_data: dict | None, transformed_data: np.ndarray | None = None
     ) -> list[TGP]:
         """
-        Uses apriori algorithm to find GP candidates based on the target-attribute. The candidates are validated if
-        their computed support is greater than or equal to the minimum support threshold specified by the user.
+        Uses apriori algorithm to find GP candidates based on the target-attribute. The
+        candidates are validated if
+        their computed support is greater than or equal to the minimum support threshold
+        specified by the user.
 
         :param time_delay_data: Time-delay values
         :param transformed_data: the transformed data.
@@ -362,7 +373,8 @@ class TGrad(OrigGRAANK):
 
     def get_time_diffs(self, step: int) -> tuple[dict, np.ndarray]:  # optimized
         """
-        A method that computes the difference between 2 timestamps separated by a specific transformation step.
+        A method that computes the difference between 2 timestamps separated by a
+        specific transformation step.
 
         :param step: Data transformation step.
         :return: Dict of time delay values
@@ -387,7 +399,10 @@ class TGrad(OrigGRAANK):
                     temp_stamp_2 = TGrad.get_timestamp(temp_2)
                     if (not temp_stamp_1) or (not temp_stamp_2):
                         # Unable to read time
-                        msg = f"Error: Time in row {i + 1} or row {i + step + 1} is not valid!"
+                        msg = (
+                            f"Error: Time in row {i + 1} or row "
+                            f"{i + step + 1} is not valid!"
+                        )
                         raise ValueError(msg)
                     else:
                         stamp_1 += temp_stamp_1
@@ -471,9 +486,9 @@ class TGrad(OrigGRAANK):
             return max(2, int(estimated))
 
         def estimate_n_clusters_silhouette(
-                max_clusters: int = 10,
-                sample_size: int = 2000,
-                random_state: int = 42,
+            max_clusters: int = 10,
+            sample_size: int = 2000,
+            random_state: int = 42,
         ) -> int:
             """Estimate the number of clusters using the silhouette coefficient.
 
@@ -531,7 +546,8 @@ class TGrad(OrigGRAANK):
             if max_k < 2:
                 return 2
 
-            # Silhouette scores require at least one observation from each cluster and therefore k <= n - 1.
+            # Silhouette scores require at least one observation from each cluster and
+            # therefore k <= n - 1.
             vals = values.reshape(-1, 1)
 
             # For large datasets, use a representative sample when evaluating
@@ -547,7 +563,6 @@ class TGrad(OrigGRAANK):
             best_score = -np.inf
 
             for k in range(2, max_k + 1):
-
                 # Efficient clustering for one-dimensional time-delay data.
                 model = MiniBatchKMeans(
                     n_clusters=k,
@@ -767,8 +782,8 @@ class TGrad(OrigGRAANK):
             "gaussian",
         }:
             raise ValueError(
-                f"Unsupported membership-function shape: {self.mf_shape!r}. Expected 'triangular', "
-                "'trapezoidal', or 'gaussian'."
+                f"Unsupported membership-function shape: {self.mf_shape!r}. "
+                "Expected 'triangular', 'trapezoidal', or 'gaussian'."
             )
 
         mf_params: list[dict] = []

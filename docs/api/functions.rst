@@ -1,7 +1,7 @@
 Function Reference
 ==================
 
-These are the available functions in the ``so4gp`` library.
+These utility functions are available directly from the ``so4gp`` package.
 
 .. toctree::
    :maxdepth: 1
@@ -9,3 +9,4 @@ These are the available functions in the ``so4gp`` library.
    base/analyzegps
    base/savedata
    base/spiderplot
+   base/classifyftgps

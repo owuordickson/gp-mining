@@ -4,7 +4,8 @@
 
 """Gradual Pattern Mining Tools for MCP.
 
-This module provides a collection of wrapper methods that expose 'so4gp' algorithms as Model Context Protocol (MCP)
+This module provides a collection of wrapper methods that expose 'so4gp' algorithms as
+Model Context Protocol (MCP)
 tools for mining sequential and temporal gradual patterns.
 
 Authors:
@@ -14,16 +15,15 @@ Credits:
     Thomas Runkler and Anne Laurent
 """
 
-
 import pandas as pd
 
-#from mcp.server.fastmcp import FastMCP
+# from mcp.server.fastmcp import FastMCP
 
 # 1. Initialize the FastMCP server instance
-#mcp = FastMCP("Gradual Pattern Miner")
+# mcp = FastMCP("Gradual Pattern Miner")
 
 
-#@mcp.tool()
+# @mcp.tool()
 def mine_gps(
     data: list[list[str | float | int]],
     min_support: float = 0.5,
@@ -43,7 +43,8 @@ def mine_gps(
             Subsequent rows contain numerical values. A date-time column may be
             included.
             Example 1: [["Age", "Salary"], [30, 3.5], [35, 2.6]].
-            Example 2: [["Date", "Age", "Salary"], ["2021-03", 30, 3.5], ["2021-04", 35, 2.6]].
+            Example 2: [["Date", "Age", "Salary"], ["2021-03", 30, 3.5], ["2021-04", 35,
+            2.6]].
         min_support: Minimum frequency threshold for a pattern (range: 0.0 to 1.0).
         target_column: Zero-based index of the target variable column.
         algorithm: A string name of the mining algorithm to execute.
@@ -139,7 +140,7 @@ def mine_gps(
         raise ValueError("Invalid algorithm!")
 
 
-#@mcp.tool()
+# @mcp.tool()
 def mine_tgps(
     data: list[list[str | float | int]],
     target_column: int,
@@ -182,7 +183,8 @@ def mine_tgps(
 
         Schema Fields:
         - Algorithm: Name of the executed temporal mining algorithm (e.g., 'TGradAMI').
-        - Minimum Representation: The active representativity filter configuration string.
+        - Minimum Representation: The active representativity filter configuration
+        string.
         - MI Minimum Error / MI Error: Mutual Information error evaluation statistics.
         - Target Column: String representation of the chosen target variable index.
         - Run-time: Total computational time taken for processing.
@@ -191,7 +193,8 @@ def mine_tgps(
         - Transformed Data: The resulting matrix after time-lag alignment is applied.
         - Patterns: Discovered cross-temporal trends followed by 6 structural metrics:
             1. sup: Proportion of dataset rows matching the temporal trend.
-            2. density: Ratio of concordant temporal index pairs vs total possible pairs.
+            2. density: Ratio of concordant temporal index pairs vs total possible
+            pairs.
             3. avg_dev: Mean absolute distance |i - j| across temporal pairs in W_g.
             4. dispersion: Standard deviation of |i - j| cross-temporal index distances.
             5. connect: Connected graph components calculated across time gaps.

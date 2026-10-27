@@ -37,7 +37,12 @@ def write_file(data, path, wr=True) -> None:
         pass
 
 
-def gp_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: list[str], grid_levels: int = 6) -> plt.Figure:
+def gp_spider_plot(
+    df_list: list[pd.DataFrame],
+    labels: list[str],
+    parameters: list[str],
+    grid_levels: int = 6,
+) -> plt.Figure:
     """
     Modified to accept a list of DataFrames (e.g., [stats_rain, stats_evi])
     and plot their mean/std comparisons.
@@ -64,16 +69,16 @@ def gp_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: l
         try:
             # Explicitly cast to float to support formatting specifiers
             num_value = float(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             # Fallback if a non-numeric object is passed
             return str(value)
 
         if abs(num_value) >= 1_000:
-            return f'{num_value / 1_000:.1f}K'
+            return f"{num_value / 1_000:.1f}K"
         elif abs(num_value) >= 10:
-            return f'{num_value:.1f}'
+            return f"{num_value:.1f}"
         else:
-            return f'{num_value:.2f}'
+            return f"{num_value:.2f}"
 
     def shift_value(val):
         return val - min_val
@@ -103,12 +108,26 @@ def gp_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: l
         shifted_level = shift_value(level)
         x_grid = shifted_level * np.cos(np.append(angles, angles[0]))
         y_grid = shifted_level * np.sin(np.append(angles, angles[0]))
-        ax.plot(x_grid, y_grid, 'k-', linewidth=0.5, alpha=0.2)
-        ax.text(shifted_level, 0.05, format_scale_value(level), ha='left', va='bottom', fontsize=7, alpha=0.4)
+        ax.plot(x_grid, y_grid, "k-", linewidth=0.5, alpha=0.2)
+        ax.text(
+            shifted_level,
+            0.05,
+            format_scale_value(level),
+            ha="left",
+            va="bottom",
+            fontsize=7,
+            alpha=0.4,
+        )
 
     # Draw spokes
     for angle in angles:
-        ax.plot([0, max_shifted * np.cos(angle)], [0, max_shifted * np.sin(angle)], 'k-', linewidth=0.5, alpha=0.3)
+        ax.plot(
+            [0, max_shifted * np.cos(angle)],
+            [0, max_shifted * np.sin(angle)],
+            "k-",
+            linewidth=0.5,
+            alpha=0.3,
+        )
 
     # --- Plot Data Groups ---
     for i, (avg, std) in enumerate(zip(df_avgs, df_stds)):
@@ -120,21 +139,26 @@ def gp_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: l
         y = values * np.sin(angles)
 
         # Plot Polygon
-        poly_line, = ax.plot(np.append(x, x[0]), np.append(y, y[0]), linewidth=2, label=labels[i])
+        (poly_line,) = ax.plot(
+            np.append(x, x[0]), np.append(y, y[0]), linewidth=2, label=labels[i]
+        )
         color = poly_line.get_color()
         ax.fill(x, y, alpha=0.1, color=color)
 
         # Perpendicular Error Bars
         dx_perp = -np.sin(angles)
         dy_perp = np.cos(angles)
-        err_scale = 1.5 # Adjusted for standard deviation visibility
+        err_scale = 1.5  # Adjusted for standard deviation visibility
 
         for j in range(len(angles)):
             xi, yi = x[j], y[j]
             err = errors[j] * err_scale
-            ax.plot([xi + err * dx_perp[j], xi - err * dx_perp[j]],
-                    [yi + err * dy_perp[j], yi - err * dy_perp[j]],
-                    color=color, linewidth=1)
+            ax.plot(
+                [xi + err * dx_perp[j], xi - err * dx_perp[j]],
+                [yi + err * dy_perp[j], yi - err * dy_perp[j]],
+                color=color,
+                linewidth=1,
+            )
 
     # --- Final Touches ---
     label_dist = max_shifted * 1.1
@@ -144,7 +168,7 @@ def gp_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: l
         check_angle = np.round(angle_deg, 0) % 360
 
         # Rename long parameters for clarity
-        param = param.replace('Avg. Deviation from Diagonal', 'Avg. Deviation')
+        param = param.replace("Avg. Deviation from Diagonal", "Avg. Deviation")
 
         # Tilt Logic:
         # Flip text if it's on the left side (between 90 and 270 degrees)
@@ -163,24 +187,28 @@ def gp_spider_plot(df_list: list[pd.DataFrame], labels: list[str], parameters: l
         y_pos = label_dist * np.sin(angle)
 
         ax.text(
-            x_pos, y_pos, param,
-            ha='center', va='center',
+            x_pos,
+            y_pos,
+            param,
+            ha="center",
+            va="center",
             fontsize=10,
-            fontweight='bold',
-            rotation=display_angle,      # Apply the tilt
-            rotation_mode='anchor'       # Ensures rotation is around the text center
+            fontweight="bold",
+            rotation=display_angle,  # Apply the tilt
+            rotation_mode="anchor",  # Ensures rotation is around the text center
         )
 
-    ax.set_aspect('equal')
-    ax.axis('off')
-    ax.set_title("GP Descriptors Spider Plot with Std. Dev. Error Bars", fontsize=14, pad=40)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.0, 1.0))
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_title(
+        "GP Descriptors Spider Plot with Std. Dev. Error Bars", fontsize=14, pad=40
+    )
+    ax.legend(loc="upper right", bbox_to_anchor=(1.0, 1.0))
 
     return fig
 
 
-
-def classify_ftgps(lst_test_data, lst_ground_truth,threshold=0.5) -> dict:
+def classify_ftgps(lst_test_data, lst_ground_truth, threshold=0.5) -> dict:
     """
     Classify FTGPs by comparing a test dataset against a reference dataset.
 
@@ -201,9 +229,9 @@ def classify_ftgps(lst_test_data, lst_ground_truth,threshold=0.5) -> dict:
     lst_ground_truth : list
         FTGPs extracted from the reference (proxy ground-truth) dataset.
 
-    threshold : float, default=0.5
+    threshold : float, optional
         Support threshold used to distinguish supported and unsupported
-        FTGPs.
+        FTGPs. Defaults to 0.5.
 
     Returns
     -------
@@ -221,14 +249,11 @@ def classify_ftgps(lst_test_data, lst_ground_truth,threshold=0.5) -> dict:
     # Step 1: Match test FTGPs to reference FTGPs.
     # ------------------------------------------------------------
     for i, test_pat in enumerate(lst_test_data):
-
         for j, gt_pat in enumerate(lst_ground_truth):
-
             if i in matched_test or j in matched_ground_truth:
                 continue
 
             if test_pat.is_similar_to(gt_pat):
-
                 test_support = test_pat.support
                 gt_support = gt_pat.support
 
@@ -254,7 +279,6 @@ def classify_ftgps(lst_test_data, lst_ground_truth,threshold=0.5) -> dict:
     # Their reference support is therefore zero.
     # ------------------------------------------------------------
     for i, test_pat in enumerate(lst_test_data):
-
         if i in matched_test:
             continue
 
@@ -268,7 +292,6 @@ def classify_ftgps(lst_test_data, lst_ground_truth,threshold=0.5) -> dict:
     # Their test support is therefore zero.
     # ------------------------------------------------------------
     for j, gt_pat in enumerate(lst_ground_truth):
-
         if j in matched_ground_truth:
             continue
 

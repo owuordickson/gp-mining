@@ -15,26 +15,44 @@ from .base.graank_base import BaseGrad
 class ClusterGP(BaseGrad):
     def __init__(self, *args, e_prob: float = 0.5, max_iter: int = 10, **kwargs):
         """
-        CluDataGP stands for Clustering DataGP. It is a class that inherits the DataGP class to create data-gp
-        objects for the clustering approach. This class inherits the DataGP class which is used to create data-gp objects.
-        The classical data-gp object is meant to store all the parameters required by GP algorithms to extract gradual
-        patterns (GP). It takes a numeric file (in CSV format) as input and converts it into an object whose attributes are
+        CluDataGP stands for Clustering DataGP. It is a class that inherits the DataGP
+        class to create data-gp
+        objects for the clustering approach. This class inherits the DataGP class which
+        is used to create data-gp objects.
+        The classical data-gp object is meant to store all the parameters required by GP
+        algorithms to extract gradual
+        patterns (GP). It takes a numeric file (in CSV format) as input and converts it
+        into an object whose attributes are
         used by algorithms to extract GPs.
 
-        A class for creating data-gp objects for the clustering approach. This class inherits the DataGP class which is
-        used to create data-gp objects. This class adds the parameters required for clustering gradual items to the
+        A class for creating data-gp objects for the clustering approach. This class
+        inherits the DataGP class which is
+        used to create data-gp objects. This class adds the parameters required for
+        clustering gradual items to the
         data-gp object.
 
-        :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
+        :param args: [required] data source path of Pandas DataFrame, [optional]
+            minimum-support, [optional] eq
         :param e_prob: [optional] erasure probability, the default is 0.5
-        :param max_iter: [optional] maximum iteration for score vector estimation, the default is 10
+        :param max_iter: [optional] maximum iteration for score vector estimation, the
+            default is 10
 
         >>> import pandas
         >>> from so4gp.algorithms import ClusterGP
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
+        >>> dummy_data = [
+        ...     [30, 3, 1, 10],
+        ...     [35, 2, 2, 8],
+        ...     [40, 4, 2, 7],
+        ...     [50, 1, 1, 6],
+        ...     [52, 7, 1, 2],
+        ... ]
+        >>> dummy_df = pandas.DataFrame(
+        ...     dummy_data, columns=["Age", "Salary", "Cars", "Expenses"]
+        ... )
         >>>
-        >>> mine_obj = ClusterGP(data_source=dummy_df, min_sup=0.5, max_iter=3, e_prob=0.5)
+        >>> mine_obj = ClusterGP(
+        ...     data_source=dummy_df, min_sup=0.5, max_iter=3, e_prob=0.5
+        ... )
         >>> result_json = mine_obj.discover()
         >>> print(result_json) # doctest: +SKIP
         """
@@ -50,10 +68,12 @@ class ClusterGP(BaseGrad):
 
     def _construct_matrices(self, e: float = 0):
         """
-        Generates all the gradual items and constructs: (1) net-win matrix, (2) cumulative wins, (3) pairwise objects.
+        Generates all the gradual items and constructs: (1) net-win matrix, (2)
+        cumulative wins, (3) pairwise objects.
 
         :param e: [required] erasure probability
-        :return: List of gradual items, net-win matrix, cumulative win matrix, selected pairwise (ij) objects
+        :return: List of gradual items, net-win matrix, cumulative win matrix, selected
+            pairwise (ij) objects
         """
 
         n = self.row_count
@@ -133,8 +153,10 @@ class ClusterGP(BaseGrad):
         """
         A function that infers GPs from clusters of gradual items.
 
-        :param clusters: [required] groups of gradual items clustered through K-MEANS algorithm
-        :param exclude_target: Only accept GP candidates that do not contain the target feature.
+        :param clusters: [required] groups of gradual items clustered through K-MEANS
+            algorithm
+        :param exclude_target: Only accept GP candidates that do not contain the target
+            feature.
         :param time_data: (optional) time data for estimating time lag.
 
         :return: True if GPs are inferred successfully, False otherwise
@@ -192,7 +214,8 @@ class ClusterGP(BaseGrad):
         def estimate_support(score_vecs: list) -> float:
             """Description
 
-            A function that estimates the frequency support of a GP based on its score vector.
+            A function that estimates the frequency support of a GP based on its score
+            vector.
 
             :param score_vecs: Score vector
             :return: Estimated support (float)
@@ -240,11 +263,15 @@ class ClusterGP(BaseGrad):
                     # fuzzy_mf = time_data["tri_mf"]
                     gp_set = {gi.to_string() for gi in cluster_gis}
                     np.ones([self.row_count, self.row_count], dtype=bool)
-                    selected_rows = np.ndarray([])  # GP.get_selected_rows(packed_bit_mat, self.row_count, )
+                    selected_rows = np.ndarray(
+                        []
+                    )  # GP.get_selected_rows(packed_bit_mat, self.row_count, )
                     time_lag = TimeDelay.approx_time_lag(
                         selected_rows, time_data, gp_set=gp_set
                     )
-                    # time_lag = TimeDelay.approx_time_lag(bin_data, t_data, gp_set=gp_set, tri_mf_data=fuzzy_mf)
+                    # time_lag = TimeDelay.approx_time_lag(
+                    #     bin_data, t_data, gp_set=gp_set, tri_mf_data=fuzzy_mf
+                    # )
 
                 # 5. Infer GPs from the clusters
                 if est_sup >= self.thd_supp:
@@ -274,14 +301,18 @@ class ClusterGP(BaseGrad):
         exclude_target: bool = False,
     ) -> dict:
         """
-        Applies spectral clustering to determine which gradual items belong to the same group based on the similarity
-        of net-win vectors. Gradual items in the same cluster should have almost the same score vector. The candidates
-        are validated if their computed support is greater than or equal to the minimum support threshold specified by
+        Applies spectral clustering to determine which gradual items belong to the same
+        group based on the similarity
+        of net-win vectors. Gradual items in the same cluster should have almost the
+        same score vector. The candidates
+        are validated if their computed support is greater than or equal to the minimum
+        support threshold specified by
         the user.
 
         :param target_col: Target feature's column index.
         :param time_data: (optional) time data for estimating time lag.
-        :param exclude_target: Only accept GP candidates that do not contain the target feature.
+        :param exclude_target: Only accept GP candidates that do not contain the target
+            feature.
 
         :return: A dict object
         """

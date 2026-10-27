@@ -3,9 +3,9 @@ layout: "contents"
 firstpage:
 ---
 
-# Introduction
+# Quick Start
 
-A **Gradual Pattern (GP)** is a co-occurring set of gradual items (GI) that captures covariations between attributes. A pattern's quality is measured quantitatively by its computed **support value**.
+A **gradual item (GI)** pairs an attribute with a direction, such as increasing `Age` (`Age+`) or decreasing `Salary` (`Salary-`). A **gradual pattern (GP)** combines GIs whose directions hold together across pairs of observations. Its **support** is the fraction of all unordered observation pairs that satisfy those directions in a consistent orientation.
 
 ## Illustrative Example
 Consider a dataset containing 6 objects across 3 features (`Age`, `Salary`, and `Cars`):
@@ -21,29 +21,21 @@ Consider a dataset containing 6 objects across 3 features (`Age`, `Salary`, and 
 
 An extracted GP might take the following form:
 
-> **{ Age<sup>+</sup>, Salary<sup>-</sup> }** &nbsp;&nbsp;&nbsp;&nbsp; `[Support ≈ 0.83]`
+> **{ Age<sup>+</sup>, Salary<sup>-</sup> }** &nbsp;&nbsp;&nbsp;&nbsp; `[Support ≈ 0.933]`
 
-This expression reveals that in **83.3% of the dataset** (5 out of 6 objects), a strict increase in `Age` (<sup>+</sup>) strongly correlates with a simultaneous decrease in `Salary` (<sup>-</sup>). 
+This pattern holds for **14 of the 15 unordered observation pairs** (approximately 93.3%): orienting each pair toward increasing `Age` also gives decreasing `Salary`.
 
-### Step-by-Step Validation:
-* Comparing o<sub>1</sub> → o<sub>2</sub>: Age increases (23 → 27), Salary decreases (52k → 51k). **(Valid)**
-* Comparing o<sub>2</sub> → o<sub>3</sub>: Age increases (27 → 31), Salary decreases (51k → 50k). **(Valid)**
-* Comparing o<sub>3</sub> → o<sub>4</sub>: Age increases (31 → 36), Salary decreases (50k → 48k). **(Valid)**
-* Comparing o<sub>4</sub> → o<sub>5</sub>: Age increases (36 → 40), Salary decreases (48k → 47k). **(Valid)**
-* Comparing o<sub>5</sub> → o<sub>6</sub>: Age stays the same (40 → 40), but Salary decreases (47k → 45k). **(Invalid)**
-  
-  Depending on your variation definition (strict vs. non-strict inequality), this pairwise comparison is (strictly) **Invalid**.
+### Checking the support
 
+There are `6 × 5 / 2 = 15` unordered pairs, including nonadjacent observations. For example, both o<sub>1</sub> → o<sub>2</sub> and o<sub>1</sub> → o<sub>6</sub> satisfy the pattern. The only exception is o<sub>5</sub> → o<sub>6</sub>: `Age` stays at 40 while `Salary` decreases. With strict comparisons (`eq=False`, the default), this tie does not satisfy `Age+`, so the support is `14 / 15 ≈ 0.933`.
 
-
-# Quick Start
 
 ## Installation
 
-`so4gp` is available on **PyPI**. Install the latest stable release using:
+`so4gp` requires **Python 3.14 or later** and is available on **PyPI**. Install the latest stable release using:
 
 ```shell
-pip install so4gp
+python -m pip install so4gp
 ```
 
 You can verify the installation by importing the package:
@@ -116,6 +108,7 @@ print(results)
 
 The `discover()` method returns a JSON-formatted string containing the mined
 gradual patterns, their support values, and additional metadata.
+Here, `min_sup=0.5` retains patterns supported by at least half of all unordered observation pairs.
 
 - **Choosing a Mining Algorithm:**
 
@@ -141,7 +134,7 @@ gradual patterns, their support values, and additional metadata.
 #### Example 02: Temporal Gradual Pattern Mining
 
 The following example discovers fuzzy temporal gradual patterns using the
-default Mutual Information (AMI) transformation algorithm.
+default Average Mutual Information (AMI) transformation algorithm.
 
 ```python
 import pandas as pd
@@ -169,12 +162,14 @@ results = miner_tgp.discover(target_col=1)
 print(results)
 ```
 
+`target_col=1` selects `Age` using zero-based column positions: `Date` is column 0 and `Age` is column 1. The target remains the reference attribute while the other attributes are shifted. `min_rep=0.5` sets the minimum fraction of rows retained after a temporal shift; larger shifts leave fewer aligned observations. The AMI transformation estimates which shifts to use.
+
 ---
 
 `TGRAANK` supports multiple temporal transformation algorithms.
 
 ```python
-results = miner_tgp.discover(transformations="ami")
+results = miner_tgp.discover(target_col=1, transformations="ami")
 ```
 
 Supported transformation algorithms include:
@@ -186,23 +181,23 @@ Supported transformation algorithms include:
 
 ---
 
-`TGRAANK` also allows causal discovery using the `discover_causal_relationships` method.
+Use `TGRAANK.discover_causal_relationships()` to score candidate temporal causal relationships:
 
 ```python
 res_df = miner_tgp.discover_causal_relationships(max_lag=3)
 ```
 
+These scores require causal assumptions and validation. See the [causal discovery tutorial](../tutorials/causal_discovery.md) for a controlled example and guidance on interpretation.
 
 ## Learn More
 
-The complete documentation includes:
+Continue with a practical tutorial:
 
-- **Quick Start** — installation and introductory examples.
-- **Algorithm Reference** — algorithm descriptions and usage.
-- **API Reference** — complete documentation of all public classes, methods, and functions.
-- **Examples** — practical mining workflows and advanced use cases.
+- [Feature selection using GPs](../tutorials/feature_selection.md)
+- [Studying joint effects with GP descriptors](../tutorials/timeseries_analysis.md)
+- [Causal discovery using FTGPs](../tutorials/causal_discovery.md)
 
-Refer to the **Algorithm Reference** for detailed descriptions of each mining algorithm and the **API Reference** for complete parameter documentation.
+Use the [Algorithm Reference](../api/algorithms.rst), [Class Reference](../api/classes.rst), and [Function Reference](../api/functions.rst) for parameter and return-value documentation. More detailed workflows are available in the [example notebooks](https://github.com/owuordickson/gp-mining/tree/main/examples).
 
 ## References
 * Owuor, D., Runkler T., Laurent A., Menya E., Orero J (2021), Ant Colony Optimization for Mining Gradual Patterns. International Journal of Machine Learning and Cybernetics. [https://doi.org/10.1007/s13042-021-01390-w](https://doi.org/10.1007/s13042-021-01390-w)

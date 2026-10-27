@@ -11,8 +11,6 @@ import pandas
 
 from .base.tgrad import TGrad
 
-# from .. import get_num_cores
-
 
 class TGRAANK:
     """
@@ -91,14 +89,16 @@ class TGRAANK:
                 * ``gaussian`` — gaussian membership function.
 
             clustering_algorithm:
-                The clustering algorithm to use to estimate and build the membership functions
+                The clustering algorithm to use to estimate and build the membership
+                functions
                 according to the shape selected.
 
                 * ``kmeans`` — (default) the KMeans algorithm.
                 * ``fcm`` — The fuzzy-cluster-cmeans algorithm.
 
             inference_method:
-                The inference method to use to evaluate the fuzzy rules to be aggregated and
+                The inference method to use to evaluate the fuzzy rules to be aggregated
+                and
                 defuzzified to estimate the time-delay.
 
                 * ``mamdani`` — (default) The Mamdani inference.
@@ -130,8 +130,8 @@ class TGRAANK:
             ... )
             >>>
             >>> # device = "cuda" if torch.cuda.is_available() else "cpu"
-            >>> miner = TGRAANK(df, target_col=1, device='cpu')
-            >>> result = miner.discover()
+            >>> miner = TGRAANK(df, device='cpu')
+            >>> result = miner.discover(target_col=1)
         """
         self._data_src = data_source
         self._min_supp: float = min_sup
@@ -180,8 +180,10 @@ class TGRAANK:
             ``all``:
                 Classical TGRAANK algorithm generating all possible transformations.
 
-                Performs a full transformation of the dataset yielding all possible transformations up to the maximum
-                transformation step specified by `min_rep`. Then it applies fuzzy membership functions to estimate
+                Performs a full transformation of the dataset yielding all possible
+                transformations up to the maximum
+                transformation step specified by `min_rep`. Then it applies fuzzy
+                membership functions to estimate
                 temporal lags before mining temporal gradual patterns.
 
             ``ami``:
@@ -196,13 +198,15 @@ class TGRAANK:
                 Optionally, clustering can be used to reduce the number of
                 candidate transformations that must be evaluated.
 
-        The gradual pattern mining algorithm can use the classical APRIORI (GRAANK) algorithm or
+        The gradual pattern mining algorithm can use the classical APRIORI (GRAANK)
+        algorithm or
         one of several metaheuristic and alternative search strategies.
 
         Supported search algorithms are:
 
             ``apriori``:
-                Classical GRAANK uses APRIORI level-wise search for exhaustive gradual pattern
+                Classical GRAANK uses APRIORI level-wise search for exhaustive gradual
+                pattern
                 candidate generation.
 
             ``ga``:
@@ -263,9 +267,11 @@ class TGRAANK:
                 Intended for benchmarking and experimental studies.
 
             compute_causality:
-                Whether to compute causal relations between attributes based on the valid extracted gradual pattern.
+                Whether to compute causal relations between attributes based on the
+                valid extracted gradual pattern.
 
-                The target column/attribute is taken as the "cause" and the other attributes the "effects".
+                The target column/attribute is taken as the "cause" and the other
+                attributes the "effects".
 
             save_results:
                 Whether to generate CSV output files.
@@ -284,10 +290,12 @@ class TGRAANK:
                 **TGRAANK-AMI (`transformations="ami"`):**
 
                 * **use_clustering** (*bool*, default=False):
-                  Use a clustering algorithm (KMeans) to estimate the best time-delay value.
+                  Use a clustering algorithm (KMeans) to estimate the best time-delay
+                  value.
 
                 * **error_margin** (*float*, default=0.0001):
-                  Maximum acceptable mutual information difference between the transformed and original datasets.
+                  Maximum acceptable mutual information difference between the
+                  transformed and original datasets.
 
         Returns:
             JSON-formatted string containing the discovered temporal gradual
@@ -383,46 +391,35 @@ class TGRAANK:
 
     def discover_causal_relationships(self, max_lag: int = 0) -> pandas.DataFrame:
         """
-            Compute the temporal dependency matrix that identifies the causal relationship between all features.
+        Score candidate temporal causal relationships between numerical attributes.
 
-            Each feature is treated as the target attribute in turn, and temporal
-            gradual patterns are mined using the selected transformation algorithm.
-            For every discovered causal relationship, the support value is accumulated
-            into an adjacency matrix representing the strength of the dependency from
-            each cause feature to each effect feature.
+        Each feature is treated as the target in turn. Temporal gradual patterns
+        are mined with the classical transformation and APRIORI search. The largest
+        support is retained for each ordered variable pair within a target's
+        results, then accumulated in the score matrix.
 
-            The Genetic GRAANK search is configured with a maximum of three
-        optimization iterations for each target feature. This search algorithm is the
-        fastest for mining gradual patterns with a large number of features.
+        Args:
+            max_lag:
+                Sets the minimum representativity to ``(n - max_lag) / n`` when
+                positive, where ``n`` is the observation count. The transformation
+                range has an exclusive upper bound: ``max_lag=2`` visits the
+                one-row shift. Zero retains the current representativity.
 
-            The resulting matrix is returned as a ``pandas.DataFrame`` whose:
+        Returns:
+            pandas.DataFrame:
+                A square score matrix indexed by feature names. Rows are effects,
+                columns are causes, and cell ``(i, j)`` sums support for candidate
+                relationships from feature ``j`` to feature ``i``.
 
-            - Rows represent **effect** variables.
-            - Columns represent **cause** variables.
-            - Cell ``(i, j)`` contains the cumulative support of all temporal gradual
-              patterns indicating that feature ``j`` influences feature ``i``.
+        Raises:
+            ValueError:
+                If ``max_lag`` is negative or at least the observation count.
 
-            Args:
-                max_lag:
-                    Maximum temporal lag (transformation step) considered during
-                    temporal pattern mining. This value determines the minimum
-                    representativity threshold used when generating transformed
-                    datasets.
-
-            Returns:
-                pandas.DataFrame:
-                    A square dependency matrix indexed by feature names, where rows
-                    correspond to effects and columns correspond to causes.
-
-            Raises:
-                ValueError:
-                    If ``max_lag`` is negative or greater than or equal to the number
-                    of observations in the dataset.
-
-            Notes:
-                Dependency strengths are obtained by summing the support values of
-                all temporal gradual patterns supporting the same cause–effect
-                relationship.
+        Notes:
+            These scores summarize temporal gradual associations, rather than
+            causal probabilities. Causal interpretation requires assumptions about
+            confounding, temporal order, and the selected lag structure. See the
+            :doc:`causal discovery tutorial </tutorials/causal_discovery>`.
         """
 
         if not 0 <= max_lag < self._mine_obj.row_count:

@@ -1,4 +1,4 @@
-Analyze GPs
-===========
+GP Descriptor Spider Plot
+=========================
 
-.. automethod:: so4gp.utils.gp_spider_plot
+.. autofunction:: so4gp.gp_spider_plot

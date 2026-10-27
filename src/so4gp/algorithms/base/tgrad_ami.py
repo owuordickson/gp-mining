@@ -14,19 +14,29 @@ from .tgrad import TGrad
 class TGradAMI(TGrad):
     def __init__(self, *args, **kwargs):
         """
-        Algorithm for estimating time-lag using Average Mutual Information (AMI) and KMeans clustering which is
-        extended to mining gradual patterns. The average mutual information I(X; Y) is a measure of the “information”
+        Algorithm for estimating time-lag using Average Mutual Information (AMI) and
+        KMeans clustering which is
+        extended to mining gradual patterns. The average mutual information I(X; Y) is a
+        measure of the “information”
         amount that the random variables X and Y provide about one another.
 
-        This algorithm extends the work published in: https://ieeexplore.ieee.org/abstract/document/8858883. TGradAMI
-        is an algorithm that improves the classical TGrad algorithm for extracting more accurate temporal gradual
-        patterns.  It computes Mutual Information (MI) with respect to target-column with original dataset to get
-        the actual relationship between variables: by computing MI for every possible time-delay and if the transformed
-        dataset has the same almost identical MI to the original dataset, then it selects that as the best time-delay.
-        Instead of min-representativity value, the algorithm relies on the error-margin between MIs.
+        This algorithm extends the work published in:
+        https://ieeexplore.ieee.org/abstract/document/8858883. TGradAMI
+        is an algorithm that improves the classical TGrad algorithm for extracting more
+        accurate temporal gradual
+        patterns.  It computes Mutual Information (MI) with respect to target-column
+        with original dataset to get
+        the actual relationship between variables: by computing MI for every possible
+        time-delay and if the transformed
+        dataset has the same almost identical MI to the original dataset, then it
+        selects that as the best time-delay.
+        Instead of min-representativity value, the algorithm relies on the error-margin
+        between MIs.
 
-        :param args: [required] data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
-        :param kwargs: [optional] minimum representativity, [optional] MF shape, [optional] clustering algorithm,
+        :param args: [required] data source path of Pandas DataFrame, [optional]
+            minimum-support, [optional] eq
+        :param kwargs: [optional] minimum representativity, [optional] MF shape,
+            [optional] clustering algorithm,
         [optional] inference method.
 
         """
@@ -76,7 +86,8 @@ class TGradAMI(TGrad):
 
         Returns:
             A dictionary mapping each feature column index to its selected
-            transformation step (estimated time delay) and the maximum transformation step.
+            transformation step (estimated time delay) and the maximum transformation
+            step.
 
         Notes:
             Only transformed datasets satisfying the minimum representativity
@@ -123,7 +134,8 @@ class TGradAMI(TGrad):
         # 3. Standardize MI array
         mi_info_arr[mi_info_arr == 0] = -1
 
-        # 4. Identify steps (for every feature w.r.t. target) with minimum error from initial MI
+        # 4. Identify steps (for every feature w.r.t. target) with minimum error from
+        # initial MI
         squared_diff = np.square(np.subtract(mi_info_arr, init_mi_info))
         mse_arr = np.sqrt(squared_diff)
         # mse_arr[mse_arr < self.error_margin] = -1
@@ -141,7 +153,7 @@ class TGradAMI(TGrad):
         self,
         target_col: int,
         search_algorithm: str = "apriori",
-        max_iteration: int|None = None,
+        max_iteration: int | None = None,
         compute_descriptors: bool = False,
         transformation_steps: dict | None = None,
         ignore_time: bool = False,
@@ -149,22 +161,31 @@ class TGradAMI(TGrad):
         eval_mode: bool = False,
     ) -> dict:
         """
-        A method that applies mutual information concept, clustering, and hill-climbing algorithm to find the best data
-        transformation that maintains MI and estimate the best time-delay value of the mined Fuzzy Temporal Gradual
+        A method that applies mutual information concept, clustering, and hill-climbing
+        algorithm to find the best data
+        transformation that maintains MI and estimate the best time-delay value of the
+        mined Fuzzy Temporal Gradual
         Patterns (FTGPs).
 
-        :param target_col: [required] Index of the target attribute/feature/column. Temporal transformations are
+        :param target_col: [required] Index of the target attribute/feature/column.
+            Temporal transformations are
         estimated relative to this attribute.
-        :param search_algorithm: Gradual pattern mining algorithm to apply to the transformed dataset. Supported values
-        are ``apriori``, ``ga``, ``aco``, ``pso``, ``hc``, ``random``, and ``clustergp``. Defaults to ``"apriori"``.
+        :param search_algorithm: Gradual pattern mining algorithm to apply to the
+            transformed dataset. Supported values
+        are ``apriori``, ``ga``, ``aco``, ``pso``, ``hc``, ``random``, and
+        ``clustergp``. Defaults to ``"apriori"``.
         :param max_iteration: Maximum number of iterations to run the search algorithm.
-        :param compute_descriptors: If ``True``, compute descriptors for the mined gradual patterns. Defaults to ``False``.
-        :param transformation_steps: Data transformation steps (used to override the computed transformation steps).
-        :param ignore_time: Mine TGPs but skip the calculation and estimation of time delay.
+        :param compute_descriptors: If ``True``, compute descriptors for the mined
+            gradual patterns. Defaults to ``False``.
+        :param transformation_steps: Data transformation steps (used to override the
+            computed transformation steps).
+        :param ignore_time: Mine TGPs but skip the calculation and estimation of time
+            delay.
         :param error_margin: [optional] minimum Mutual Information error margin.
         :param eval_mode: Run algorithm in evaluation mode.
 
-        :return: List of (FTGPs as DICT object) or (FTGPs and evaluation data as a Python dict) when executed in evaluation mode.
+        :return: List of (FTGPs as DICT object) or (FTGPs and evaluation data as a
+            Python dict) when executed in evaluation mode.
         """
 
         start = time.time()
@@ -182,7 +203,7 @@ class TGradAMI(TGrad):
         else:
             max_step = 0
             for v in transformation_steps.values():
-                max_step = max(max_step, v)
+                max_step: int = max(max_step, v)
 
         # 3. Discover temporal-GPs from time-delayed data
         lst_tgp = self._safe_transform_and_mine(
@@ -203,14 +224,22 @@ class TGradAMI(TGrad):
                 title_row.append(txt)
                 if (col != self.target_col) and (col not in self.time_cols):
                     time_title.append(txt)
-            transformed_data, time_data = self.transform_data(transformation_steps, max_step)
+            transformed_data, time_data = self.transform_data(
+                transformation_steps, max_step
+            )
             str_time_data = {"".join(self.titles[k]): v for k, v in time_data.items()}
             self._transformation_data = {
                 "Patterns": self.display_patterns,
                 "Transformation Steps": transformation_steps,
-                'Time Data': str_time_data,
-                'Transformed Data': np.vstack(
-                    (np.array(title_row), transformed_data.T if transformed_data is not None else np.array([]))),
+                "Time Data": str_time_data,
+                "Transformed Data": np.vstack(
+                    (
+                        np.array(title_row),
+                        transformed_data.T
+                        if transformed_data is not None
+                        else np.array([]),
+                    )
+                ),
             }
 
         duration = time.time() - start
