@@ -1,6 +1,7 @@
 Class Reference
 ===============
 
+These are the available classes in the ``so4gp`` library.
 
 .. toctree::
    :maxdepth: 1

@@ -1,6 +1,7 @@
 Function Reference
 ==================
 
+These are the available functions in the ``so4gp`` library.
 
 .. toctree::
    :maxdepth: 1
