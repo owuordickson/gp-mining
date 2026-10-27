@@ -2,7 +2,10 @@
   "scope": "Current notebook comparison displays refreshed from the completed Disjoint-10 scoring artifact; other saved results retained; no mining, rescoring or full notebook execution performed",
   "source_notebook": {
     "filepath": "benchmarks/benchmarking.ipynb",
-    "sha256": "3d2b7e67d1f5047e169b46af3bd923140f1e9212a72c415619536e848d0416c1"
+    "sha256": "9b5d0d814d3774cd4805fce4ab302fd387f3cb375018f5d2b8ec8fdd5afd6d4a",
+    "hash_bytes": "LF-normalized notebook file bytes",
+    "pre_format_sha256": "3d2b7e67d1f5047e169b46af3bd923140f1e9212a72c415619536e848d0416c1",
+    "formatting_note": "Ruff formatting only; all saved outputs, execution counts, notebook metadata and benchmark values unchanged. No benchmark execution or rescoring."
   },
   "leaderboard": {
     "url": "https://raw.githubusercontent.com/CausalRivers/CausalRivers.github.io/22ffa6bdc7cb3ac6b1947c743677c35a473aa459/scoring.csv",

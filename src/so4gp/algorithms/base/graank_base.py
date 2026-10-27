@@ -155,7 +155,7 @@ class BaseGrad(DataGP):
         return self._target_col
 
     @target_col.setter
-    def target_col(self, tgt_col: int|None):
+    def target_col(self, tgt_col: int | None):
         if tgt_col is None:
             return
 
@@ -249,7 +249,8 @@ class BaseGrad(DataGP):
         Computes the fitness of a GP
 
         :param candidate: a candidate GP in the search space
-        :param exclude_target: (optional) if True, candidates containing the target feature are rejected
+        :param exclude_target: (optional) if True, candidates containing the target
+            feature are rejected
         :param time_data: (optional) time data for estimating time lag
         """
 
@@ -370,7 +371,8 @@ class BaseGrad(DataGP):
 
         def apply_bound() -> None:
             """
-            Modifies x (a numeric value) if it exceeds the lower/upper bound of the numeric search space.
+            Modifies x (a numeric value) if it exceeds the lower/upper bound of the
+            numeric search space.
             :return: None
             """
             candidate.position = float(
@@ -387,7 +389,8 @@ class BaseGrad(DataGP):
             )
 
         apply_bound()
-        # Update: What about duplicate candidate (position already exists in the search-space)?
+        # Update: What about duplicate candidate (position already exists in the
+        # search-space)?
 
         self._cost_function(
             candidate, exclude_target=exclude_target, time_data=time_data

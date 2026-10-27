@@ -1,15 +1,15 @@
 # Configuration file for the Sphinx documentation builder.
 
-#import os
-#import sys
+# import os
+# import sys
 import time
 
 # -- Path setup --------------------------------------------------------------
 
 # Add project root so autodoc can find the package
-#try:
+# try:
 #    import so4gp
-#except ImportError:
+# except ImportError:
 #    sys.path.insert(0, os.path.abspath("../src"))
 
 # -- Project information -----------------------------------------------------
@@ -99,7 +99,8 @@ html_baseurl = "https://so4gp.readthedocs.io/"
 html_copy_source = False
 
 html_theme_options = {
-    # "description": "A collection of gradual pattern mining algorithms and tools",  ## Not supported by Furo
+    # "description": "A collection of gradual pattern mining algorithms and tools",  ##
+    # Not supported by Furo
     "source_repository": "https://github.com/owuordickson/gp-mining",
     "source_branch": "main",
     "source_directory": "docs/",

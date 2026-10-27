@@ -18,7 +18,8 @@ from .cluster_gp import ClusterGP
 
 class GradPFS:
     """
-    GradPFS is a filter-based algorithm for performing univariate or/and multivariate feature selection through gradual
+    GradPFS is a filter-based algorithm for performing univariate or/and multivariate
+    feature selection through gradual
     patterns for regression tasks. This algorithm is published in:
     """
 
@@ -29,19 +30,30 @@ class GradPFS:
         target_col: int | None = None,
     ):
         """
-        An algorithm based on the filter method for performing univariate or/and multivariate feature selection through
-        gradual patterns for regression tasks (not suitable for classification tasks). The results are returned as a
+        An algorithm based on the filter method for performing univariate or/and
+        multivariate feature selection through
+        gradual patterns for regression tasks (not suitable for classification tasks).
+        The results are returned as a
         Pandas DataFrame.
 
         :param data_src: [required] the data in a CSV file or Pandas DataFrame.
-        :param min_score: [optional] user-specified minimum correlation score for filtering redundant features, default=0.75.
+        :param min_score: [optional] user-specified minimum correlation score for
+            filtering redundant features, default=0.75.
         :param target_col: [optional] user-specified target column index, default=None.
 
         >>> import pandas
         >>> from so4gp.algorithms import GradPFS
         >>>
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
+        >>> dummy_data = [
+        ...     [30, 3, 1, 10],
+        ...     [35, 2, 2, 8],
+        ...     [40, 4, 2, 7],
+        ...     [50, 1, 1, 6],
+        ...     [52, 7, 1, 2],
+        ... ]
+        >>> dummy_df = pandas.DataFrame(
+        ...     dummy_data, columns=["Age", "Salary", "Cars", "Expenses"]
+        ... )
         >>>
         >>> fs_obj = GradPFS(data_src=dummy_df)
         >>> gp_cor = fs_obj.univariate_fs()
@@ -73,9 +85,12 @@ class GradPFS:
 
     def univariate_fs(self) -> pd.DataFrame:
         """
-        A method that runs the univariate GradPFS feature selection algorithm. The method that calculates the gradual
-        correlation between each pair of attributes in the dataset. This is achieved by mining 2-attribute GPs and
-        using their highest support values to show the correlation between them. The method returns a correlation
+        A method that runs the univariate GradPFS feature selection algorithm. The
+        method that calculates the gradual
+        correlation between each pair of attributes in the dataset. This is achieved by
+        mining 2-attribute GPs and
+        using their highest support values to show the correlation between them. The
+        method returns a correlation
         matrix of feature similarities.
 
         :return: Correlation matrix as a pandas dataframe.
@@ -242,7 +257,10 @@ class GradPFS:
         if len(corr_lst) <= 0:
             return None
         corr_arr = np.array(corr_lst, dtype=object)
-        # corr_df = pd.DataFrame(corr_arr, columns=[ "Attribute Indices", "Relevant Features", "GradPFS Score"])
+        # corr_df = pd.DataFrame(
+        #     corr_arr,
+        #     columns=["Attribute Indices", "Relevant Features", "GradPFS Score"],
+        # )
         corr_df = pd.DataFrame(
             corr_arr,
             columns=["Target Feature", "Relevant Features", "Irrelevant Features"],
@@ -252,10 +270,12 @@ class GradPFS:
 
     def generate_pdf_report(self, fs_type: str = "U") -> bool:
         """
-        A method that executes GradPFS algorithm for either Univariate Feature Selection ('U') or
+        A method that executes GradPFS algorithm for either Univariate Feature Selection
+        ('U') or
         Multivariate Feature Selection ('M') and generates a PDF report.
 
-        :param fs_type: Feature selection type: 'U' -> univariate or 'M' -> multivariate. Default is 'U'
+        :param fs_type: Feature selection type: 'U' -> univariate or 'M' ->
+            multivariate. Default is 'U'
         :return: True if a PDF report is generated.
         """
 
@@ -351,10 +371,12 @@ class GradPFS:
     @staticmethod
     def find_redundant_features(corr_arr: np.ndarray, thd_score: float) -> list:
         """
-        A method that identifies features that are redundant using their correlation score.
+        A method that identifies features that are redundant using their correlation
+        score.
 
         :param corr_arr: A correlation matrix as a numpy array.
-        :param thd_score: A user-specified minimum correlation score for filtering redundant features.
+        :param thd_score: A user-specified minimum correlation score for filtering
+            redundant features.
         :return: Redundant features with the corresponding similarity/correlation score.
         """
         lst_redundant = []

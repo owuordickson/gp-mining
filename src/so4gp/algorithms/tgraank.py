@@ -11,8 +11,6 @@ import pandas
 
 from .base.tgrad import TGrad
 
-# from .. import get_num_cores
-
 
 class TGRAANK:
     """
@@ -91,14 +89,16 @@ class TGRAANK:
                 * ``gaussian`` — gaussian membership function.
 
             clustering_algorithm:
-                The clustering algorithm to use to estimate and build the membership functions
+                The clustering algorithm to use to estimate and build the membership
+                functions
                 according to the shape selected.
 
                 * ``kmeans`` — (default) the KMeans algorithm.
                 * ``fcm`` — The fuzzy-cluster-cmeans algorithm.
 
             inference_method:
-                The inference method to use to evaluate the fuzzy rules to be aggregated and
+                The inference method to use to evaluate the fuzzy rules to be aggregated
+                and
                 defuzzified to estimate the time-delay.
 
                 * ``mamdani`` — (default) The Mamdani inference.
@@ -180,8 +180,10 @@ class TGRAANK:
             ``all``:
                 Classical TGRAANK algorithm generating all possible transformations.
 
-                Performs a full transformation of the dataset yielding all possible transformations up to the maximum
-                transformation step specified by `min_rep`. Then it applies fuzzy membership functions to estimate
+                Performs a full transformation of the dataset yielding all possible
+                transformations up to the maximum
+                transformation step specified by `min_rep`. Then it applies fuzzy
+                membership functions to estimate
                 temporal lags before mining temporal gradual patterns.
 
             ``ami``:
@@ -196,13 +198,15 @@ class TGRAANK:
                 Optionally, clustering can be used to reduce the number of
                 candidate transformations that must be evaluated.
 
-        The gradual pattern mining algorithm can use the classical APRIORI (GRAANK) algorithm or
+        The gradual pattern mining algorithm can use the classical APRIORI (GRAANK)
+        algorithm or
         one of several metaheuristic and alternative search strategies.
 
         Supported search algorithms are:
 
             ``apriori``:
-                Classical GRAANK uses APRIORI level-wise search for exhaustive gradual pattern
+                Classical GRAANK uses APRIORI level-wise search for exhaustive gradual
+                pattern
                 candidate generation.
 
             ``ga``:
@@ -263,9 +267,11 @@ class TGRAANK:
                 Intended for benchmarking and experimental studies.
 
             compute_causality:
-                Whether to compute causal relations between attributes based on the valid extracted gradual pattern.
+                Whether to compute causal relations between attributes based on the
+                valid extracted gradual pattern.
 
-                The target column/attribute is taken as the "cause" and the other attributes the "effects".
+                The target column/attribute is taken as the "cause" and the other
+                attributes the "effects".
 
             save_results:
                 Whether to generate CSV output files.
@@ -284,10 +290,12 @@ class TGRAANK:
                 **TGRAANK-AMI (`transformations="ami"`):**
 
                 * **use_clustering** (*bool*, default=False):
-                  Use a clustering algorithm (KMeans) to estimate the best time-delay value.
+                  Use a clustering algorithm (KMeans) to estimate the best time-delay
+                  value.
 
                 * **error_margin** (*float*, default=0.0001):
-                  Maximum acceptable mutual information difference between the transformed and original datasets.
+                  Maximum acceptable mutual information difference between the
+                  transformed and original datasets.
 
         Returns:
             JSON-formatted string containing the discovered temporal gradual
@@ -383,7 +391,8 @@ class TGRAANK:
 
     def discover_causal_relationships(self, max_lag: int = 0) -> pandas.DataFrame:
         """
-            Compute the temporal dependency matrix that identifies the causal relationship between all features.
+            Compute the temporal dependency matrix that identifies the causal
+            relationship between all features.
 
             Each feature is treated as the target attribute in turn, and temporal
             gradual patterns are mined using the selected transformation algorithm.

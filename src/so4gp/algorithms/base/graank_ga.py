@@ -16,18 +16,27 @@ class GeneticGRAANK(BaseGrad):
         self, *args, max_iter=1, n_pop=5, pc=0.5, gamma=1.0, mu=0.9, sigma=0.9, **kwargs
     ):
         """
-        Extract gradual patterns (GPs) from a numeric data source using the Genetic Algorithm approach (proposed
-        in a published paper by Dickson Owuor). A GP is a set of gradual items (GI), and its quality is measured by
-        its computed support value. For example, given a data set with 3 columns (age, salary, cars) and 10 objects.
-        A GP may take the form: {age+, salary-} with a support of 0.8. This implies that 8 out of 10 objects have the
+        Extract gradual patterns (GPs) from a numeric data source using the Genetic
+        Algorithm approach (proposed
+        in a published paper by Dickson Owuor). A GP is a set of gradual items (GI), and
+        its quality is measured by
+        its computed support value. For example, given a data set with 3 columns (age,
+        salary, cars) and 10 objects.
+        A GP may take the form: {age+, salary-} with a support of 0.8. This implies that
+        8 out of 10 objects have the
         values of column age 'increasing' and column 'salary' decreasing.
 
-             In this approach, we assume that every GP candidate may be represented as a binary gene (or individual)
-             that has a unique position and cost. The cost is derived from the computed support of that candidate, the
-             higher the support value, the lower the cost. The aim of the algorithm is to search through a population of
-             individuals (or candidates) and find those with the lowest cost as efficiently as possible.
+             In this approach, we assume that every GP candidate may be represented as a
+             binary gene (or individual)
+             that has a unique position and cost. The cost is derived from the computed
+             support of that candidate, the
+             higher the support value, the lower the cost. The aim of the algorithm is
+             to search through a population of
+             individuals (or candidates) and find those with the lowest cost as
+             efficiently as possible.
 
-        :param args: [required] a data source path of Pandas DataFrame, [optional] minimum-support, [optional] eq
+        :param args: [required] a data source path of Pandas DataFrame, [optional]
+            minimum-support, [optional] eq
         :param max_iter: [optional] maximum_iteration, default is 1
         :type max_iter: int
 
@@ -59,7 +68,8 @@ class GeneticGRAANK(BaseGrad):
         self, p1: BaseGrad.Candidate, p2: BaseGrad.Candidate
     ) -> tuple[BaseGrad.Candidate, BaseGrad.Candidate]:
         """
-        Crosses over the genes of 2 parents (an individual with a specific position and cost) to generate 2
+        Crosses over the genes of 2 parents (an individual with a specific position and
+        cost) to generate 2
         different offsprings.
 
         :param p1: The parent-1 individual
@@ -104,12 +114,14 @@ class GeneticGRAANK(BaseGrad):
         exclude_target: bool = False,
     ) -> dict:
         """
-        Uses genetic algorithm to find GP candidates. The candidates are validated if their computed support is greater
+        Uses genetic algorithm to find GP candidates. The candidates are validated if
+        their computed support is greater
         than or equal to the minimum support threshold specified by the user.
 
         :param target_col: Target feature's column index.
         :param time_data: (optional) time data for estimating time lag.
-        :param exclude_target: Only accept GP candidates that do not contain the target feature.
+        :param exclude_target: Only accept GP candidates that do not contain the target
+            feature.
 
         :return: A dict object
         """

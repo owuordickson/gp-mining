@@ -53,7 +53,10 @@ def run_pcmci_tigramite(df, max_lag=3, alpha=0.05):
 
     # Extract structural matrix edges
     p_matrix = results["p_matrix"]
-    #  print(f"\nTigramite PCMCI Results. P-Matrix\n{p_matrix}\n\nRes: {p_matrix[0, 1, 1:]}\n")
+    #  print(
+    #      f"\nTigramite PCMCI Results. P-Matrix\n{p_matrix}\n"
+    #      f"\nRes: {p_matrix[0, 1, 1:]}\n"
+    #  )
     # If any lag reveals a significant p-value from 0 -> 1
     if np.min(p_matrix[0, 1, 1:]) < alpha:
         adj_matrix[0, 1] = 1

@@ -37,11 +37,14 @@ class DataGP:
         device: str = "cpu",
     ) -> None:
         """
-        A class for creating data-gp objects. A data-gp object is meant to store all the parameters required by GP
-        algorithms to extract gradual patterns (GP). It takes a numeric file (in CSV format) as input and converts it
+        A class for creating data-gp objects. A data-gp object is meant to store all the
+        parameters required by GP
+        algorithms to extract gradual patterns (GP). It takes a numeric file (in CSV
+        format) as input and converts it
         into an object whose attributes are used by algorithms to extract GPs.
 
-        :param data_source: [required] a data source, it can either be a 'file in csv format' or a 'Pandas DataFrame'
+        :param data_source: [required] a data source, it can either be a 'file in csv
+            format' or a 'Pandas DataFrame'
         :type data_source: pd.DataFrame | str
 
         :param min_sup: [optional] minimum support threshold, the default is 0.5
@@ -50,9 +53,11 @@ class DataGP:
         :param eq: [optional] encode equal values as gradual, the default is False
         :type eq: bool
 
-        :param add_time: [optional] add a dummy time column if the dataset is not a time-series
+        :param add_time: [optional] add a dummy time column if the dataset is not a
+            time-series
 
-        :param device: [required] computing device to be used, 'cpu' or 'gpu', default is 'cpu'
+        :param device: [required] computing device to be used, 'cpu' or 'gpu', default
+            is 'cpu'
 
         """
         self._data_src = data_source
@@ -161,7 +166,8 @@ class DataGP:
 
         def get_time_cols() -> np.ndarray:
             """
-            Tests each column's objects for date-time values. Returns indices of all columns with date-time objects
+            Tests each column's objects for date-time values. Returns indices of all
+            columns with date-time objects
 
             :return: A ndarray object containing the indices of the time columns.
             """
@@ -194,9 +200,7 @@ class DataGP:
             self._row_count, self._col_count = self._data.shape
         self._attr_cols = get_attr_cols()
 
-    def _compute_pairwise_bitmap(
-        self, attr_values: np.ndarray
-    ) -> np.ndarray:
+    def _compute_pairwise_bitmap(self, attr_values: np.ndarray) -> np.ndarray:
         """Compute a pairwise bitmap and its support for one attribute.
 
         Args:
@@ -306,7 +310,8 @@ class DataGP:
         Remove subset GPs from the list.
 
         :param gi_arr: Gradual items in an array
-        :param gradual_patterns: List of gradual patterns (if None, use the object's GPs)
+        :param gradual_patterns: List of gradual patterns (if None, use the object's
+            GPs)
         :return: List of GPs
         """
         gps = self._gradual_patterns if gradual_patterns is None else gradual_patterns
@@ -419,12 +424,16 @@ class DataGP:
 
     def fit_warpingset(self) -> None:
         """
-        Generates transaction ids (tids) for each column/feature with numeric objects. It stores the tids in attribute
-        valid_tids (those tids whose computed support values are greater or equal to the minimum support threshold
+        Generates transaction ids (tids) for each column/feature with numeric objects.
+        It stores the tids in attribute
+        valid_tids (those tids whose computed support values are greater or equal to the
+        minimum support threshold
         value).
 
-        The method decomposes the pairwise matrix of a gradual item/pattern into a warping set. Attributes that have
-        strong correlation will produce a warping set with dense zigzag patterns when plotted as a graph. Those with weak
+        The method decomposes the pairwise matrix of a gradual item/pattern into a
+        warping set. Attributes that have
+        strong correlation will produce a warping set with dense zigzag patterns when
+        plotted as a graph. Those with weak
         correlation will produce a warping set with sparse zigzag patterns.
 
         """
@@ -545,10 +554,8 @@ class DataGP:
                 for item in block:
                     if isinstance(item, str):
                         cleaned_str = item.strip('"{ }')
-                        key, val = cleaned_str.split(':', 1)
-                        extracted_dict = {
-                            key.strip("' "): val.strip("' ")
-                        }
+                        key, val = cleaned_str.split(":", 1)
+                        extracted_dict = {key.strip("' "): val.strip("' ")}
                     else:
                         extracted_dict = item
 
@@ -568,9 +575,7 @@ class DataGP:
                 "Singularity Score",
             ]
 
-            df[numeric_cols] = df[numeric_cols].apply(
-                pd.to_numeric
-            )
+            df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
 
             data_cols = [
                 "Pattern",
@@ -602,7 +607,10 @@ class DataGP:
             gp.add_gradual_item(gi)
             gp.support = v_bins[gi_str].support
             gp.confidence = v_bins[gi_str].confidence
-            gp.compute_descriptors(np.asarray(w_set[gi_str]), obj_count=self.row_count,)
+            gp.compute_descriptors(
+                np.asarray(w_set[gi_str]),
+                obj_count=self.row_count,
+            )
 
             temp_row = gp.get_computed_descriptors(descriptor_title=True)
             temp_row.append("{'Pattern': " + col_name + "}")
@@ -671,14 +679,23 @@ class DataGP:
         cls, data_src: pd.DataFrame | str, min_sup: float = 0.5, out_dir: str = ""
     ) -> bool:
         """
-        Given a numeric dataset, this method generates all the pairwise matrices for the all the gradual items (GI)
+        Given a numeric dataset, this method generates all the pairwise matrices for the
+        all the gradual items (GI)
         which are obtained from the dataset's features/columns.
 
         >>> import so4gp as sgp
         >>> import pandas
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
+        >>> dummy_data = [
+        ...     [30, 3, 1, 10],
+        ...     [35, 2, 2, 8],
+        ...     [40, 4, 2, 7],
+        ...     [50, 1, 1, 6],
+        ...     [52, 7, 1, 2],
+        ... ]
         >>> columns = ['Age', 'Salary', 'Cars', 'Expenses']
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
+        >>> dummy_df = pandas.DataFrame(
+        ...     dummy_data, columns=["Age", "Salary", "Cars", "Expenses"]
+        ... )
         >>> sgp.save_pairwise_data(dummy_df, out_dir="mat_data")
 
         :param data_src: Pandas dataframe or CSV file name as a string
@@ -703,7 +720,8 @@ class DataGP:
             file_name = f"{gi.as_string(d_set.titles)}.csv"
             file = os.path.join(out_dir, file_name)
 
-            # Note: Changed fmt to '%.0f' to support floats without decimal places safely
+            # Note: Changed fmt to '%.0f' to support floats without decimal places
+            # safely
             np.savetxt(file, gp_data.packed_bin_mat, delimiter=",", fmt="%.0f")
         return True
 
@@ -716,14 +734,23 @@ class DataGP:
         approach: str = "bfs",
     ) -> str:
         """
-        For each estimated GP, computes its true support using the GRAANK approach and returns the statistics (% error,
+        For each estimated GP, computes its true support using the GRAANK approach and
+        returns the statistics (% error,
         and standard deviation).
 
         >>> import so4gp as sgp
         >>> import pandas
-        >>> dummy_data = [[30, 3, 1, 10], [35, 2, 2, 8], [40, 4, 2, 7], [50, 1, 1, 6], [52, 7, 1, 2]]
+        >>> dummy_data = [
+        ...     [30, 3, 1, 10],
+        ...     [35, 2, 2, 8],
+        ...     [40, 4, 2, 7],
+        ...     [50, 1, 1, 6],
+        ...     [52, 7, 1, 2],
+        ... ]
         >>> columns = ['Age', 'Salary', 'Cars', 'Expenses']
-        >>> dummy_df = pandas.DataFrame(dummy_data, columns=['Age', 'Salary', 'Cars', 'Expenses'])
+        >>> dummy_df = pandas.DataFrame(
+        ...     dummy_data, columns=["Age", "Salary", "Cars", "Expenses"]
+        ... )
         >>>
         >>> estimated_gps = list()
         >>> temp_gp = sgp.GP()
@@ -736,11 +763,16 @@ class DataGP:
         >>>    temp_gp.add_gradual_item(sgp.GI.from_string(gi_str))
         >>> temp_gp.support = 0.48
         >>> estimated_gps.append(temp_gp)
-        >>> res = sgp.analyze_gps(dummy_df, min_sup=0.4, est_gps=estimated_gps, approach='bfs')
-        >>> print(res)
-        Gradual Pattern       Estimated Support    True Support  Percentage Error      Standard Deviation
-        ['0+', '1-']                       0.5              0.4             25.0%                   0.071
-        ['1+', '3-', '0+']                 0.48             0.6            -20.0%                   0.085
+        >>> res = sgp.analyze_gps(
+        ...     dummy_df, min_sup=0.4, est_gps=estimated_gps, approach="bfs"
+        ... )
+        >>> print(res)  # doctest: +NORMALIZE_WHITESPACE
+        Gradual Pattern       Estimated Support    True Support  Percentage Error
+        Standard Deviation
+        ['0+', '1-']                       0.5              0.4             25.0%
+        0.071
+        ['1+', '3-', '0+']                 0.48             0.6            -20.0%
+        0.085
 
         :param data_src: Data set file
         :param min_sup: Minimum support (set by user)
@@ -796,10 +828,12 @@ class DataGP:
     @staticmethod
     def read(data_src) -> tuple[list, np.ndarray]:
         """
-        Reads all the contents of a file (in CSV format) or a data-frame. Checks if its columns have numeric values. It
+        Reads all the contents of a file (in CSV format) or a data-frame. Checks if its
+        columns have numeric values. It
         separates its column headers (titles) from the objects.
 
-        :param data_src: A data source, it can either be a 'file in csv format' or a 'Pandas DataFrame'
+        :param data_src: A data source, it can either be a 'file in csv format' or a
+            'Pandas DataFrame'
         :type data_src: pd.DataFrame | str
 
         :return: The title, column objects

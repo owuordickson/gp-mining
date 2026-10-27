@@ -22,24 +22,30 @@ NO_TIME_LABEL = "NoTime"
 
 
 class FatalError(Exception):
-    """Custom exception to handle stoppage in case of missing information or user errors"""
+    """
+    Custom exception to handle stoppage in case of missing information or user errors
+    """
 
 
 @dataclass
 class PairwiseMatrix:
-    """A data-class for storing pairwise (bitmap) matrix as packed-bits and its support value."""
+    """A data-class for storing pairwise (bitmap) matrix as packed-bits and its support
+    value."""
+
     packed_bin_mat: np.ndarray | torch.Tensor
     support: float
     pattern: set[str]
-    confidence: float= 0
+    confidence: float = 0
     time_lag: TimeDelay | None = None
 
 
 class GI:
     def __init__(self, attr_col, symbol):
         """
-        GI (Gradual Item). A class that is used to create GI objects. A GI is a pair (i,v) where is a column, and v is a variation symbol -
-        increasing/decreasing. Each column of a data set yields 2 GIs; for example, column age yields GI age+ or age-.
+        GI (Gradual Item). A class that is used to create GI objects. A GI is a pair
+        (i,v) where is a column, and v is a variation symbol -
+        increasing/decreasing. Each column of a data set yields 2 GIs; for example,
+        column age yields GI age+ or age-.
 
         >>> import so4gp as sgp
         >>> gradual_item = sgp.GI(1, "+")
@@ -120,14 +126,16 @@ class GI:
             return cls(attr_col, symbol)
         except ValueError:
             print(
-                f"Invalid GI format: '{gi_str}'. Must be in the format 'column_number+'."
+                f"Invalid GI format: '{gi_str}'. "
+                "Must be in the format 'column_number+'."
             )
             raise ValueError(f"Invalid column number in: '{gi_str}'")
 
     @staticmethod
     def swap_gi_symbol(gi_obj: GI) -> GI:
         """
-        Inverts a GI symbol to the opposite variation (i.e., from - to +; or, from + to -)
+        Inverts a GI symbol to the opposite variation (i.e., from - to +; or, from + to
+        -)
         :return: inverted GI object
         """
         if gi_obj.symbol == "+":
@@ -139,7 +147,8 @@ class GI:
     @staticmethod
     def parse_gi(gi_str: str) -> GI:
         """
-        Converts a stringified GI into normal GI. The accepted format is '1_neg' or 1_pos'.
+        Converts a stringified GI into normal GI. The accepted format is '1_neg' or
+        1_pos'.
 
         :param gi_str: A stringified GI
         :type gi_str: str
@@ -158,10 +167,14 @@ class GI:
 class GP:
     def __init__(self):
         """
-        GP (Gradual Pattern). A class that is used to create GP objects. A GP object is a set of gradual items (GI),
-        and its quality is measured by its computed support value. For example, given a data set with 3 columns
-        (age, salary, cars) and 10 objects. A GP may take the form: {age+, salary-} with a support of 0.8. This implies
-        that 8 out of 10 objects have the values of column age 'increasing' and column 'salary' decreasing.
+        GP (Gradual Pattern). A class that is used to create GP objects. A GP object is
+        a set of gradual items (GI),
+        and its quality is measured by its computed support value. For example, given a
+        data set with 3 columns
+        (age, salary, cars) and 10 objects. A GP may take the form: {age+, salary-} with
+        a support of 0.8. This implies
+        that 8 out of 10 objects have the values of column age 'increasing' and column
+        'salary' decreasing.
 
         >>> import so4gp as sgp
         >>> gradual_pattern = sgp.GP()
@@ -223,7 +236,8 @@ class GP:
 
     def add_gradual_item(self, item: GI) -> None | bool:
         """
-        Add a gradual item to this gradual pattern. First checks if the gradual item's column already exists in the GP.
+        Add a gradual item to this gradual pattern. First checks if the gradual item's
+        column already exists in the GP.
 
         Args:
             item:
@@ -254,19 +268,25 @@ class GP:
         gp = GP.swap_gp_symbols(self)
         return set(gp.to_string())
 
-    def get_computed_descriptors(self, descriptor_title: bool=False) -> list[str] | list[dict]:
+    def get_computed_descriptors(
+        self, descriptor_title: bool = False
+    ) -> list[str] | list[dict]:
         """
         Returns the computed descriptors of the gradual pattern (GP)
 
-        :param descriptor_title: If True, returns a dictionary with column names as keys and descriptors as values
+        :param descriptor_title: If True, returns a dictionary with column names as keys
+            and descriptors as values
 
         :return: List of descriptors
         """
         if self.density <= 0:
             params = (
                 [f"sup={self.support}, conf={self.confidence}"]
-                if not descriptor_title else
-                [{"Support": f"{self.support}"}, {"Confidence": f"{self.confidence}"}]
+                if not descriptor_title
+                else [
+                    {"Support": f"{self.support}"},
+                    {"Confidence": f"{self.confidence}"},
+                ]
             )
         else:
             if not descriptor_title:
@@ -285,7 +305,9 @@ class GP:
                     {"Confidence": f"{self.confidence}"},
                     {"Density": f"{self.density}"},
                     {
-                        "Avg. Deviation from Diagonal": f"{self.avg_deviation_from_diagonal}"
+                        "Avg. Deviation from Diagonal": (
+                            f"{self.avg_deviation_from_diagonal}"
+                        )
                     },
                     {"Rank Dispersion": f"{self.rank_dispersion}"},
                     {"Graph Connectivity": f"{self.graph_connectivity}"},
@@ -295,9 +317,12 @@ class GP:
 
     def decompose(self) -> tuple[list[int], list[str]]:
         """
-        Breaks down all the gradual items (GIs) in the gradual pattern into columns and variation symbols and returns
-        them as separate variables. For instance, a GP {"1+", "3-"} will be returned as [1, 3], [1, -1]: where [1, 3] is
-        the list of attributes/features and [1, -1] are their corresponding gradual variations (1 -> '+' and 1- -> '-').
+        Breaks down all the gradual items (GIs) in the gradual pattern into columns and
+        variation symbols and returns
+        them as separate variables. For instance, a GP {"1+", "3-"} will be returned as
+        [1, 3], [1, -1]: where [1, 3] is
+        the list of attributes/features and [1, -1] are their corresponding gradual
+        variations (1 -> '+' and 1- -> '-').
 
         :return: Separate columns and variation symbols
         """
@@ -311,7 +336,8 @@ class GP:
 
     def contains_attr(self, gi: GI | None) -> bool:
         """
-        Checks if any gradual item (GI) in the gradual pattern (GP) is composed of the column
+        Checks if any gradual item (GI) in the gradual pattern (GP) is composed of the
+        column
         :param gi: gradual item
         :type gi: GI
 
@@ -325,7 +351,7 @@ class GP:
                 return True
         return False
 
-    def get_target_gi(self, target_col: int|None) -> GI:
+    def get_target_gi(self, target_col: int | None) -> GI:
         """
         Find the target gradual item (GI) in the gradual pattern (GP)
 
@@ -358,7 +384,8 @@ class GP:
         A method that returns patterns with actual column names
 
         :param columns: Column names
-        :param descriptor_title: If True, returns a dictionary with column names as keys and descriptors as values
+        :param descriptor_title: If True, returns a dictionary with column names as keys
+            and descriptors as values
 
         :return: GP with actual column names
         """
@@ -379,8 +406,10 @@ class GP:
         self, data_gp, target_col: int | None, time_data: dict | None = None
     ) -> GP | TGP:
         """
-        Validates a candidate gradual pattern (GP) based on support computation. A GP is invalid if its support value is
-        less than the minimum support threshold set by the user. It uses a breath-first approach to compute support.
+        Validates a candidate gradual pattern (GP) based on support computation. A GP is
+        invalid if its support value is
+        less than the minimum support threshold set by the user. It uses a breath-first
+        approach to compute support.
 
         :param data_gp: a :class:`so4gp.DataGP` object
         :type data_gp: so4gp.DataGP # noinspection PyTypeChecker
@@ -392,7 +421,7 @@ class GP:
         # pattern = [('2', "+"), ('4', "+")]
         min_supp = data_gp.thd_supp
         n = data_gp.attr_size
-        gi_dict: dict|None = copy.deepcopy(data_gp.valid_bins)
+        gi_dict: dict | None = copy.deepcopy(data_gp.valid_bins)
         if gi_dict is None:
             return self
 
@@ -424,7 +453,9 @@ class GP:
             return self
         else:
             # if compute_descriptors:
-            #    warping_set_arr: np.ndarray = np.array(DataGP.gen_gradual_warping_set(pw_mat.bin_mat, as_array=True))
+            #    warping_set_arr: np.ndarray = np.array(
+            #        DataGP.gen_gradual_warping_set(pw_mat.bin_mat, as_array=True)
+            #    )
             #    rand_gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
             conf = gen_pattern.support / round(target_gi_supp, 3)
             gen_pattern.confidence = conf
@@ -432,8 +463,10 @@ class GP:
 
     def validate_via_tree(self, d_gp):
         """
-        Validates a candidate gradual pattern (GP) based on support computation. A GP is invalid if its support value is
-        less than the minimum support threshold set by the user. It applies a depth-first (FP-Growth) approach
+        Validates a candidate gradual pattern (GP) based on support computation. A GP is
+        invalid if its support value is
+        less than the minimum support threshold set by the user. It applies a
+        depth-first (FP-Growth) approach
         to compute support.
 
         :param d_gp: Data_GP object
@@ -472,7 +505,8 @@ class GP:
 
     def check_am(self, gp_list: list[GP | TGP] | None, subset: bool = True) -> bool:
         """
-        Anti-monotonicity check. Checks if a GP is a subset or superset of an already existing GP
+        Anti-monotonicity check. Checks if a GP is a subset or superset of an already
+        existing GP
 
         :param gp_list: A list of existing GPs
         :param subset: A check if it is a subset
@@ -980,7 +1014,8 @@ class GP:
     @staticmethod
     def swap_gp_symbols(gp_obj: GP) -> GP:
         """
-        Swaps the variation symbols of all the gradual items (GIs) in a gradual pattern (GP)
+        Swaps the variation symbols of all the gradual items (GIs) in a gradual pattern
+        (GP)
         """
         new_gp = GP()
         for gi in gp_obj.gradual_items:
@@ -1011,11 +1046,14 @@ class GP:
         packed_pairwise_mat: np.ndarray | torch.Tensor, n: int
     ) -> np.ndarray | torch.Tensor:
         """
-        A method that decomposes the pairwise matrix of a gradual item/pattern into a warping set. Attributes that have
-        strong correlation will produce a warping set with dense zigzag patterns when plotted as a graph. Those with weak
+        A method that decomposes the pairwise matrix of a gradual item/pattern into a
+        warping set. Attributes that have
+        strong correlation will produce a warping set with dense zigzag patterns when
+        plotted as a graph. Those with weak
         correlation will produce a warping set with sparse zigzag patterns.
 
-        :param packed_pairwise_mat: The pairwise matrix of a gradual item/pattern, reduced to packed bits.
+        :param packed_pairwise_mat: The pairwise matrix of a gradual item/pattern,
+            reduced to packed bits.
         :param n: Number of rows/columns in the unpacked pairwise matrix.
 
         :return: A list array of the warping path (as an edge list) as a numpy array.
@@ -1090,17 +1128,22 @@ class GP:
 
         if bin_data_1 is None or bin_data_2 is None:
             return PairwiseMatrix(
-                packed_bin_mat=np.zeros((dim, dim)), support=0, confidence=0, pattern=set()
+                packed_bin_mat=np.zeros((dim, dim)),
+                support=0,
+                confidence=0,
+                pattern=set(),
             )
 
-        # Intersection of packed bitmaps -- Supports NumPy arrays and PyTorch tensors (CPU or CUDA)
+        # Intersection of packed bitmaps -- Supports NumPy arrays and PyTorch tensors
+        # (CPU or CUDA)
         packed_1 = bin_data_1.packed_bin_mat
         packed_2 = bin_data_2.packed_bin_mat
 
         if isinstance(packed_1, torch.Tensor):
             if not isinstance(packed_2, torch.Tensor):
                 raise TypeError(
-                    "Both packed bitmaps must be either NumPy arrays or PyTorch tensors."
+                    "Both packed bitmaps must be either NumPy arrays "
+                    "or PyTorch tensors."
                 )
 
             if packed_1.device != packed_2.device:
@@ -1116,7 +1159,8 @@ class GP:
         else:
             if isinstance(packed_2, torch.Tensor):
                 raise TypeError(
-                    "Both packed bitmaps must be either NumPy arrays or PyTorch tensors."
+                    "Both packed bitmaps must be either NumPy arrays "
+                    "or PyTorch tensors."
                 )
 
             packed_bit_mat = np.bitwise_and(packed_1, packed_2)
@@ -1156,7 +1200,8 @@ class GP:
 class TimeDelay:
     def __init__(self, tstamp: float = 0, supp: float = 0):
         """
-            TimeDelay (Time Delay). A class used in Fuzzy Temporal Gradual Patterns to create the time-delay object.
+            TimeDelay (Time Delay). A class used in Fuzzy Temporal Gradual Patterns to
+            create the time-delay object.
 
         >>> import so4gp as sgp
         >>> t_delay = sgp.TimeDelay(3600, 0.75)
@@ -1209,7 +1254,8 @@ class TimeDelay:
 
         def format_time() -> list:
             """
-            Formats the time-delay value as a Date in string format (i.e., seconds/minutes/hours/days/weeks/months/years).
+            Formats the time-delay value as a Date in string format (i.e.,
+            seconds/minutes/hours/days/weeks/months/years).
 
             :return: The formatted time-delay as a list.
             """
@@ -1426,7 +1472,7 @@ class TimeDelay:
             return 0
 
         if not fuzzy_mfs:
-            # raise ValueError("fuzzy_mfs must contain at least one membership function.")
+            # raise ValueError("mfs must contain at least one MF.")
             return 0
 
         def evaluate_mfs(values: np.ndarray) -> np.ndarray:
@@ -1461,7 +1507,8 @@ class TimeDelay:
                 if shape == "triangular":
                     if params.size != 3:
                         raise ValueError(
-                            "Triangular membership functions require [left, center, right]."
+                            "Triangular membership functions require "
+                            "[left, center, right]."
                         )
                     left, center, right = params
                     rising = (values - left) / max(center - left, eps)
@@ -1476,7 +1523,8 @@ class TimeDelay:
                 elif shape == "trapezoidal":
                     if params.size != 4:
                         raise ValueError(
-                            "Trapezoidal membership functions require [left, left_peak, right_peak, right]."
+                            "Trapezoidal membership functions require "
+                            "[left, left_peak, right_peak, right]."
                         )
                     left, left_peak, right_peak, right = params
                     rising = (values - left) / max(left_peak - left, eps)
@@ -1506,7 +1554,8 @@ class TimeDelay:
                     memberships[:, i] = np.exp(-0.5 * ((values - center) / sigma) ** 2)
                 else:
                     raise ValueError(
-                        f"Unsupported membership-function shape: {shape!r}. Expected 'triangular', 'trapezoidal', or 'gaussian'."
+                        f"Unsupported membership-function shape: {shape!r}. "
+                        "Expected 'triangular', 'trapezoidal', or 'gaussian'."
                     )
 
             return np.clip(
@@ -1586,7 +1635,8 @@ class TimeDelay:
 
         if method not in {"mamdani", "larsen"}:
             raise ValueError(
-                f"Unsupported inference method: {inference_method!r}. Expected 'mamdani' or 'larsen'."
+                f"Unsupported inference method: {inference_method!r}. "
+                "Expected 'mamdani' or 'larsen'."
             )
 
         # --------------------------------------------------------------
@@ -1645,12 +1695,15 @@ class TimeDelay:
         gp_set: set,
     ) -> TimeDelay:
         """
-        A method that uses a fuzzy membership function to select the most accurate time-delay value. We implement two
-        methods: (1) uses classical slide and re-calculate dynamic programming to find the best time-delay value and,
+        A method that uses a fuzzy membership function to select the most accurate
+        time-delay value. We implement two
+        methods: (1) uses classical slide and re-calculate dynamic programming to find
+        the best time-delay value and,
         (2) uses metaheuristic hill-climbing to find the best time-delay value.
 
         :param selected_rows: Only the rows where the GP is respected.
-        :param time_data: A dict that contains time-data, mined GP, MFs parameters and inference method.
+        :param time_data: A dict that contains time-data, mined GP, MFs parameters and
+            inference method.
         :param gp_set: Gradual item object.
 
         :return: TimeDelay object.
@@ -1725,9 +1778,12 @@ class TGP(GP):
 
     def __init__(self):
         """
-        A class that inherits an existing GP class to create Temporal GP objects. A TGP is a gradual pattern with a
-        time-delay. It has a target gradual item (which is created from a user-defined attribute), and it is used as the
-        anchor for mining patterns from a dataset. The class has the following attributes:
+        A class that inherits an existing GP class to create Temporal GP objects. A TGP
+        is a gradual pattern with a
+        time-delay. It has a target gradual item (which is created from a user-defined
+        attribute), and it is used as the
+        anchor for mining patterns from a dataset. The class has the following
+        attributes:
 
         target_gradual_item: the gradual item on which the pattern is based.
 
@@ -1749,7 +1805,8 @@ class TGP(GP):
 
     @target_gradual_item.setter
     def target_gradual_item(self, item: GI) -> None:
-        """Adds a target gradual item (fTGI) into the fuzzy temporal gradual pattern (fTGP)"""
+        """Adds a target gradual item (fTGI) into the fuzzy temporal gradual pattern
+        (fTGP)"""
         if not isinstance(item, GI):
             raise TypeError("Target gradual item must be of type GI")
         self._target_gradual_item = item
@@ -1761,7 +1818,8 @@ class TGP(GP):
 
     def add_temporal_gradual_item(self, item: GI, time_delay: TimeDelay | None):
         """
-        Adds a fuzzy temporal gradual item (fTGI) into the fuzzy temporal gradual pattern (fTGP)
+        Adds a fuzzy temporal gradual item (fTGI) into the fuzzy temporal gradual
+        pattern (fTGP)
         :param item: gradual item
         :type item: so4gp.GI
 
@@ -1790,7 +1848,10 @@ class TGP(GP):
         for temp_gi in self._temporal_gradual_items:
             gi = temp_gi.gradual_item
             t_lag = temp_gi.time_delay
-            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {t_lag.formatted_time['duration']}"
+            str_time = (
+                f"{t_lag.sign}{t_lag.formatted_time['value']} "
+                f"{t_lag.formatted_time['duration']}"
+            )
             pattern.append(f"({gi.to_string()}) {str_time}")
         return pattern
 
@@ -1798,7 +1859,8 @@ class TGP(GP):
         self, columns: list[str], descriptor_title: bool = False
     ) -> tuple[str, list[str] | list[dict]]:
         """
-        A method that returns a fuzzy temporal gradual pattern (TGP) with actual column names
+        A method that returns a fuzzy temporal gradual pattern (TGP) with actual column
+        names
 
         :param columns: Column names of the dataset
         :param descriptor_title: If True, prints the descriptor title
@@ -1814,7 +1876,10 @@ class TGP(GP):
         for i, temp_gi in enumerate(self._temporal_gradual_items):
             gi = temp_gi.gradual_item
             t_lag = temp_gi.time_delay
-            str_time = f"{t_lag.sign}{t_lag.formatted_time['value']} {'lag' if has_no_time else t_lag.formatted_time['duration']}"
+            str_time = (
+                f"{t_lag.sign}{t_lag.formatted_time['value']} "
+                f"{'lag' if has_no_time else t_lag.formatted_time['duration']}"
+            )
             col_title = columns[gi.attribute_col]
             pat = f"({col_title}{gi.symbol}) {str_time}"
             # pattern.append(pat)
@@ -1873,11 +1938,13 @@ class TGP(GP):
 
         # Compare time delays
         td_set1 = {
-            f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}"
+            f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} "
+            f"{tgi.time_delay.formatted_time['duration']}"
             for tgi in lst_tgi1
         }
         td_set2 = {
-            f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} {tgi.time_delay.formatted_time['duration']}"
+            f"{tgi.time_delay.sign}{tgi.time_delay.formatted_time['value']} "
+            f"{tgi.time_delay.formatted_time['duration']}"
             for tgi in lst_tgi2
         }
 

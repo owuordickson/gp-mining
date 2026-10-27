@@ -234,17 +234,21 @@ class GRAANK:
                   accepted.
 
             time_data:
-                Time delay data required to compute the time lag of the gradual patterns. It consists of a dictionary
+                Time delay data required to compute the time lag of the gradual
+                patterns. It consists of a dictionary
                 with the following keys:
 
                 * ``"time_delay_data"``:
-                The time delays after transformation of the data at specific steps. It is either a dictionary or NumPy array.
+                The time delays after transformation of the data at specific steps. It
+                is either a dictionary or NumPy array.
 
                 * ``"tri_mf"``:
-                The triangular membership function used to compute the time lag. It is either None or a NumPy array.
+                The triangular membership function used to compute the time lag. It is
+                either None or a NumPy array.
 
                 * ``"use_gp"``:
-                Whether to use the gradual items of the GP to compute the time lag. It is a boolean.
+                Whether to use the gradual items of the GP to compute the time lag. It
+                is a boolean.
 
 
             compute_descriptors:
