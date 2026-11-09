@@ -11,9 +11,9 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import numpy as np
-from evaluation import Protocol, evaluate_split
+from uea.tools.evaluation import Protocol, evaluate_split
 from synthetic import suite as synthetic_suite
-from uea import suite as uea_suite
+from uea.tools import suite as uea_suite
 
 HERE = Path(__file__).resolve().parent
 SUITES = {"uea": uea_suite, "synthetic": synthetic_suite}
