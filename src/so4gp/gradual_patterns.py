@@ -761,6 +761,12 @@ class GP:
     def _unpack_bitmap(packed: torch.Tensor, n: int) -> torch.Tensor: ...
 
     @staticmethod
+    @overload
+    def _unpack_bitmap(
+        packed: np.ndarray | torch.Tensor, n: int
+    ) -> np.ndarray | torch.Tensor: ...
+
+    @staticmethod
     def _unpack_bitmap(
         packed: np.ndarray | torch.Tensor, n: int
     ) -> np.ndarray | torch.Tensor:
