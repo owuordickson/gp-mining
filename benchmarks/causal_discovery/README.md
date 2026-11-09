@@ -1,6 +1,6 @@
 # TGRAANK causal-discovery benchmark results
 
-Refs #19. Published from the saved output of [benchmarking.ipynb](./benchmarking.ipynb) on 13 October 2026; updated on 26 October 2026 with the completed Disjoint-10 run. The current notebook comparison displays, [machine-readable export](./benchmarking-results.json) and table below include the completed result. The [earlier notebook snapshot](https://github.com/theseedship/deposium_geoai/blob/896075293f0be530f63df1e249d81ea282e09a92/benchmarks/benchmarking.ipynb) remains in Git history. Previous results are retained; no mining, rescoring or full notebook execution was performed for this publication update.
+Updated on 26 October 2026 with the completed Disjoint-10 run. 
 
 ## Research focus and method families
 
@@ -20,7 +20,7 @@ The benchmark asks how TGRAANK, an asymmetric approach to causal discovery, perf
 
 Names are normalized for publication: the notebook's `PCMI` means **PCMCI**, `Varlingam` means **VARLiNGAM**, and `Dynoteurs` means **DYNOTEARS**. PC denotes the constraint-based PC algorithm. The paper's **CP** denotes Causal Pretraining, a different method.
 
-## CausalRivers: saved comparison with completed Disjoint-10
+## CausalRivers: saved comparison
 
 The metric is **mean per graph AUROC**, named `Individual AUROC` by the harness, with autoregressive diagonal entries excluded. It differs from pooled `AUROC`. The notebook's two saved comparison displays and the JSON table now show the completed Disjoint-10 result at six decimal places. The other ten TGRAANK values and the comparator values retain their previous display precision.
 

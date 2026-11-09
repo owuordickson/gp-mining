@@ -1,8 +1,46 @@
 # Joint-effect benchmark
 
-This benchmark measures whether composed gradual patterns (GPs) and their gradual
-concordance set (GCS) descriptors help classify multivariate sequences. Each
-case is an entire sequence. The target is its independent class label.
+This benchmark tests whether gradual patterns (GPs) and descriptors of their
+gradual concordance sets (GCSs) help a classifier recognize activities in unseen
+recordings. Each recording becomes one row in a table. The **features** are
+numbers calculated from the sensor readings. The **label** is the activity
+supplied by the dataset.
+
+## Worked example with RacketSports
+
+A smartwatch worn on the player's dominant wrist recorded a stroke for three
+seconds. Each recording contains 30 readings from six channels, with three
+axes of acceleration and three axes of rotation rate. The archive supplies one
+of four labels for the whole recording, `Badminton_Clear`, `Badminton_Smash`,
+`Squash_BackhandBoast`, or `Squash_ForehandBoast`.
+[UEA RacketSports dataset](https://www.timeseriesclassification.com/description.php?Dataset=RacketSports).
+
+The first recording in the published test split has the label
+`Badminton_Smash`. One pattern selected from the training recordings says
+**Z acceleration increases while Y rotation rate decreases**. From reading 3
+to reading 16 in this recording, Z acceleration rises from 5.80 to 11.75 and Y
+rotation rate falls from 0.08 to −5.28. The pair `(3, 16)` therefore supports
+the pattern.
+
+The benchmark compares every earlier reading with every later one in that
+recording. Reading 1 gives 29 pairs, reading 2 gives 28, and so on. This gives
+30 × 29 / 2 = 435 possible pairs. The pattern holds for 122 of them. Those
+122 pairs form its GCS and give a directional density of 122 / 435 ≈ 0.28.
+
+The benchmark turns the set of pairs into numbers. Connectivity counts the
+groups of readings linked by the pairs, including isolated readings.
+Singularity is the largest fraction of pairs that touch any one reading.
+Rank dispersion measures how much the gaps between paired readings vary.
+Here are four feature values for this one pattern, alongside the known label.
+
+| Directional density | Connected groups | Singularity | Rank dispersion | Known label |
+| ---: | ---: | ---: | ---: | --- |
+| 0.2805 | 1 | 0.1393 | 33.82 | `Badminton_Smash` |
+
+Each selected pattern contributes its own columns. The classifier learns from
+these numeric features and the known stroke labels in the training recordings.
+For a test recording, it receives the feature values, predicts a stroke, and
+the benchmark compares that prediction with the label supplied by the archive.
 
 ## Run from the repository root
 
@@ -49,32 +87,37 @@ seed and noise level. The default sweep uses five seeds and three noise levels.
 
 ## Protocol
 
-Train-only mining ranks signed two-channel pattern families by mean full support
-over training cases. Each retained family contributes both inverse directions,
-so --max-patterns must be even. --min-support filters mean training support.
-Full support uses both packed bitmap orientations. Directional density and
-the GCS descriptors use the upper triangle in the original sequence order.
+The benchmark selects two-channel GPs by their average full support on the
+training recordings. Each selected pattern family contributes both inverse
+forms, such as `A+ B-` and `A- B+`. Set an even `--max-patterns` and use
+`--min-support` to filter by average training support. Full support uses both
+orientations of the packed bitmap. Directional density and the structural
+descriptors use earlier-to-later pairs.
+
+**Method** names a way to represent a recording. **Features** lists the input
+columns for that method's classifier.
 
 | Method | Features |
 | --- | --- |
-| standard | Channel means, standard deviations, slopes, and Pearson correlations |
-| gi | Both directions of each GI, represented by density, mean gap, connectivity, singularity, and dispersion |
-| gp | GI features plus full support and directional density of the selected GPs |
-| gcs | The same GP features plus GP connectivity, singularity, and dispersion |
-| gcs_no_connectivity | GCS features with only the GP connectivity block removed |
-| gcs_no_singularity | GCS features with only the GP singularity block removed |
-| gcs_no_dispersion | GCS features with only the GP dispersion block removed |
+| `standard` | The mean, standard deviation, and overall linear trend of each channel, plus the Pearson correlation between each pair of channels at matching times. |
+| `gi` | Each channel's increase and decrease described separately by density, mean gap, connectivity, singularity, and rank dispersion. |
+| `gp` | The `gi` columns plus full support and directional density for each selected two-channel GP. |
+| `gcs` | The `gp` columns plus connectivity, singularity, and rank dispersion for each selected two-channel GP. |
+| `gcs_no_connectivity` | The `gcs` columns with GP connectivity removed. |
+| `gcs_no_singularity` | The `gcs` columns with GP singularity removed. |
+| `gcs_no_dispersion` | The `gcs` columns with GP rank dispersion removed. |
 
 For an empty concordance set, connectivity is the observation count. Undefined
 separation and singularity statistics use zero in the feature matrix, and
 density records the empty set. The implementation calls
 GP.gen_gradual_concordance_set and GP.compute_descriptors for the descriptors.
 
-Every method uses the same stratified training folds and regularization grid
-for standardized logistic regression. Each fold mines its vocabulary on its
-own training cases. The final vocabulary is mined on the full training split
-and held fixed on test. Feature standardization is fitted inside each model's
-training pipeline. Validation balanced accuracy selects regularization.
+The benchmark trains a separate logistic regression model for each feature set.
+All models use the same stratified training folds and regularization grid.
+Each fold selects patterns using its own training cases. The final patterns are
+selected on the full training split and applied to every test recording.
+Feature standardization is fitted inside each model's training pipeline.
+Validation balanced accuracy selects regularization.
 
 ## Reports
 
@@ -106,16 +149,29 @@ python -m pytest benchmarks/joint_effect/tests -q
 
 ## Reference runs
 
-The [UEA metrics](results/uea-20261109T133818769079Z/metrics.csv) and
-[paired intervals](results/uea-20261109T133818769079Z/paired_contrasts.csv)
-use the published splits and the default protocol. Scores are percentages.
-Differences and paired 95% bootstrap intervals are in percentage points.
+**BA means balanced accuracy.** For each class, divide the number of correctly
+predicted recordings by the number of recordings with that true label. Average
+the resulting percentages to give every class equal weight. For example, if
+the four strokes are correctly classified 90%, 80%, 70%, and 60% of the time,
+the balanced accuracy is 75%. Higher BA is better.
+
+The UEA reference runs use the published splits and the default protocol.
+Scores are percentages. Differences and paired 95% bootstrap intervals are
+in percentage points. [UEA metrics](results/uea-20261109T133818769079Z/metrics.csv)
+and [paired intervals](results/uea-20261109T133818769079Z/paired_contrasts.csv).
 
 | Dataset | Standard BA | GP BA | GCS BA | GCS - GP BA (95% interval) | GP macro-F1 | GCS macro-F1 | Elapsed (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | BasicMotions | 97.5 | 92.5 | 95.0 | +2.5 [-5.0, +10.0] | 92.3 | 95.0 | 27.7 |
 | RacketSports | 77.5 | 78.2 | 84.2 | +5.9 [+0.5, +11.3] | 78.4 | 84.0 | 16.4 |
 | NATOPS | 90.6 | 68.3 | 70.0 | +1.7 [-1.1, +4.4] | 67.6 | 69.6 | 101.9 |
+
+The standard features scored highest on BasicMotions and NATOPS. GCS scored
+highest on RacketSports among the three methods shown. The comparison between
+`gp` and `gcs` measures the contribution of the extra GCS columns because both
+use the same selected patterns and the same support and density features. The
+test BA rose on all three datasets, and RacketSports was the only one whose
+paired 95% interval for that difference excluded zero.
 
 The [synthetic summaries](results/synthetic-full/summary.csv) and
 [paired summaries](results/synthetic-full/paired_summary.csv) cover five

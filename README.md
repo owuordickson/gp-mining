@@ -117,7 +117,7 @@ The default output is the format of JSON:
 
 ## Benchmarks
 
-- [Causal discovery notebook](benchmarks/causal_discovery/benchmarking.ipynb) and [archived CausalRivers results](benchmarks/causal_discovery/benchmarking-results.md)
+- [Causal discovery benchmark](benchmarks/causal_discovery/README.md) and [archived CausalRivers results](benchmarks/causal_discovery/README.md)
 - [Joint-effect benchmark and results](benchmarks/joint_effect/README.md)
 
 ## Contributors ✨
