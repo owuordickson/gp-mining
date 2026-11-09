@@ -1,0 +1,26 @@
+{
+  "archive_url": "https://github.com/CausalRivers/benchmark/releases/download/First_release/product.zip",
+  "archive_sha256": "4f779fa9222653af092046eacba39a955cc65638bfb70fb7e31a32d9d8373b55",
+  "verified_products": [
+    {
+      "filepath": "product/rivers_east_germany.p",
+      "sha256": "d6ff7df27325be8e1a8b7194ee2d1dd915a29e253561e389db66338a6711ade3",
+      "archive_member": "product/rivers_east_germany.p"
+    },
+    {
+      "filepath": "product/rivers_bavaria.p",
+      "sha256": "a798c76cba8ecd3e0971916783c94d29e56d81b4663b24c32fd1e7e81610d1f4",
+      "archive_member": "product/rivers_bavaria.p"
+    },
+    {
+      "filepath": "product/rivers_flood.p",
+      "sha256": "7f8befac07c5980d5de633063fb939716f13126be9fcb1169924e54fbc94adf2",
+      "archive_member": "product/rivers_flood.p"
+    },
+    {
+      "filepath": "product/rivers_ts_east_germany.csv",
+      "sha256": "c0b2202df0c69eefd3174160d8d537aa4977452bd0545c77e3ef41052da8abc5",
+      "archive_member": "product/rivers_ts_east_germany.csv"
+    }
+  ]
+}

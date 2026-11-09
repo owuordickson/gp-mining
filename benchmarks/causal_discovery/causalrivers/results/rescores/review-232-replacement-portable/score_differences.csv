@@ -1,0 +1,14 @@
+Metric,rescored_minus_stored
+Max Acc thresh,0.0
+Max Acc,0.0
+Max individual Acc thresh,0.0
+Max individual Acc,0.0
+Null Acc,0.0
+Max F1 thresh,-0.17100000381469727
+Max F1,5.551115123125783e-17
+Max individual F1 thresh,-0.022109925746917725
+Max individual F1,0.0
+Null F1,0.0
+AUROC,0.0
+Individual AUROC,0.0
+Null AUROC,0.0

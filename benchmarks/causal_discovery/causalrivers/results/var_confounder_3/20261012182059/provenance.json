@@ -1,0 +1,435 @@
+{
+  "schema_version": 1,
+  "run_id": "results/var_confounder_3/20261012182059",
+  "status": "executed",
+  "command": [
+    ".venv_review/Scripts/python.exe",
+    "benchmark.py",
+    "method=var",
+    "label_path=evidence/review-232/frozen/confounder_3/east.p",
+    "data_path=product/rivers_ts_east_germany.csv",
+    "restrict_to=-1",
+    "dt_preprocess=True",
+    "data_preprocess.resolution=6h",
+    "data_preprocess.normalize=True",
+    "data_preprocess.interpolate=True",
+    "data_preprocess.subsample=1",
+    "data_preprocess.subset_year=False",
+    "data_preprocess.subset_month=False",
+    "data_preprocess.remove_trailing_nans_early=False",
+    "method.max_lag=3",
+    "method.var_absolute_values=True",
+    "method.map_to_summary_graph=max",
+    "remove_diagonal=True",
+    "save_full_out=True"
+  ],
+  "source": {
+    "commit": "a95c5fdc48fb74c6bdd1837e9c1496011813abdd",
+    "files": [
+      {
+        "filepath": "benchmark.py",
+        "sha256": "03b295445fbf9e13d5eb47758c418544cbb0d4a98011e34632976679f9fdd160",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/tools.py",
+        "sha256": "168883522d057af20637a63490261100c3f665928417c40350393581995c4779",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/integrity.py",
+        "sha256": "ebf06b25b105aa0f2f100931b54934964b21b1d947b432ba2e0cacf6d88e7a6a",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/baseline_methods.py",
+        "sha256": "7f214e9ec7665ba52f2f2380de48b71205d970035884507cbf4aefd42e1ced0f",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/scoring_tools.py",
+        "sha256": "4fb9f4f00b961b82ceae519a8442d04ee6bd696d8a59d860f2c7c53725279fb2",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/provenance.py",
+        "sha256": "f1c82c9f97a84fa0c66e70ba334982ff78ec35e0d0b1b333d3c6e53061aed5ca",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "0_generate_datasets.py",
+        "sha256": "68f241a969228faebd7660f38e0131459b2afa7e7b15e274af4f211183f259ea",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "rescore.py",
+        "sha256": "5d216ceec00dd7fb5d124c93bf29714fddd8ad465aea177587d72a4bc91eca03",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "verify_setup.py",
+        "sha256": "5da316a83b0019ffb9c1b14e5ef3674c44ec3cc1ebbfc45b82ebc92375af9b7a",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "requirements.txt",
+        "sha256": "8ca0c19a5830bca250cede0dae96a1a5fdb6b5a1d1967ebc313cae7aaa0b42d1",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "run_pair.py",
+        "sha256": "98aa4fc5d1d407aadcd167639f7028c59e732283961b6bae7fe46f8b2a927260",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "environment_probe.py",
+        "sha256": "6435346b81996e8714cc6bcfc39d94f9c652830339fdf67aae37fbe76c9d9855",
+        "hash_bytes": "git-blob"
+      }
+    ],
+    "status": "verified-files-at-git-commit"
+  },
+  "environment": {
+    "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "Jinja2": "3.1.6",
+      "MarkupSafe": "3.0.4",
+      "PyYAML": "6.0.3",
+      "antlr4-python3-runtime": "4.9.3",
+      "cloudpickle": "3.1.2",
+      "contourpy": "1.4.0",
+      "cycler": "0.12.1",
+      "filelock": "4.1.1",
+      "fonttools": "4.66.1",
+      "formulaic": "1.2.2",
+      "fsspec": "2026.9.0",
+      "hydra-core": "1.3.7",
+      "interface_meta": "2.0.1",
+      "joblib": "1.6.0",
+      "kiwisolver": "1.5.1",
+      "matplotlib": "3.11.2",
+      "mpmath": "1.3.0",
+      "narwhals": "2.27.1",
+      "networkx": "3.6.1",
+      "numpy": "2.5.4",
+      "omegaconf": "2.3.1",
+      "packaging": "26.3",
+      "pandas": "3.0.6",
+      "patsy": "1.0.3",
+      "pillow": "12.3.0",
+      "pip": "25.2",
+      "pyparsing": "3.3.3",
+      "python-dateutil": "2.9.0.post0",
+      "scikit-fuzzy": "0.5.0",
+      "scikit-learn": "1.9.1",
+      "scipy": "1.18.1",
+      "seaborn": "0.13.2",
+      "setuptools": "84.0.0",
+      "six": "1.17.0",
+      "so4gp": "1.0.8",
+      "statsmodels": "0.15.0",
+      "sympy": "1.14.0",
+      "tabulate": "0.10.0",
+      "threadpoolctl": "3.7.0",
+      "torch": "2.13.0",
+      "typing_extensions": "4.16.0",
+      "tzdata": "2026.5",
+      "wrapt": "2.5.1rc1"
+    },
+    "torch_cuda_available": false,
+    "torch_cuda_version": null,
+    "mode": "cpu"
+  },
+  "selection": {
+    "restrict_to": -1,
+    "sample_count": 24,
+    "nodes": [
+      [
+        "44",
+        "45",
+        "201"
+      ],
+      [
+        "99",
+        "277",
+        "307"
+      ],
+      [
+        "22",
+        "100",
+        "590"
+      ],
+      [
+        "121",
+        "864",
+        "935"
+      ],
+      [
+        "122",
+        "123",
+        "125"
+      ],
+      [
+        "145",
+        "146",
+        "148"
+      ],
+      [
+        "166",
+        "233",
+        "555"
+      ],
+      [
+        "241",
+        "242",
+        "567"
+      ],
+      [
+        "145",
+        "146",
+        "245"
+      ],
+      [
+        "295",
+        "577",
+        "578"
+      ],
+      [
+        "277",
+        "307",
+        "308"
+      ],
+      [
+        "310",
+        "312",
+        "584"
+      ],
+      [
+        "376",
+        "377",
+        "378"
+      ],
+      [
+        "19",
+        "380",
+        "568"
+      ],
+      [
+        "310",
+        "495",
+        "584"
+      ],
+      [
+        "427",
+        "579",
+        "580"
+      ],
+      [
+        "22",
+        "590",
+        "591"
+      ],
+      [
+        "682",
+        "973",
+        "1110"
+      ],
+      [
+        "44",
+        "201",
+        "773"
+      ],
+      [
+        "310",
+        "584",
+        "786"
+      ],
+      [
+        "816",
+        "817",
+        "818"
+      ],
+      [
+        "125",
+        "867",
+        "868"
+      ],
+      [
+        "296",
+        "869",
+        "870"
+      ],
+      [
+        "203",
+        "977",
+        "978"
+      ]
+    ],
+    "rows": [
+      7305,
+      7305,
+      4993,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7029,
+      4381,
+      7305,
+      7305,
+      4993,
+      3165,
+      7305,
+      6089,
+      7029,
+      4625,
+      7305,
+      7305
+    ],
+    "time_ranges": [
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2020-08-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-03-11 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2021-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2020-08-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2021-11-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-11-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-03-11 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2020-11-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ]
+    ],
+    "capture": "before method invocation"
+  },
+  "inputs": {
+    "labels": {
+      "filepath": "evidence/review-232/frozen/confounder_3/east.p",
+      "sha256": "3579fb8cfb8bc5c2f0fc7dfa74d45b81acd7b85f1d6681c4c48dc5e9c34e81ce"
+    },
+    "timeseries": {
+      "filepath": "product/rivers_ts_east_germany.csv",
+      "sha256": "c0b2202df0c69eefd3174160d8d537aa4977452bd0545c77e3ef41052da8abc5"
+    }
+  },
+  "artifacts": {
+    "config.yaml": {
+      "filepath": "results/var_confounder_3/20261012182059/config.yaml",
+      "sha256": "b956c78676025ba07ce80e6a5ecfcb2c9209aa5a2228fc167abd252c7c62810a"
+    },
+    "preds.p": {
+      "filepath": "results/var_confounder_3/20261012182059/preds.p",
+      "sha256": "8686da5ecfc2afecfd013e1821d3eb5b8d59442b9563ca4fb81c96d4c7968c93"
+    },
+    "runtime.csv": {
+      "filepath": "results/var_confounder_3/20261012182059/runtime.csv",
+      "sha256": "8fd994229b397b327099b36b1462b4dca6ecec3bd214001fd6ee01dde9dc967c"
+    },
+    "scoring.csv": {
+      "filepath": "results/var_confounder_3/20261012182059/scoring.csv",
+      "sha256": "1615e6b6b48d3f4bc1e39cf6e222ff914b57c36d1f58c0dfcd65ed0d1ba94c30"
+    }
+  },
+  "scorer": {
+    "filepath": "tools/scoring_tools.py",
+    "sha256": "4fb9f4f00b961b82ceae519a8442d04ee6bd696d8a59d860f2c7c53725279fb2"
+  },
+  "metrics": {
+    "AUROC": "pooled off-diagonal",
+    "Individual AUROC": "mean per graph, excluding single-class graphs"
+  },
+  "environment_record": {
+    "filepath": "evidence/review-232/environment.json",
+    "sha256": "66856ca37ad8dfb775618fc0b7473b54043529b2428f1940995464a0271a8f11"
+  }
+}

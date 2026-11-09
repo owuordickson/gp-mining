@@ -1,0 +1,118 @@
+{
+  "reference_commit": "8bb9cf016a4269f1620cd6146fa1fa42b32233b6",
+  "current_scorer": {
+    "filepath": "tools/scoring_tools.py",
+    "sha256": "4fb9f4f00b961b82ceae519a8442d04ee6bd696d8a59d860f2c7c53725279fb2"
+  },
+  "exact_scalar_vectorized_equivalence_cases": 18,
+  "fixtures": [
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 6,
+      "threshold": 0.0,
+      "accuracy": 1.0
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 6,
+      "threshold": -1.1605693101882935,
+      "accuracy": 0.8333333333333334
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 6,
+      "threshold": 0.0,
+      "accuracy": 0.0
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 20,
+      "threshold": 0.0,
+      "accuracy": 0.6
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 20,
+      "threshold": 0.0,
+      "accuracy": 0.65
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 20,
+      "threshold": 0.0,
+      "accuracy": 0.4
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 60,
+      "threshold": 0.2135662004817277,
+      "accuracy": 0.6333333333333333
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 60,
+      "threshold": -1.2494984197616574,
+      "accuracy": 0.5666666666666667
+    },
+    {
+      "dtype": "<class 'numpy.float32'>",
+      "size": 60,
+      "threshold": 0.0,
+      "accuracy": 0.45
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 6,
+      "threshold": 0.0,
+      "accuracy": 0.5
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 6,
+      "threshold": 0.0,
+      "accuracy": 0.6666666666666666
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 6,
+      "threshold": 0.0,
+      "accuracy": 0.5
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 20,
+      "threshold": 0.6392537489514168,
+      "accuracy": 0.7
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 20,
+      "threshold": -2.786627322408088,
+      "accuracy": 0.5
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 20,
+      "threshold": 0.0,
+      "accuracy": 0.45
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 60,
+      "threshold": 0.5452608421683166,
+      "accuracy": 0.5166666666666667
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 60,
+      "threshold": 1.9968865314291164,
+      "accuracy": 0.5
+    },
+    {
+      "dtype": "<class 'numpy.float64'>",
+      "size": 60,
+      "threshold": 0.0,
+      "accuracy": 0.5
+    }
+  ]
+}

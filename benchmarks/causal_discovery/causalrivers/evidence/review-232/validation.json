@@ -1,0 +1,92 @@
+{
+  "source": {
+    "commit": "dfadcd91410446148f1f767788d72bea37b2888e",
+    "files": [
+      {
+        "filepath": "benchmark.py",
+        "sha256": "03b295445fbf9e13d5eb47758c418544cbb0d4a98011e34632976679f9fdd160",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/tools.py",
+        "sha256": "168883522d057af20637a63490261100c3f665928417c40350393581995c4779",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/integrity.py",
+        "sha256": "ebf06b25b105aa0f2f100931b54934964b21b1d947b432ba2e0cacf6d88e7a6a",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/baseline_methods.py",
+        "sha256": "7f214e9ec7665ba52f2f2380de48b71205d970035884507cbf4aefd42e1ced0f",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/scoring_tools.py",
+        "sha256": "4fb9f4f00b961b82ceae519a8442d04ee6bd696d8a59d860f2c7c53725279fb2",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/provenance.py",
+        "sha256": "f1c82c9f97a84fa0c66e70ba334982ff78ec35e0d0b1b333d3c6e53061aed5ca",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "0_generate_datasets.py",
+        "sha256": "68f241a969228faebd7660f38e0131459b2afa7e7b15e274af4f211183f259ea",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "rescore.py",
+        "sha256": "73166251b91db4c4939872f6a9b3838c18aa3b8bd62f94cb00881110138800de",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "verify_setup.py",
+        "sha256": "5da316a83b0019ffb9c1b14e5ef3674c44ec3cc1ebbfc45b82ebc92375af9b7a",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "requirements.txt",
+        "sha256": "8ca0c19a5830bca250cede0dae96a1a5fdb6b5a1d1967ebc313cae7aaa0b42d1",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "run_pair.py",
+        "sha256": "98aa4fc5d1d407aadcd167639f7028c59e732283961b6bae7fe46f8b2a927260",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "environment_probe.py",
+        "sha256": "6435346b81996e8714cc6bcfc39d94f9c652830339fdf67aae37fbe76c9d9855",
+        "hash_bytes": "git-blob"
+      }
+    ],
+    "status": "verified-files-at-git-commit"
+  },
+  "environment": {
+    "filepath": "evidence/review-232/environment.json",
+    "sha256": "66856ca37ad8dfb775618fc0b7473b54043529b2428f1940995464a0271a8f11"
+  },
+  "resolved_requirements": {
+    "filepath": "evidence/review-232/requirements-resolved.txt",
+    "sha256": "a93eb9e5e37949c163dd235862d4f1e3cdf8e781059d37df0d049bee86e939e3"
+  },
+  "installation_report": {
+    "filepath": "evidence/review-232/pip-install.json",
+    "sha256": "4ca45285731b942eabf1e6c7cfc7c9aee616e784c605328fa4a74c3db0b6da4a"
+  },
+  "tests": {
+    "command": ".venv_review/Scripts/python.exe -m unittest discover -s tests -v",
+    "exit_code": 0,
+    "test_count": 19,
+    "transcript": {
+      "filepath": "evidence/review-232/tests-final.txt",
+      "sha256": "d01da23783dc5283c9a2381360f3a49b7931045d8acc005becd881a45b01888e"
+    }
+  },
+  "verified_run_artifact_sets": 2,
+  "identical_pair_inputs_and_selection": true,
+  "historical_files_byte_identical_to_original_commit": true
+}

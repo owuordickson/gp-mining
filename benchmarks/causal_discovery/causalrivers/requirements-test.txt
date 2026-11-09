@@ -1,0 +1,7 @@
+# Hermetic tests do not need Torch, so4gp, external datasets, or GPU access.
+numpy==2.5.4
+pandas==3.0.6
+omegaconf==2.3.1
+statsmodels==0.15.0
+networkx==3.6.1
+scikit-learn==1.9.1

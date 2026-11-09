@@ -1,0 +1,359 @@
+{
+  "scope": "One confounder_3 river-network graph-recovery comparison; no forecast/superiority claim",
+  "command": ".venv_review/Scripts/python.exe run_pair.py",
+  "source": {
+    "commit": "a95c5fdc48fb74c6bdd1837e9c1496011813abdd",
+    "files": [
+      {
+        "filepath": "benchmark.py",
+        "sha256": "03b295445fbf9e13d5eb47758c418544cbb0d4a98011e34632976679f9fdd160",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/tools.py",
+        "sha256": "168883522d057af20637a63490261100c3f665928417c40350393581995c4779",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/integrity.py",
+        "sha256": "ebf06b25b105aa0f2f100931b54934964b21b1d947b432ba2e0cacf6d88e7a6a",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/baseline_methods.py",
+        "sha256": "7f214e9ec7665ba52f2f2380de48b71205d970035884507cbf4aefd42e1ced0f",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/scoring_tools.py",
+        "sha256": "4fb9f4f00b961b82ceae519a8442d04ee6bd696d8a59d860f2c7c53725279fb2",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "tools/provenance.py",
+        "sha256": "f1c82c9f97a84fa0c66e70ba334982ff78ec35e0d0b1b333d3c6e53061aed5ca",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "0_generate_datasets.py",
+        "sha256": "68f241a969228faebd7660f38e0131459b2afa7e7b15e274af4f211183f259ea",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "rescore.py",
+        "sha256": "5d216ceec00dd7fb5d124c93bf29714fddd8ad465aea177587d72a4bc91eca03",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "verify_setup.py",
+        "sha256": "5da316a83b0019ffb9c1b14e5ef3674c44ec3cc1ebbfc45b82ebc92375af9b7a",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "requirements.txt",
+        "sha256": "8ca0c19a5830bca250cede0dae96a1a5fdb6b5a1d1967ebc313cae7aaa0b42d1",
+        "hash_bytes": "git-blob-with-CRLF-newlines"
+      },
+      {
+        "filepath": "run_pair.py",
+        "sha256": "98aa4fc5d1d407aadcd167639f7028c59e732283961b6bae7fe46f8b2a927260",
+        "hash_bytes": "git-blob"
+      },
+      {
+        "filepath": "environment_probe.py",
+        "sha256": "6435346b81996e8714cc6bcfc39d94f9c652830339fdf67aae37fbe76c9d9855",
+        "hash_bytes": "git-blob"
+      }
+    ],
+    "status": "verified-files-at-git-commit"
+  },
+  "environment": {
+    "filepath": "evidence/review-232/environment.json",
+    "sha256": "66856ca37ad8dfb775618fc0b7473b54043529b2428f1940995464a0271a8f11"
+  },
+  "generation_matches_frozen_topology_and_order": true,
+  "sample_count": 24,
+  "shared_inputs": {
+    "labels": {
+      "filepath": "evidence/review-232/frozen/confounder_3/east.p",
+      "sha256": "3579fb8cfb8bc5c2f0fc7dfa74d45b81acd7b85f1d6681c4c48dc5e9c34e81ce"
+    },
+    "timeseries": {
+      "filepath": "product/rivers_ts_east_germany.csv",
+      "sha256": "c0b2202df0c69eefd3174160d8d537aa4977452bd0545c77e3ef41052da8abc5"
+    }
+  },
+  "shared_selection": {
+    "restrict_to": -1,
+    "sample_count": 24,
+    "nodes": [
+      [
+        "44",
+        "45",
+        "201"
+      ],
+      [
+        "99",
+        "277",
+        "307"
+      ],
+      [
+        "22",
+        "100",
+        "590"
+      ],
+      [
+        "121",
+        "864",
+        "935"
+      ],
+      [
+        "122",
+        "123",
+        "125"
+      ],
+      [
+        "145",
+        "146",
+        "148"
+      ],
+      [
+        "166",
+        "233",
+        "555"
+      ],
+      [
+        "241",
+        "242",
+        "567"
+      ],
+      [
+        "145",
+        "146",
+        "245"
+      ],
+      [
+        "295",
+        "577",
+        "578"
+      ],
+      [
+        "277",
+        "307",
+        "308"
+      ],
+      [
+        "310",
+        "312",
+        "584"
+      ],
+      [
+        "376",
+        "377",
+        "378"
+      ],
+      [
+        "19",
+        "380",
+        "568"
+      ],
+      [
+        "310",
+        "495",
+        "584"
+      ],
+      [
+        "427",
+        "579",
+        "580"
+      ],
+      [
+        "22",
+        "590",
+        "591"
+      ],
+      [
+        "682",
+        "973",
+        "1110"
+      ],
+      [
+        "44",
+        "201",
+        "773"
+      ],
+      [
+        "310",
+        "584",
+        "786"
+      ],
+      [
+        "816",
+        "817",
+        "818"
+      ],
+      [
+        "125",
+        "867",
+        "868"
+      ],
+      [
+        "296",
+        "869",
+        "870"
+      ],
+      [
+        "203",
+        "977",
+        "978"
+      ]
+    ],
+    "rows": [
+      7305,
+      7305,
+      4993,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7305,
+      7029,
+      4381,
+      7305,
+      7305,
+      4993,
+      3165,
+      7305,
+      6089,
+      7029,
+      4625,
+      7305,
+      7305
+    ],
+    "time_ranges": [
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2020-08-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-03-11 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2021-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2020-08-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2021-11-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-11-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-03-11 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2020-11-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ],
+      [
+        "2019-01-01 00:00:00",
+        "2024-01-01 00:00:00"
+      ]
+    ],
+    "capture": "before method invocation"
+  },
+  "runs": [
+    {
+      "run_id": "results/var_confounder_3/20261012182059",
+      "record": {
+        "filepath": "results/var_confounder_3/20261012182059/provenance.json",
+        "sha256": "20eb08fe04bad1ba0a7d039e917192072fbabfce6f9d24605ff534cacd7abf6a"
+      },
+      "pooled_auroc": 0.6471076093717603,
+      "mean_per_graph_auroc": 0.7089120370370371,
+      "runtime_seconds": 5.068524599075317
+    },
+    {
+      "run_id": "results/tgraank_confounder_3/20261012182600",
+      "record": {
+        "filepath": "results/tgraank_confounder_3/20261012182600/provenance.json",
+        "sha256": "7994e4997189a204398ab788cb998adf02ca2a2f62d85d3dab43b4707ee3aa78"
+      },
+      "pooled_auroc": 0.6093717603151566,
+      "mean_per_graph_auroc": 0.6513310185185185,
+      "runtime_seconds": 294.51442646980286
+    }
+  ]
+}

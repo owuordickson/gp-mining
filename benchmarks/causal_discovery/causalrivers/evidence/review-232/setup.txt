@@ -1,0 +1,6 @@
+Downloading https://github.com/CausalRivers/benchmark/releases/download/First_release/product.zip
+Verified archive member rivers_east_germany.p: d6ff7df27325be8e1a8b7194ee2d1dd915a29e253561e389db66338a6711ade3
+Verified archive member rivers_bavaria.p: a798c76cba8ecd3e0971916783c94d29e56d81b4663b24c32fd1e7e81610d1f4
+Verified archive member rivers_flood.p: 7f8befac07c5980d5de633063fb939716f13126be9fcb1169924e54fbc94adf2
+Verified archive member rivers_ts_east_germany.csv: c0b2202df0c69eefd3174160d8d537aa4977452bd0545c77e3ef41052da8abc5
+Pinned archive and all four selected frozen products match.

@@ -1,0 +1,58 @@
+.venv_test/Scripts/python.exe : test_absolute_manifest_key 
+(test_review_regressions.IntegrityTests.test_absolute_manifest_key) ... ok
+At line:11 char:1
++ .venv_test/Scripts/python.exe -m unittest discover -s tests -v > evid ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_absolute_m...est_key) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_duplicate_and_outside_paths_refuse 
+(test_review_regressions.IntegrityTests.test_duplicate_and_outside_paths_refuse) ... ok
+test_equivalent_paths_from_other_working_directory 
+(test_review_regressions.IntegrityTests.test_equivalent_paths_from_other_working_directory) ... ok
+test_filename_does_not_alias_nested_artifact 
+(test_review_regressions.IntegrityTests.test_filename_does_not_alias_nested_artifact) ... ok
+test_manifest_failures_never_unpickle (test_review_regressions.IntegrityTests.test_manifest_failures_never_unpickle) 
+... ok
+test_missing_artifact_never_unpickles (test_review_regressions.IntegrityTests.test_missing_artifact_never_unpickles) 
+... ok
+test_reconstructed_rescore_checks_node_order_and_scores_real_fixture 
+(test_review_regressions.IntegrityTests.test_reconstructed_rescore_checks_node_order_and_scores_real_fixture) ... ok
+test_rescoring_tamper_refuses_before_unpickling 
+(test_review_regressions.IntegrityTests.test_rescoring_tamper_refuses_before_unpickling) ... ok
+test_verified_bytes_are_the_bytes_loaded 
+(test_review_regressions.IntegrityTests.test_verified_bytes_are_the_bytes_loaded) ... ok
+test_accuracy_threshold_grid_preserves_first_best_threshold 
+(test_review_regressions.MethodAndScorerTests.test_accuracy_threshold_grid_preserves_first_best_threshold) ... ok
+test_orientation_metrics_and_label_immutability 
+(test_review_regressions.MethodAndScorerTests.test_orientation_metrics_and_label_immutability) ... ok
+test_scoring_rejects_empty_mismatched_and_nonfinite_results 
+(test_review_regressions.MethodAndScorerTests.test_scoring_rejects_empty_mismatched_and_nonfinite_results) ... ok
+test_tgraank_isolates_upstream_dataframe_mutation 
+(test_review_regressions.MethodAndScorerTests.test_tgraank_isolates_upstream_dataframe_mutation) ... ok
+test_var_preserves_input_and_produces_effect_by_cause_matrix 
+(test_review_regressions.MethodAndScorerTests.test_var_preserves_input_and_produces_effect_by_cause_matrix) ... ok
+test_constant_missing_mask_and_input_preserved 
+(test_review_regressions.PreprocessingTests.test_constant_missing_mask_and_input_preserved) ... ok
+test_edge_trimming_preserves_interior_gap_and_input 
+(test_review_regressions.PreprocessingTests.test_edge_trimming_preserves_interior_gap_and_input) ... ok
+test_empty_and_no_fully_valid_rows_rejected 
+(test_review_regressions.PreprocessingTests.test_empty_and_no_fully_valid_rows_rejected) ... ok
+test_nonconstant_interpolation (test_review_regressions.PreprocessingTests.test_nonconstant_interpolation) ... ok
+test_unusable_selection_rejected_before_any_method 
+(test_review_regressions.PreprocessingTests.test_unusable_selection_rejected_before_any_method) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 3.532s
+
+OK
+Scoring...
+0 / 1
+{
+  "run": "results/reconstructed-run",
+  "pooled_auroc": 1.0,
+  "mean_per_graph_auroc": 1.0,
+  "max_absolute_stored_score_difference": 0.5
+}
+Scoring...
+0 / 1

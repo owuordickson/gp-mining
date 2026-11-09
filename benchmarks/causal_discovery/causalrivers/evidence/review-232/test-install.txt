@@ -1,0 +1,78 @@
+Collecting numpy==2.5.4 (from -r requirements-test.txt (line 2))
+  Using cached numpy-2.5.4-cp314-cp314-win_amd64.whl.metadata (6.6 kB)
+Collecting pandas==3.0.6 (from -r requirements-test.txt (line 3))
+  Using cached pandas-3.0.6-cp314-cp314-win_amd64.whl.metadata (19 kB)
+Collecting omegaconf==2.3.1 (from -r requirements-test.txt (line 4))
+  Using cached omegaconf-2.3.1-py3-none-any.whl.metadata (4.5 kB)
+Collecting statsmodels==0.15.0 (from -r requirements-test.txt (line 5))
+  Using cached statsmodels-0.15.0-cp314-cp314-win_amd64.whl.metadata (9.6 kB)
+Collecting networkx==3.6.1 (from -r requirements-test.txt (line 6))
+  Using cached networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting scikit-learn==1.9.1 (from -r requirements-test.txt (line 7))
+  Using cached scikit_learn-1.9.1-cp314-cp314-win_amd64.whl.metadata (9.3 kB)
+Collecting python-dateutil>=2.8.2 (from pandas==3.0.6->-r requirements-test.txt (line 3))
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting tzdata (from pandas==3.0.6->-r requirements-test.txt (line 3))
+  Using cached tzdata-2026.5-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting antlr4-python3-runtime==4.9.* (from omegaconf==2.3.1->-r requirements-test.txt (line 4))
+  Using cached antlr4_python3_runtime-4.9.3-py3-none-any.whl
+Collecting PyYAML>=5.1.0 (from omegaconf==2.3.1->-r requirements-test.txt (line 4))
+  Using cached pyyaml-6.0.3-cp314-cp314-win_amd64.whl.metadata (2.4 kB)
+Collecting scipy!=1.9.2,>=1.8 (from statsmodels==0.15.0->-r requirements-test.txt (line 5))
+  Using cached scipy-1.18.1-cp314-cp314-win_amd64.whl.metadata (61 kB)
+Collecting patsy>=0.5.6 (from statsmodels==0.15.0->-r requirements-test.txt (line 5))
+  Using cached patsy-1.0.3-py2.py3-none-any.whl.metadata (3.7 kB)
+Collecting packaging>=21.3 (from statsmodels==0.15.0->-r requirements-test.txt (line 5))
+  Using cached packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting formulaic>=1.1.0 (from statsmodels==0.15.0->-r requirements-test.txt (line 5))
+  Using cached formulaic-1.2.2-py3-none-any.whl.metadata (7.0 kB)
+Collecting joblib>=1.4.0 (from scikit-learn==1.9.1->-r requirements-test.txt (line 7))
+  Using cached joblib-1.6.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting narwhals>=2.0.1 (from scikit-learn==1.9.1->-r requirements-test.txt (line 7))
+  Using cached narwhals-2.27.1-py3-none-any.whl.metadata (15 kB)
+Collecting threadpoolctl>=3.5.0 (from scikit-learn==1.9.1->-r requirements-test.txt (line 7))
+  Using cached threadpoolctl-3.7.0-py3-none-any.whl.metadata (24 kB)
+Collecting interface-meta>=1.2.0 (from formulaic>=1.1.0->statsmodels==0.15.0->-r requirements-test.txt (line 5))
+  Using cached interface_meta-2.0.1-py3-none-any.whl.metadata (6.4 kB)
+Collecting typing-extensions>=4.2.0 (from formulaic>=1.1.0->statsmodels==0.15.0->-r requirements-test.txt (line 5))
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting wrapt>=1.17.0rc1 (from formulaic>=1.1.0->statsmodels==0.15.0->-r requirements-test.txt (line 5))
+  Using cached wrapt-2.5.1rc1-cp314-cp314-win_amd64.whl.metadata (7.7 kB)
+Collecting cloudpickle>=3.0 (from joblib>=1.4.0->scikit-learn==1.9.1->-r requirements-test.txt (line 7))
+  Using cached cloudpickle-3.1.2-py3-none-any.whl.metadata (7.1 kB)
+Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas==3.0.6->-r requirements-test.txt (line 3))
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Using cached numpy-2.5.4-cp314-cp314-win_amd64.whl (12.7 MB)
+Using cached pandas-3.0.6-cp314-cp314-win_amd64.whl (9.8 MB)
+Using cached omegaconf-2.3.1-py3-none-any.whl (79 kB)
+Using cached statsmodels-0.15.0-cp314-cp314-win_amd64.whl (11.3 MB)
+Using cached networkx-3.6.1-py3-none-any.whl (2.1 MB)
+Using cached scikit_learn-1.9.1-cp314-cp314-win_amd64.whl (8.4 MB)
+Using cached formulaic-1.2.2-py3-none-any.whl (118 kB)
+Using cached interface_meta-2.0.1-py3-none-any.whl (15 kB)
+Using cached joblib-1.6.0-py3-none-any.whl (306 kB)
+Using cached cloudpickle-3.1.2-py3-none-any.whl (22 kB)
+Using cached narwhals-2.27.1-py3-none-any.whl (483 kB)
+Using cached packaging-26.3-py3-none-any.whl (129 kB)
+Using cached patsy-1.0.3-py2.py3-none-any.whl (233 kB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Using cached pyyaml-6.0.3-cp314-cp314-win_amd64.whl (156 kB)
+Using cached scipy-1.18.1-cp314-cp314-win_amd64.whl (37.4 MB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Using cached threadpoolctl-3.7.0-py3-none-any.whl (26 kB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Using cached wrapt-2.5.1rc1-cp314-cp314-win_amd64.whl (106 kB)
+Using cached tzdata-2026.5-py2.py3-none-any.whl (347 kB)
+Installing collected packages: antlr4-python3-runtime, wrapt, tzdata, typing-extensions, threadpoolctl, six, PyYAML, packaging, numpy, networkx, narwhals, interface-meta, cloudpickle, scipy, python-dateutil, patsy, omegaconf, joblib, scikit-learn, pandas, formulaic, statsmodels
+
+Successfully installed PyYAML-6.0.3 antlr4-python3-runtime-4.9.3 cloudpickle-3.1.2 formulaic-1.2.2 interface-meta-2.0.1 joblib-1.6.0 narwhals-2.27.1 networkx-3.6.1 numpy-2.5.4 omegaconf-2.3.1 packaging-26.3 pandas-3.0.6 patsy-1.0.3 python-dateutil-2.9.0.post0 scikit-learn-1.9.1 scipy-1.18.1 six-1.17.0 statsmodels-0.15.0 threadpoolctl-3.7.0 typing-extensions-4.16.0 tzdata-2026.5 wrapt-2.5.1rc1
+.venv_test/Scripts/python.exe : 
+At line:9 char:1
++ .venv_test/Scripts/python.exe -m pip install -r requirements-test.txt ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[notice] A new release of pip is available: 25.2 -> 26.2.1
+[notice] To update, run: C:\owuor_lab\DeposiumGeoAI\benchmarks\causalrivers\.venv_test\Scripts\python.exe -m pip 
+install --upgrade pip

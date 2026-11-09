@@ -1,0 +1,70 @@
+Resolved Configuration Profile:
+{'label_path': 'evidence/review-232/frozen/confounder_3/east.p', 'data_path': 'product/rivers_ts_east_germany.csv', 'save_path': 'results/', 'save_full_out': True, 'remove_diagonal': True, 'restrict_to': -1, 'dt_preprocess': True, 'method': {'name': 'tgraank', 'max_lag': 3, 'var_absolute_values': True, 'map_to_summary_graph': 'max'}, 'data_preprocess': {'resolution': '6h', 'interpolate': True, 'subset_month': False, 'subset_year': False, 'subsample': 1, 'normalize': True, 'remove_trailing_nans_early': False}}
+Loading data...
+Performing Causal Discovery...
+0 / 24
+1 / 24
+2 / 24
+3 / 24
+4 / 24
+5 / 24
+6 / 24
+7 / 24
+8 / 24
+9 / 24
+10 / 24
+11 / 24
+12 / 24
+13 / 24
+14 / 24
+15 / 24
+16 / 24
+17 / 24
+18 / 24
+19 / 24
+20 / 24
+21 / 24
+22 / 24
+23 / 24
+Scoring...
+0 / 24
+1 / 24
+2 / 24
+3 / 24
+4 / 24
+5 / 24
+6 / 24
+7 / 24
+8 / 24
+9 / 24
+10 / 24
+11 / 24
+12 / 24
+13 / 24
+14 / 24
+15 / 24
+16 / 24
+17 / 24
+18 / 24
+19 / 24
+20 / 24
+21 / 24
+22 / 24
+23 / 24
+                            tgraank
+Metric                             
+Max Acc thresh             0.899600
+Max Acc                    0.645833
+Max individual Acc thresh  0.672067
+Max individual Acc         0.750000
+Null Acc                   0.631944
+Max F1 thresh              0.607000
+Max F1                     0.563380
+Max individual F1 thresh   0.655167
+Max individual F1          0.686508
+Null F1                    0.538071
+AUROC                      0.609372
+Individual AUROC           0.651331
+Null AUROC                 0.500000
+Saving...
+Done 294.51442646980286

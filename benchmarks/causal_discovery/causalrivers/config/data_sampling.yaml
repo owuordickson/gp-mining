@@ -1,0 +1,16 @@
+test_G_path: 'product/rivers_east_germany.p'
+train_G_path: 'product/rivers_bavaria.p'
+flood_G_path: 'product/rivers_flood.p'
+
+
+save_path: "datasets/"
+which: "ALL"
+n_vars: 3
+
+#distance set
+dist_measure: "geo_distance"
+max_distance: 0.3
+
+
+# Not used for paper datasets
+g_per_sink: 10

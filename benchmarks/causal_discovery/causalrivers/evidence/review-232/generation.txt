@@ -1,0 +1,16 @@
+{'test_G_path': 'product/rivers_east_germany.p', 'train_G_path': 'product/rivers_bavaria.p', 'flood_G_path': 'product/rivers_flood.p', 'save_path': 'evidence/review-232/generated/', 'which': 'confounder', 'n_vars': 3, 'dist_measure': 'geo_distance', 'max_distance': 0.3, 'g_per_sink': 10}
+Nodes in G[rivers_east_germany.p]: 666
+Edges in G[rivers_east_germany.p]: 651
+Nodes in G[rivers_bavaria.p]: 494
+Edges in G[rivers_bavaria.p]: 490
+Nodes in G[rivers_flood.p]: 42
+Edges in G[rivers_flood.p]: 42
+--------------------------------------------------
+Generating datasets for the following strategies:
+	Strategy: confounder with 3 variables.
+--------------------------------------------------
+Generating dataset for: confounder with 3 variables.
+Save path: evidence\review-232\generated\confounder_3
+Number of subgraphs: 24
+Number of subgraphs for finetuning: 11
+Number of subgraphs for flood area: 1
