@@ -12,8 +12,8 @@ branch. Dataset access uses the Python standard library.
 
 ```powershell
 python -m pip install -e .
-python -m benchmarks.joint_effect uea --download
-python -m benchmarks.joint_effect synthetic
+python benchmarks/joint_effect/benchmark.py uea --download
+python benchmarks/joint_effect/benchmark.py synthetic
 ```
 
 The UEA run uses the published train and test files for BasicMotions,
@@ -30,7 +30,7 @@ Use --data-dir for another location and --datasets to select a subset.
 For a small local check:
 
 ```powershell
-python -m benchmarks.joint_effect synthetic --seeds 0 --noise 0.5 --train-size 32 --test-size 24 --max-patterns 8 --folds 2 --bootstrap 100
+python benchmarks/joint_effect/benchmark.py synthetic --seeds 0 --noise 0.5 --train-size 32 --test-size 24 --max-patterns 8 --folds 2 --bootstrap 100
 ```
 
 The synthetic experiment uses independent train and test sequences for each

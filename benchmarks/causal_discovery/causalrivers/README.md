@@ -17,7 +17,7 @@ Also check our [Website](https://causalrivers.github.io/) where we will maintain
 
 ❗We maintain an active leaderboard for CausalRivers.❗ 
 You can submit to this leaderboard by using the [submission form](https://docs.google.com/forms/d/e/1FAIpQLSfDcNKLPo0L5ihIV9HDFhhkTWLNzcexsFWXvaU6tb8lPdBlyQ/viewform). 
-Here you can submit your raw performance for the different datasets. For the format, please check [example submission file](tgraank_submission.csv) and the [preparation tutorial](6_prepare_leaderboard_submission). 
+Here you can submit your raw performance for the different datasets. For the format, please check [example submission file](tgraank_submission.csv) and the [preparation tutorial](6_prepare_leaderboard_submission.ipynb).
 Note, you don't have to submit results for all datasets (as shown in the example file). 
 Further, if you want to integrate the algorithm that produced your scorings, you can submit it along with the predictions and we will include it under [the CD zoo](https://github.com/CausalRivers/experiments/tree/main/causal_discovery_zoo). We will reference it accordingly to your wishes.
 
@@ -30,15 +30,20 @@ Check out our new work: [TCD-Arena](https://tcd-arena.github.io/)
 
 ## Install
 
+The CausalRivers harness is included in the GP-Mining checkout under
+`benchmarks/causal_discovery/causalrivers`. Open its tutorial notebooks
+with that directory as the notebook working directory.
+
 For the PR #232 bounded comparison, the supported profile is the pip environment
 recorded in [evidence/review-232/requirements-resolved.txt](evidence/review-232/requirements-resolved.txt).
 It was installed and run on Windows x64, CPython 3.14.0, CPU, with so4gp 1.0.8
 and Torch 2.13.0. Installation, imports, versions, archive verification, generation,
 regressions, and complete run commands are in [evidence/review-232](evidence/review-232).
 
-From the benchmark root, using PowerShell:
+Use PowerShell from the GP-Mining repository root.
 
 ```powershell
+cd benchmarks/causal_discovery/causalrivers
 python -m venv .venv_review
 .venv_review/Scripts/python.exe -m pip install -r evidence/review-232/requirements-resolved.txt
 .venv_review/Scripts/python.exe verify_setup.py

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+
 # 1. Initialize Conda runtime configuration mapping
 conda env create -f causal_rivers_core.yml
 

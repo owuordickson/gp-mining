@@ -8,7 +8,6 @@ import networkx as nx
 from hydra import compose, initialize
 from omegaconf import DictConfig
 
-sys.path.append("..")
 from tools.graph_sampling_tools import (
     add_one_random_node,
     combine_far_apart,
@@ -17,7 +16,7 @@ from tools.graph_sampling_tools import (
     get_longest_path,
     select_confounder_samples,
 )
-from tools.integrity import secure_load_pickle
+from tools.integrity import MANIFEST_PATH, artifact_key, artifact_path, secure_load_pickle
 
 # Here we generate all sub-sampling strategies that we evaluate and some additional ones.
 # Additional ones might be added according to need.
@@ -31,15 +30,11 @@ from tools.integrity import secure_load_pickle
 # - One random node + connected graph
 # - Disjoint groups
 
-# Path to the JSON run manifest that stores metadata about the generated datasets
-MANIFEST_PATH = Path("run_manifest.json")
-
-
 def load_pickle(path: str, verbose: bool = False) -> nx.Graph:
     """
     Loads a pickle file and verifies its integrity before deserialization.
     """
-    _path = Path(path)
+    _path = artifact_path(path)
     if not _path.exists() or not _path.is_file() or _path.suffix != ".p":
         raise FileNotFoundError(
             f"File validation failed: {path}. Please check if you have downloaded the *product* dataset."
@@ -89,8 +84,6 @@ def save_subgraphs_to_pickle(main_G: nx.Graph, sub_G: nx.Graph, name: str, save_
 
     # Convert the file path to a standardized relative string representation
     # .as_posix() guarantees forward slashes (/) across Windows and Linux
-    from tools.integrity import artifact_key
-
     relative_path_str = artifact_key(file_path)
 
     # Update global tracking schemas
@@ -166,7 +159,7 @@ def main(cfg: DictConfig):
     else:
         to_generate = [(cfg.which, cfg.n_vars)]
 
-    save_path = Path(cfg.save_path)
+    save_path = artifact_path(cfg.save_path)
     save_path.mkdir(exist_ok=True, parents=True)
 
     print("-" * 50)

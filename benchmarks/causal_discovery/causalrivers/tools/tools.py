@@ -1,5 +1,4 @@
 import datetime
-import os
 import pickle
 from pathlib import Path
 
@@ -212,21 +211,14 @@ def load_joint_samples(cfg, index_col="datetime", preprocessing=None):
 
 
 def save_run(out, stop_time, preds, cfg):
-    # make folder with naming
-    p = cfg.save_path + cfg.method.name + "_" + cfg.label_path.split("/")[-2]
-    if not os.path.exists(p):
-        os.makedirs(p)
-    #  tstamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    tstamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d%H%M%S")
-    inner_p = p + "/" + str(tstamp)
-    os.makedirs(inner_p)
-    out.to_csv(inner_p + "/scoring.csv")
-
-    pd.DataFrame([stop_time], columns=["runtime"]).to_csv(inner_p + "/runtime.csv")  # dumps to file:
-    with open(inner_p + "/config.yaml", "w") as f:
+    dataset = artifact_path(cfg.label_path).parent.name
+    timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d%H%M%S")
+    run_path = artifact_path(cfg.save_path) / f"{cfg.method.name}_{dataset}" / timestamp
+    run_path.mkdir(parents=True)
+    out.to_csv(run_path / "scoring.csv")
+    pd.DataFrame([stop_time], columns=["runtime"]).to_csv(run_path / "runtime.csv")
+    with (run_path / "config.yaml").open("w", encoding="utf-8") as f:
         OmegaConf.save(cfg, f)
-
-    with open(inner_p + "/preds.p", "wb") as f:
+    with (run_path / "preds.p").open("wb") as f:
         pickle.dump(preds, f)
-    # pickle.dump(preds, open(inner_p + "/preds.p", "wb"))
-    return Path(inner_p)
+    return run_path

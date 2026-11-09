@@ -19,7 +19,7 @@ Tested regression and historical-rescoring source SHA: `dfadcd91410446148f1f7677
 | 5 | `pair.json` links one completed T-GRAANK/VAR pair: identical frozen input hashes, ordered graph selection, row counts, time windows, preprocessing and CPU environment. Each run includes complete command, config, predictions, runtime, scoring, source/scorer hashes and provenance. |
 | 6 | This report describes the current partial O1 delivery and provides concrete commands/output; no external leaderboard, install-resolution-only, forecast, superiority, speedup or full acceptance claim substitutes for local evidence. |
 
-From `benchmarks/causal_discovery/causalrivers`, the complete setup/validation commands actually executed were:
+The commands below record the original Deposium GeoAI run, including its local environment and recovery script. For this checkout, use the [CausalRivers setup instructions](../../README.md#install).
 
 ```powershell
 ../../.venv_geoai/Scripts/python.exe -m venv .venv_review
