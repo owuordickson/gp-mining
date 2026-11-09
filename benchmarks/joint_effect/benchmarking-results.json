@@ -1,0 +1,213 @@
+{
+  "scope": "Saved joint-effect classification benchmark results",
+  "score_units": "Proportions",
+  "uea": {
+    "reference_run": "uea-20261109T133818769079Z",
+    "data_directory": "uea/data",
+    "reports": {
+      "metrics": "uea/results/uea-20261109T133818769079Z/metrics.csv",
+      "paired_contrasts": "uea/results/uea-20261109T133818769079Z/paired_contrasts.csv",
+      "summary": "uea/results/uea-20261109T133818769079Z/summary.csv",
+      "paired_summary": "uea/results/uea-20261109T133818769079Z/paired_summary.csv",
+      "manifest": "uea/results/uea-20261109T133818769079Z/run.json"
+    },
+    "datasets": [
+      {
+        "dataset": "BasicMotions",
+        "balanced_accuracy": {
+          "standard": 0.975,
+          "gp": 0.9249999999999999,
+          "gcs": 0.95
+        },
+        "macro_f1": {
+          "gp": 0.9234126984126984,
+          "gcs": 0.949937343358396
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": 0.025000000000000022,
+          "paired_95_interval": [
+            -0.050000000000000044,
+            0.10000000000000009
+          ]
+        },
+        "elapsed_seconds": 27.654600200010464
+      },
+      {
+        "dataset": "RacketSports",
+        "balanced_accuracy": {
+          "standard": 0.7750390854016025,
+          "gp": 0.7824701973812781,
+          "gcs": 0.841608852843463
+        },
+        "macro_f1": {
+          "gp": 0.7841334425733404,
+          "gcs": 0.8396132020887672
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": 0.059138655462184886,
+          "paired_95_interval": [
+            0.0046161691420754086,
+            0.11275213137580609
+          ]
+        },
+        "elapsed_seconds": 16.365418300032616
+      },
+      {
+        "dataset": "NATOPS",
+        "balanced_accuracy": {
+          "standard": 0.9055555555555556,
+          "gp": 0.6833333333333332,
+          "gcs": 0.7000000000000001
+        },
+        "macro_f1": {
+          "gp": 0.6762920940561384,
+          "gcs": 0.6963370291129675
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": 0.01666666666666683,
+          "paired_95_interval": [
+            -0.011111111111111072,
+            0.04444444444444451
+          ]
+        },
+        "elapsed_seconds": 101.85664229997201
+      }
+    ]
+  },
+  "synthetic": {
+    "reference_run": "synthetic-full",
+    "reports": {
+      "metrics": "synthetic/results/synthetic-full/metrics.csv",
+      "paired_contrasts": "synthetic/results/synthetic-full/paired_contrasts.csv",
+      "summary": "synthetic/results/synthetic-full/summary.csv",
+      "paired_summary": "synthetic/results/synthetic-full/paired_summary.csv",
+      "manifest": "synthetic/results/synthetic-full/run.json"
+    },
+    "summaries": [
+      {
+        "regime": "shared",
+        "noise": 0,
+        "runs": 5,
+        "mean_balanced_accuracy": {
+          "gp": 0.8400000000000001,
+          "gcs": 0.8174999999999999
+        },
+        "gcs_minus_gp": {
+          "balanced_accuracy": {
+            "mean": -0.02250000000000001,
+            "sample_sd": 0.027099354235848465
+          },
+          "macro_f1": {
+            "mean": -0.022351976241400527,
+            "sample_sd": 0.027181661944135238
+          }
+        }
+      },
+      {
+        "regime": "shared",
+        "noise": 0.5,
+        "runs": 5,
+        "mean_balanced_accuracy": {
+          "gp": 0.7849999999999999,
+          "gcs": 0.7975
+        },
+        "gcs_minus_gp": {
+          "balanced_accuracy": {
+            "mean": 0.012499999999999978,
+            "sample_sd": 0.05077524002897474
+          },
+          "macro_f1": {
+            "mean": 0.012520053406584731,
+            "sample_sd": 0.05190765060693155
+          }
+        }
+      },
+      {
+        "regime": "shared",
+        "noise": 1,
+        "runs": 5,
+        "mean_balanced_accuracy": {
+          "gp": 0.7175,
+          "gcs": 0.68
+        },
+        "gcs_minus_gp": {
+          "balanced_accuracy": {
+            "mean": -0.0375,
+            "sample_sd": 0.07071067811865478
+          },
+          "macro_f1": {
+            "mean": -0.03663246315020241,
+            "sample_sd": 0.07242020625435924
+          }
+        }
+      },
+      {
+        "regime": "timing",
+        "noise": 0,
+        "runs": 5,
+        "mean_balanced_accuracy": {
+          "gp": 0.6649999999999999,
+          "gcs": 1
+        },
+        "gcs_minus_gp": {
+          "balanced_accuracy": {
+            "mean": 0.33499999999999996,
+            "sample_sd": 0.1073108801566738
+          },
+          "macro_f1": {
+            "mean": 0.33796394507171257,
+            "sample_sd": 0.10722542274216058
+          }
+        }
+      },
+      {
+        "regime": "timing",
+        "noise": 0.5,
+        "runs": 5,
+        "mean_balanced_accuracy": {
+          "gp": 0.6325000000000001,
+          "gcs": 1
+        },
+        "gcs_minus_gp": {
+          "balanced_accuracy": {
+            "mean": 0.3675,
+            "sample_sd": 0.06766184301362181
+          },
+          "macro_f1": {
+            "mean": 0.36838753116256573,
+            "sample_sd": 0.06773719426853346
+          }
+        }
+      },
+      {
+        "regime": "timing",
+        "noise": 1,
+        "runs": 5,
+        "mean_balanced_accuracy": {
+          "gp": 0.5650000000000001,
+          "gcs": 1
+        },
+        "gcs_minus_gp": {
+          "balanced_accuracy": {
+            "mean": 0.43499999999999994,
+            "sample_sd": 0.0903119593409422
+          },
+          "macro_f1": {
+            "mean": 0.43780169151732584,
+            "sample_sd": 0.09413615169215671
+          }
+        }
+      }
+    ],
+    "pilot": {
+      "run": "synthetic-20261109T133738062196Z",
+      "reports": {
+        "metrics": "synthetic/results/synthetic-20261109T133738062196Z/metrics.csv",
+        "paired_contrasts": "synthetic/results/synthetic-20261109T133738062196Z/paired_contrasts.csv",
+        "summary": "synthetic/results/synthetic-20261109T133738062196Z/summary.csv",
+        "paired_summary": "synthetic/results/synthetic-20261109T133738062196Z/paired_summary.csv",
+        "manifest": "synthetic/results/synthetic-20261109T133738062196Z/run.json"
+      }
+    }
+  }
+}

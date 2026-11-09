@@ -111,8 +111,8 @@ python benchmarks/joint_effect/benchmark.py synthetic
 
 The UEA run uses the published train and test files for BasicMotions,
 RacketSports, and NATOPS. No fork is needed. To run offline, place the official
-ZIP for each dataset or its two .ts files under benchmarks/joint_effect/data.
-Use --data-dir for another location and --datasets to select a subset.
+ZIP for each dataset or its two `.ts` files under `benchmarks/joint_effect/uea/data`.
+Use `--data-dir` for another location and `--datasets` to select a subset.
 
 - [UEA archive paper](https://arxiv.org/abs/1811.00075)
 - [Multiverse expansion](https://arxiv.org/abs/2603.20352)
@@ -126,8 +126,9 @@ For a small local check:
 python benchmarks/joint_effect/benchmark.py synthetic --seeds 0 --noise 0.5 --train-size 32 --test-size 24 --max-patterns 8 --folds 2 --bootstrap 100
 ```
 
-The synthetic experiment uses independent train and test sequences for each
-seed and noise level. The default sweep uses five seeds and three noise levels.
+The synthetic suite generates independent train and test sequences in memory
+for each seed and noise level. The default sweep uses five seeds and three
+noise levels.
 
 - **Shared**. Three of six channels share a changing latent signal inside a
   random interval in the positive class. The negative class has independent
@@ -176,8 +177,10 @@ Validation balanced accuracy selects regularization.
 
 ## Reports
 
-Each run writes to a new directory under benchmarks/joint_effect/results by
-default. Pass --output to choose a new directory.
+By default, each run writes to a new directory under `uea/results/` or
+`synthetic/results/` within this benchmark. Use `--output` to choose another
+destination. The saved reference scores and links to their detailed reports
+are collected in [benchmarking-results.json](benchmarking-results.json).
 
 - metrics.csv gives held-out balanced accuracy, macro-F1, 95% stratified
   bootstrap intervals, and model tuning, fit, and prediction times.
@@ -196,10 +199,10 @@ Classification measures the value of the representation for recognizing
 multivariate behavior. CAMELS-US is a separate optional environmental case
 study with its own streamflow label and time-block protocol.
 
-Run the focused checks with:
+Run the tests for both suites from the repository root.
 
 ```powershell
-python -m pytest benchmarks/joint_effect/tests -q
+python -m pytest benchmarks/joint_effect -q
 ```
 
 ## Reference runs
@@ -212,8 +215,8 @@ the balanced accuracy is 75%. Higher BA is better.
 
 The UEA reference runs use the published splits and the default protocol.
 Scores are percentages. Differences and paired 95% bootstrap intervals are
-in percentage points. [UEA metrics](results/uea-20261109T133818769079Z/metrics.csv)
-and [paired intervals](results/uea-20261109T133818769079Z/paired_contrasts.csv).
+in percentage points. [UEA metrics](uea/results/uea-20261109T133818769079Z/metrics.csv)
+and [paired intervals](uea/results/uea-20261109T133818769079Z/paired_contrasts.csv).
 
 | Dataset | Standard BA | GP BA | GCS BA | GCS - GP BA (95% interval) | GP macro-F1 | GCS macro-F1 | Elapsed (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -228,8 +231,8 @@ use the same selected patterns and the same support and density features. The
 test BA rose on all three datasets, and RacketSports was the only one whose
 paired 95% interval for that difference excluded zero.
 
-The [synthetic summaries](results/synthetic-full/summary.csv) and
-[paired summaries](results/synthetic-full/paired_summary.csv) cover five
+The [synthetic summaries](synthetic/results/synthetic-full/summary.csv) and
+[paired summaries](synthetic/results/synthetic-full/paired_summary.csv) cover five
 seeds per regime and noise level. The paired columns report the mean and
 sample standard deviation of the differences across seeds.
 

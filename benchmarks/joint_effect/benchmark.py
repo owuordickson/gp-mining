@@ -11,37 +11,21 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import numpy as np
-from tools.archive import BASE_URL, DATASETS, archive_split
-from tools.evaluation import Protocol, evaluate_split
-from tools.synthetic import synthetic_split
+from evaluation import Protocol, evaluate_split
+from synthetic import suite as synthetic_suite
+from uea import suite as uea_suite
 
 HERE = Path(__file__).resolve().parent
+SUITES = {"uea": uea_suite, "synthetic": synthetic_suite}
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_subparsers(dest="experiment", required=True)
-    uea = modes.add_parser("uea", help="Use the published UEA archive splits")
-    uea.add_argument("--datasets", choices=DATASETS, nargs="+", default=list(DATASETS))
-    uea.add_argument("--data-dir", type=Path, default=HERE / "data")
-    uea.add_argument(
-        "--download", action="store_true", help="Fetch missing official ZIPs"
-    )
-    uea.add_argument("--seed", type=int, default=0, help="CV and bootstrap seed")
 
-    synthetic = modes.add_parser("synthetic", help="Use independently generated cases")
-    synthetic.add_argument(
-        "--regimes",
-        choices=("shared", "timing"),
-        nargs="+",
-        default=["shared", "timing"],
-    )
-    synthetic.add_argument("--noise", type=float, nargs="+", default=[0.0, 0.5, 1.0])
-    synthetic.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
-    synthetic.add_argument("--train-size", type=int, default=120)
-    synthetic.add_argument("--test-size", type=int, default=80)
-
-    for mode in (uea, synthetic):
+    for name, suite in SUITES.items():
+        mode = modes.add_parser(name, help=suite.__doc__)
+        suite.add_arguments(mode)
         mode.add_argument("--output", type=Path, help="A new directory for reports")
         mode.add_argument("--max-patterns", type=int, default=24)
         mode.add_argument("--min-support", type=float, default=0.4)
@@ -49,34 +33,6 @@ def _parser() -> argparse.ArgumentParser:
         mode.add_argument("--c-grid", type=float, nargs="+", default=[0.1, 1.0, 10.0])
         mode.add_argument("--bootstrap", type=int, default=1000)
     return parser
-
-
-def _cases(args):
-    if args.experiment == "uea":
-        for dataset in dict.fromkeys(args.datasets):
-            yield (
-                {
-                    "dataset": dataset,
-                    "noise": None,
-                    "seed": args.seed,
-                    "source_url": f"{BASE_URL}/{dataset}.zip",
-                },
-                archive_split(dataset, args.data_dir, download=args.download),
-            )
-    else:
-        for regime in dict.fromkeys(args.regimes):
-            for noise in dict.fromkeys(args.noise):
-                for seed in dict.fromkeys(args.seeds):
-                    yield (
-                        {"dataset": regime, "noise": noise, "seed": seed},
-                        synthetic_split(
-                            regime,
-                            seed=seed,
-                            noise=noise,
-                            train_size=args.train_size,
-                            test_size=args.test_size,
-                        ),
-                    )
 
 
 def _csv(path: Path, rows: list[dict]) -> None:
@@ -131,12 +87,15 @@ def main(argv: list[str] | None = None) -> int:
         bootstrap=args.bootstrap,
     )
     output = args.output or (
-        HERE / "results" / f"{args.experiment}-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}"
+        HERE
+        / args.experiment
+        / "results"
+        / f"{args.experiment}-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}"
     )
     if output.exists():
         parser.error(f"Output already exists: {output}")
     metrics, contrasts, runs = [], [], []
-    for info, split in _cases(args):
+    for info, split in SUITES[args.experiment].cases(args):
         run = evaluate_split(*split, seed=info["seed"], protocol=protocol)
         common = {k: info[k] for k in ("dataset", "noise", "seed")}
         metrics.extend({**common, **row} for row in run.pop("metrics"))
