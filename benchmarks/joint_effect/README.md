@@ -15,8 +15,58 @@ of four labels for the whole recording, `Badminton_Clear`, `Badminton_Smash`,
 `Squash_BackhandBoast`, or `Squash_ForehandBoast`.
 [UEA RacketSports dataset](https://www.timeseriesclassification.com/description.php?Dataset=RacketSports).
 
+### Original recording
+
 The first recording in the published test split has the label
-`Badminton_Smash`. One pattern selected from the training recordings says
+`Badminton_Smash`. That single label applies to all 30 readings. The
+table shows the original archive values for two of those readings.
+
+| Reading | Accel. X | Accel. Y | Accel. Z | Gyro. X | Gyro. Y | Gyro. Z |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 3 | 1.787509 | -0.813344 | 5.804565 | -2.540857 | 0.077238 | -1.054696 |
+| 16 | 14.509458 | -11.269689 | 11.749872 | -14.949511 | -5.276141 | 2.476937 |
+
+<details>
+<summary>All 30 readings from this recording</summary>
+
+| Reading | Accel. X | Accel. Y | Accel. Z | Gyro. X | Gyro. Y | Gyro. Z |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.6661 | -0.558194 | -2.323993 | -0.058594 | -0.822982 | -0.194426 |
+| 2 | -0.549034 | -0.354419 | -2.772675 | -1.558073 | 0.058594 | -2.040144 |
+| 3 | 1.787509 | -0.813344 | 5.804565 | -2.540857 | 0.077238 | -1.054696 |
+| 4 | 1.787509 | -0.813344 | 5.804565 | -2.540857 | 0.077238 | -1.054696 |
+| 5 | 4.933549 | 1.774982 | 6.955224 | -1.099973 | 1.651291 | -0.050604 |
+| 6 | 0.059652 | -7.810628 | 3.018279 | 2.27452 | 0.609912 | -0.705794 |
+| 7 | 2.509221 | -4.748552 | -6.000353 | 1.478172 | 1.368974 | -1.837727 |
+| 8 | -1.225921 | -0.8191 | -3.01334 | -1.424904 | 1.408924 | -0.660516 |
+| 9 | 0.066535 | -2.882862 | 3.637775 | 2.034817 | 1.376964 | -0.67117 |
+| 10 | 3.043326 | -4.53172 | 3.547236 | 2.215926 | 0.980121 | -1.360983 |
+| 11 | 3.927304 | -3.852172 | 5.227589 | 3.41977 | 1.102636 | -1.693905 |
+| 12 | 5.936533 | -7.790691 | -11.003212 | -1.241132 | 6.314857 | -2.026827 |
+| 13 | 6.169348 | 2.209995 | -20.295305 | -10.66148 | 10.922491 | 4.389238 |
+| 14 | 22.8746 | -17.673197 | -13.550385 | -15.183887 | -5.902034 | -12.744238 |
+| 15 | 23.352537 | 23.981478 | 11.664442 | 34.871536 | -9.889102 | -15.375649 |
+| 16 | 14.509458 | -11.269689 | 11.749872 | -14.949511 | -5.276141 | 2.476937 |
+| 17 | 12.477253 | 11.081854 | 4.704073 | 2.170649 | -0.335585 | 0.034624 |
+| 18 | 7.187539 | 12.789593 | -2.402317 | -0.689814 | 0.359555 | 0.103872 |
+| 19 | -1.773086 | 3.603779 | -4.403036 | -0.596595 | 0.697804 | 1.667271 |
+| 20 | -3.327036 | 3.079627 | -5.912917 | 2.285174 | 1.036052 | 3.118809 |
+| 21 | -1.743321 | -3.054036 | -1.313099 | 2.71664 | 1.984213 | 2.229243 |
+| 22 | 3.34082 | -2.211271 | 2.846099 | 1.661945 | 0.985448 | 0.748408 |
+| 23 | 3.322938 | 2.191704 | 0.022982 | 1.001428 | 0.279654 | 1.078666 |
+| 24 | 5.100965 | -0.55755 | -3.837673 | 1.502142 | 0.564635 | 1.060022 |
+| 25 | 3.872064 | 1.730436 | -1.444935 | 1.323696 | 0.308951 | 0.119852 |
+| 26 | 4.015299 | -0.727289 | 1.474412 | 1.235805 | -0.780368 | 0.545991 |
+| 27 | 1.813128 | 0.99165 | -1.31174 | 1.827074 | 0.029297 | 0.65519 |
+| 28 | 2.506096 | -1.619691 | -3.268069 | 0.724437 | 0.141159 | 0.652526 |
+| 29 | 2.88671 | -1.948051 | -1.902785 | 0.396843 | 0.833636 | 0.202416 |
+| 30 | -0.828796 | -2.499378 | -2.126675 | 0.657853 | 0.359555 | 0.24503 |
+
+</details>
+
+### Encoded recording
+
+One pattern selected from the training recordings says
 **Z acceleration increases while Y rotation rate decreases**. From reading 3
 to reading 16 in this recording, Z acceleration rises from 5.80 to 11.75 and Y
 rotation rate falls from 0.08 to −5.28. The pair `(3, 16)` therefore supports
@@ -31,11 +81,16 @@ The benchmark turns the set of pairs into numbers. Connectivity counts the
 groups of readings linked by the pairs, including isolated readings.
 Singularity is the largest fraction of pairs that touch any one reading.
 Rank dispersion measures how much the gaps between paired readings vary.
-Here are four feature values for this one pattern, alongside the known label.
+Full support also counts pairs that match when read in reverse, giving
+263 / 435 ≈ 0.6046.
 
-| Directional density | Connected groups | Singularity | Rank dispersion | Known label |
-| ---: | ---: | ---: | ---: | --- |
-| 0.2805 | 1 | 0.1393 | 33.82 | `Badminton_Smash` |
+The encoded recording has 180 numeric features in the `gcs` method. The
+table shows the five columns for this one pattern. The label stays in a
+separate column and keeps its original value.
+
+| Full support | Directional density | Connected groups | Singularity | Rank dispersion | Known label |
+| ---: | ---: | ---: | ---: | ---: | --- |
+| 0.6046 | 0.2805 | 1 | 0.1393 | 33.82 | `Badminton_Smash` |
 
 Each selected pattern contributes its own columns. The classifier learns from
 these numeric features and the known stroke labels in the training recordings.
