@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from ...gradual_patterns import GI, GP, TGP, PairwiseMatrix
+from ...gradual_patterns import GI, GP, TGP
 from .graank_base import BaseGrad
 
 
@@ -51,41 +51,25 @@ class AntGRAANK(BaseGrad):
         self._attribute_keys: list[str] | None = None
 
     def _fit(self):
-        """
-        Generates the distance matrix (d)
-        :return: distance matrix (d) and attribute keys
-        """
+        """Compute the shared-comparison count for each pair of distinct GIs."""
+        gi_dict = self.valid_bins or {}
+        attr_keys = list(gi_dict)
+        columns = [GI.from_string(key).attribute_col for key in attr_keys]
+        dim = self.attr_size
+        total_pairs = GP.pair_count(dim)
+        count = len(attr_keys)
+        distance = np.zeros((count, count), dtype=np.int64)
 
-        # Get valid GI bitmaps
-        gi_dict = self.valid_bins
-
-        # 1. Fetch valid bins group
-        gi_key_list = list(gi_dict.keys()) if gi_dict is not None else []
-        attr_keys = [GI.from_string(gi_str).to_string() for gi_str in gi_key_list]
-
-        # 2. Initialize an empty d-matrix
-        n = self.attr_size  # len(attr_keys)
-        d = np.zeros((n, n), dtype=np.dtype("i8"))  # cumulative sum of all segments
-        for i in range(n):
-            for j in range(n):
-                if (
-                    GI.from_string(attr_keys[i]).attribute_col
-                    == GI.from_string(attr_keys[j]).attribute_col
-                ):
-                    # Ignore similar attributes (+ or/and -)
+        for i, first_key in enumerate(attr_keys):
+            for j in range(i + 1, count):
+                if columns[i] == columns[j]:
                     continue
-                else:
-                    if gi_dict is None:
-                        continue
-                    res_pw_mat: PairwiseMatrix = GP.perform_and(
-                        gi_dict[attr_keys[i]], gi_dict[attr_keys[j]], n
-                    )
-                    # Cumulative sum of all segments for 2x2 (all attributes) gradual
-                    # items
-                    d[i][j] += np.sum(res_pw_mat.packed_bin_mat)
-        # print(d)
-        self._distance_matrix = d
-        self._attribute_keys: list[str] = attr_keys
+                result = GP.perform_and(gi_dict[first_key], gi_dict[attr_keys[j]], dim)
+                shared_pairs = round(result.support * total_pairs)
+                distance[i, j] = distance[j, i] = shared_pairs
+
+        self._distance_matrix = distance
+        self._attribute_keys = attr_keys
         gc.collect()
 
     def _gen_aco_candidates(self, p_matrix: np.ndarray, exclude_target: bool = True):

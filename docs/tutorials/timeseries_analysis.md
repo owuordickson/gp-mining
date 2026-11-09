@@ -4,25 +4,21 @@ title: Studying Joint Effects with GP Descriptors
 
 # Analyzing Joint Effects with GPs
 
-A gradual item (GI) describes an attribute and a direction, such as `A+` for increasing values. A gradual pattern (GP) combines several GIs by retaining the observation pairs that satisfy all their directions. Comparing the individual GIs with their GP lets us study how attributes behave jointly.
+A gradual pattern (GP) retains observation pairs that satisfy every constituent gradual item (GI). The gradual concordance set contains the supporting pairs $(i,j)$ with $i<j$ in the given observation order. Compare the GP with each constituent to describe how composition changes the retained pairs.
 
-The coherence hypothesis is that combining GIs can produce a progression of index relationships resembling dynamic time warping (DTW): **one connected component**, **low singularity**, and **low rank-gap variance**.
-
-$$
-\kappa_g \rightarrow 1,\qquad Si_g \rightarrow 0,\qquad \sigma_g^2 \rightarrow 0.
-$$
-
-| Descriptor | What it tells us |
+| Descriptor | Calculation |
 |---|---|
-| Connectivity ($\kappa_g$) | The number of connected components; the target is **1**. |
-| Singularity ($Si_g$) | How unevenly observations participate in the relationships; smaller means more even participation. |
-| Rank-gap variance ($\sigma_g^2$) | How much the absolute index distances vary; smaller means more consistent separations. |
+| Density | Number of concordance pairs divided by the number of possible unordered observation pairs. |
+| Mean index separation | Mean of the gaps $j-i$. |
+| Rank dispersion | Population variance of the gaps $j-i$. |
+| Connectivity | Number of connected components of the undirected graph on all observations, including isolated ones. |
+| Singularity | Largest vertex degree divided by the number of concordance pairs. |
 
-These are structural indicators to examine together. They do not establish that the relationships form a valid DTW alignment.
+The full packed bitmap retains both orientations for pattern support. Descriptor calculations use the upper-triangular concordance set.
 
-## 1. Prepare a small example
+## Compare individual items and their joint pattern
 
-With SO4GP installed, run the following Python blocks in order. The rows represent six observations already arranged in time order.
+The rows represent six observations in time order.
 
 ```python
 import numpy as np
@@ -36,72 +32,44 @@ data = pd.DataFrame({
 })
 
 miner = GRAANK(data, min_sup=0.1, eq=False, device="cpu")
-_ = miner.discover(compute_descriptors=True)
 engine = miner.mining_engine
-```
+engine.fit_bitmap()
 
-`eq=False` uses strict comparisons. For example, `A+` retains `(i, j)` when `A[j] > A[i]`. The low support threshold keeps this small example's joint pattern available.
-
-## 2. Combine the GIs and compare their descriptors
-
-Select `A+` and `B+` using their zero-based column keys, `0+` and `1+`. Their joint GP is the intersection of their pairwise matrices, computed with bitwise AND.
-
-```python
-keys = ("0+", "1+")
-labels = [f"{data.columns[int(key[:-1])]}{key[-1]}" for key in keys]
 matrices = {
     label: engine.valid_bins[key].packed_bin_mat
-    for label, key in zip(labels, keys)
+    for label, key in [("A+", "0+"), ("B+", "1+")]
 }
 matrices["Joint GP"] = np.bitwise_and.reduce(list(matrices.values()))
 
 rows = []
 for label, matrix in matrices.items():
-    pairs = np.asarray(
-        GP.gen_gradual_warping_set(matrix, engine.row_count)
-    ).reshape(-1, 2)
+    pairs = GP.gen_gradual_concordance_set(matrix, engine.attr_size)
     gp = GP()
-    if not gp.compute_descriptors(pairs, obj_count=engine.row_count):
-        print(f"{label}: no pairs to describe")
-        continue
+    gp.compute_descriptors(pairs, obj_count=engine.attr_size)
     rows.append({
         "Pattern": label,
         "Pairs": len(pairs),
+        "Density": gp.density,
         "Connectivity": gp.graph_connectivity,
         "Singularity": gp.singularity_score,
-        "Rank-gap variance": np.var(np.abs(pairs[:, 0] - pairs[:, 1])),
+        "Index-gap variance": gp.rank_dispersion,
     })
 
-result = pd.DataFrame(rows)
-print(result.round(3).to_string(index=False))
+print(pd.DataFrame(rows).round(3).to_string(index=False))
 ```
 
-SO4GP's `rank_dispersion` reports the standard deviation of the absolute index gaps. Here, `np.var` computes variance rather than standard deviation, matching the $\sigma_g^2$ notation above.
+| Pattern | Pairs | Density | Connectivity | Singularity | Index-gap variance |
+|---|---:|---:|---:|---:|---:|
+| A+ | 13 | 0.867 | 1 | 0.385 | 1.479 |
+| B+ | 3 | 0.200 | 3 | 0.333 | 0.000 |
+| Joint GP | 3 | 0.200 | 3 | 0.333 | 0.000 |
 
-Expected results:
+The joint concordance set contains $(0,1)$, $(2,3)$, and $(4,5)$. Each pair connects two neighboring observations, yielding three components and zero gap variance. The joint set equals the concordance set of B+, so their descriptors agree.
 
-| Pattern | Pairs | Connectivity | Singularity | Rank-gap variance |
-|---|---:|---:|---:|---:|
-| A+ | 15 | 1 | 0.000 | 1.556 |
-| B+ | 15 | 1 | 0.000 | 1.556 |
-| Joint GP | 5 | 1 | 0.133 | 0.000 |
+An empty concordance set has zero density and one component per observation. Its mean separation, dispersion, and singularity are undefined and appear as `NaN`.
 
-The joint pairs are `(0, 1), (2, 1), (2, 3), (4, 3), (4, 5)`. Every pair links neighboring observations, so the variance becomes zero while the observation graph remains connected. Singularity increases because the chain's endpoints have fewer neighbors than its interior observations. Composition improves the consistency of index gaps in this example, while participation becomes less uniform.
+## Use your own data
 
-Connectivity counts only observations appearing in the pairs. When using your own data, also check which observations remain in the joint set.
+Sort observations by time and select the numerical attributes. The keys `0+` and `1-` refer to the first attribute increasing and the second decreasing. Index gaps count observation steps and represent equal elapsed times when sampling is regular.
 
-## 3. Use your own data
-
-Replace the example DataFrame with your numerical attributes, sorted by date:
-
-```python
-raw = pd.read_csv("my_timeseries.csv")
-raw["Date"] = pd.to_datetime(raw["Date"])
-data = raw.sort_values("Date")[["temperature", "humidity"]].reset_index(drop=True)
-```
-
-Rerun the mining and descriptor steps. Use `keys = ("0+", "1+")` to study increasing temperature with increasing humidity, or `keys = ("0+", "1-")` for increasing temperature with decreasing humidity. The keys refer to column positions in `data`; each selected key must be present in `engine.valid_bins`.
-
-Handle missing values before mining and choose a support threshold appropriate to your data. Index gaps measure row separations; they represent equal time intervals only when observations are regularly spaced.
-
-For plots, matched GI-to-GP comparisons, and the rainfall/EVI analysis, see [ftgp_composition.ipynb](https://github.com/owuordickson/gp-mining/blob/main/examples/ftgp_composition.ipynb).
+For plots and a rainfall and EVI case study, see [the composition notebook](https://github.com/owuordickson/gp-mining/blob/main/examples/ftgp_composition.ipynb).

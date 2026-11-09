@@ -2,7 +2,6 @@
 # See the LICENSE file at the root of this
 # repository for complete details.
 
-import copy
 import time
 from itertools import combinations
 
@@ -132,8 +131,8 @@ class OrigGRAANK(BaseGrad):
         s_space = self.blank_search_space()
         if s_space is None:
             return {"Error": "Search space is empty!"}
-        valid_bins_dict: dict | None = copy.deepcopy(self.valid_bins)
-        target_gi_dict: dict | None = copy.deepcopy(self.valid_bins)
+        target_gi_dict = self.valid_bins
+        valid_bins_dict = target_gi_dict
 
         if valid_bins_dict is None or target_gi_dict is None:
             return {"Error": "Pairwise matrices not available!"}
@@ -165,10 +164,10 @@ class OrigGRAANK(BaseGrad):
                 # Compute descriptors
                 if compute_descriptors:
                     n = self._attr_size
-                    warping_set_arr: np.ndarray | torch.Tensor = (
-                        GP.gen_gradual_warping_set(gi_data.packed_bin_mat, n)
+                    concordance_set: np.ndarray | torch.Tensor = (
+                        GP.gen_gradual_concordance_set(gi_data.packed_bin_mat, n)
                     )
-                    gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
+                    gp.compute_descriptors(concordance_set, obj_count=n)
                 self.add_gradual_pattern(gp)
             candidate_level += 1
             if (

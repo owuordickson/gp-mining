@@ -72,7 +72,7 @@ class DataGP:
         self._time_cols: np.ndarray = np.array([])
         self._attr_cols: np.ndarray = np.array([])
         self._valid_bins: dict | None = None
-        self._warping_set: dict | None = None
+        self._concordance_set: dict | None = None
         self._attr_size: int = 0
         self._gradual_patterns: list[GP | TGP] | None = None
         self._init_attributes(create_time_index=add_time)
@@ -110,8 +110,9 @@ class DataGP:
         return self._valid_bins
 
     @property
-    def warping_set(self) -> dict[str, list] | None:
-        return self._warping_set
+    def concordance_set(self) -> dict[str, list] | None:
+        """Canonical comparison pairs by gradual-item key, when fitted."""
+        return self._concordance_set
 
     @property
     def attr_size(self) -> int:
@@ -349,16 +350,7 @@ class DataGP:
             Only attributes satisfying ``self._thd_supp`` are retained.
         """
 
-        def get_largest_triangle_sum():
-            # Sum the upper triangle (excluding the main diagonal, k=1)
-            upper_sum = np.sum(np.triu(bin_mat, k=1))
-
-            # Sum the lower triangle (excluding the main diagonal, k=-1)
-            lower_sum = np.sum(np.tril(bin_mat, k=-1))
-
-            # Find the largest of the two
-            largest_sum = max(upper_sum, lower_sum)
-            return largest_sum
+        self._concordance_set = None
 
         # 1. Prepare attribute data
         if attr_data is None:
@@ -385,7 +377,11 @@ class DataGP:
             # Discard unsupported attributes immediately.
             n_samples = self.attr_size
             pair_cnt = GP.pair_count(n_samples)
-            support = float(get_largest_triangle_sum() / pair_cnt)
+            upper_count = lower_count = 0
+            for index, row in enumerate(bin_mat):
+                upper_count += np.count_nonzero(row[index + 1 :])
+                lower_count += np.count_nonzero(row[:index])
+            support = float(max(upper_count, lower_count) / pair_cnt)
             if support < self._thd_supp or self._valid_bins is None:
                 del bin_mat
                 continue
@@ -421,115 +417,36 @@ class DataGP:
         if valid_bins_len < 3:
             self._valid_bins = None
 
-    def fit_warpingset(self) -> None:
+    def fit_concordance_set(self) -> None:
+        """Extract canonical comparison pairs from the valid GI bitmaps.
+
+        The fitted mapping uses gradual-item keys such as ``"0+"``.
+        Values contain the true upper-triangular pairs with zero-based
+        indices. An empty set is kept when its GI has a valid bitmap.
         """
-        Generates transaction ids (tids) for each column/feature with numeric objects.
-        It stores the tids in attribute
-        valid_tids (those tids whose computed support values are greater or equal to the
-        minimum support threshold
-        value).
-
-        The method decomposes the pairwise matrix of a gradual item/pattern into a
-        warping set. Attributes that have
-        strong correlation will produce a warping set with dense zigzag patterns when
-        plotted as a graph. Those with weak
-        correlation will produce a warping set with sparse zigzag patterns.
-
-        """
-
         if self._valid_bins is None:
             self.fit_bitmap()
             if self._valid_bins is None:
                 return
 
-        n = self._row_count
-        self._warping_set = {}
-        for gi_str, gi_data in self._valid_bins.items():
-            edge_list: np.ndarray | torch.Tensor = GP.gen_gradual_warping_set(
-                gi_data.packed_bin_mat, n
-            )
-
-            tids_len = edge_list.shape[0]
-            supp = (tids_len * 0.5) * (tids_len - 1) / GP.pair_count(n)
-            if supp >= self._thd_supp and self._warping_set is not None:
-                lst_ij = (
-                    edge_list.cpu().tolist()
-                    if isinstance(edge_list, torch.Tensor)
-                    else edge_list.tolist()
-                )
-                self._warping_set[gi_str] = lst_ij
+        self._concordance_set = {
+            key: GP.gen_gradual_concordance_set(
+                gi_data.packed_bin_mat, self.attr_size
+            ).tolist()
+            for key, gi_data in self._valid_bins.items()
+        }
 
     def compute_attribute_descriptors(self) -> pd.DataFrame:
-        """Compute structural descriptors for all valid gradual attributes.
+        """Summarize the descriptors of the fitted gradual concordance sets.
 
-        The method computes and consolidates a set of descriptors for each
-        valid gradual item (GI) in the current gradual pattern mining
-        result. The descriptors are computed from the corresponding
-        gradual warping sets and include support, confidence, density,
-        average deviation from the diagonal, rank dispersion, graph
-        connectivity, and singularity.
-
-        For each gradual item in ``self.warping_set``, a temporary
-        :class:`so4gp.GP` object is created and populated with the GI, its
-        support and confidence values. The GI's warping set is then used
-        to compute the structural graph descriptors through
-        ``GP.compute_descriptors()``.
-
-        The resulting descriptor records are converted into a
-        :class:`pandas.DataFrame`, with ``Pattern`` as the first column.
-        The ``Confidence`` column is reset to ``NaN`` because confidence
-        is not treated as an attribute-level descriptor in the resulting
-        descriptor table.
-
-        The descriptor table contains the following columns:
-
-            Pattern
-                String representation of the gradual attribute, including
-                its direction symbol.
-
-            Support
-                Support of the gradual item in its corresponding valid
-                bin.
-
-            Confidence
-                Placeholder column set to ``NaN`` in the final attribute
-                descriptor table.
-
-            Density
-                Density of the gradual warping graph.
-
-            Avg. Deviation from Diagonal
-                Mean deviation of the gradual relationships from the
-                diagonal of the pairwise object matrix.
-
-            Rank Dispersion
-                Dispersion of the ranks represented by the gradual
-                relationships.
-
-            Graph Connectivity
-                Connectivity structure of the graph induced by the
-                gradual warping set.
-
-            Singularity Score
-                Degree-based measure describing the concentration or
-                irregularity of the gradual warping graph.
-
-        The method returns an empty DataFrame when either
-        ``self.warping_set`` or ``self.valid_bins`` is unavailable.
+        Call :meth:`fit_concordance_set` to prepare the canonical comparisons.
+        Support comes from each GI's bitmap metadata. Density and the
+        graph and separation descriptors use the GI's concordance set.
 
         Returns:
-            pandas.DataFrame:
-                A table containing the computed descriptors for each valid
-                gradual attribute. ``Pattern`` is the first column and all
-                descriptor columns are converted to numeric values where
-                applicable.
-
-        Notes:
-            The gradual warping set associated with each gradual item is
-            expected to be stored in ``self.warping_set`` using the string
-            representation of the gradual item as its key. The
-            corresponding support and confidence values are obtained from
-            ``self.valid_bins`` using the same key.
+            A data frame with one row per valid GI. Attribute-level confidence
+            and undefined descriptors appear as ``NaN``. An empty data frame
+            is returned when the concordance sets are unavailable.
         """
 
         def create_df(lst_descriptors: list[list]) -> pd.DataFrame:
@@ -574,7 +491,8 @@ class DataGP:
                 "Singularity Score",
             ]
 
-            df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric)
+            numeric_values = df[numeric_cols].replace("nan", np.nan)
+            df[numeric_cols] = numeric_values.apply(pd.to_numeric)
 
             data_cols = [
                 "Pattern",
@@ -591,14 +509,13 @@ class DataGP:
 
         lst_rows = []
 
-        w_set = self.warping_set
+        concordance_sets = self.concordance_set
         v_bins = self.valid_bins
 
-        if v_bins is None or w_set is None:
+        if v_bins is None or not concordance_sets:
             return pd.DataFrame()
 
-        lst_gi = list(w_set.keys())
-        for gi_str in lst_gi:
+        for gi_str, concordance_set in concordance_sets.items():
             gp = GP()
             gi = GI.from_string(gi_str)
             col_name = f"{self.titles[gi.attribute_col]}{gi.symbol}"
@@ -607,8 +524,8 @@ class DataGP:
             gp.support = v_bins[gi_str].support
             gp.confidence = v_bins[gi_str].confidence
             gp.compute_descriptors(
-                np.asarray(w_set[gi_str]),
-                obj_count=self.row_count,
+                np.asarray(concordance_set),
+                obj_count=self.attr_size,
             )
 
             temp_row = gp.get_computed_descriptors(descriptor_title=True)
@@ -782,7 +699,7 @@ class DataGP:
         """
         if approach == "dfs":
             d_set = cls(data_src, min_sup)
-            d_set.fit_warpingset()
+            d_set.fit_concordance_set()
         else:
             d_set = cls(data_src, min_sup)
             d_set.fit_bitmap()

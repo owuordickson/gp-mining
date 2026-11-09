@@ -35,7 +35,7 @@ def mine_gps(
     Extract standard co-occurring gradual patterns from a tabular dataset.
 
     Analyzes numerical and categorical datasets to find parallel trends (e.g.,
-    'The more X increases, the more Y decreases') based on Gradual Warping Set
+    'The more X increases, the more Y decreases') based on Gradual Concordance Set
     (GWS) descriptors.
 
     Args:

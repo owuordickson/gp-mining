@@ -1,7 +1,7 @@
 import pandas
 import torch
 
-from so4gp.algorithms import TGRAANK
+from so4gp.algorithms import TGRAANK, GRAANK
 
 # make get_selected_rows -- less intensive and fast
 
@@ -76,14 +76,7 @@ if __name__ == "__main__":
     # result_json = mine_obj1.discover(
     #     target_col=1, transformations="all", search_algorithm="ga", max_iteration=10
     # )  # TGRAANK
-    result_json = mine_obj1.discover(
-        target_col=1,
-        transformations="all",
-        search_algorithm="apriori",
-        max_iteration=1,
-        eval_mode=True,
-        compute_causality=False,
-    )  # TGRAANK-AMI
+    result_json = mine_obj1.discover(target_col=1, transformations="all", search_algorithm="apriori", max_iteration=1, eval_mode=True, compute_causality=False,)  # TGRAANK-AMI
     print(f"{result_json}\n")
     # start = time.time()
     # corr_df = mine_obj1.discover_causal_relationships(max_lag=3)
