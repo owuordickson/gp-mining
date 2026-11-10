@@ -72,4 +72,4 @@ An empty concordance set has zero density and one component per observation. Its
 
 Sort observations by time and select the numerical attributes. The keys `0+` and `1-` refer to the first attribute increasing and the second decreasing. Index gaps count observation steps and represent equal elapsed times when sampling is regular.
 
-For plots and a rainfall and EVI case study, see [the composition notebook](https://github.com/owuordickson/gp-mining/blob/main/examples/ftgp_composition.ipynb).
+For plots and a rainfall and EVI case study, see [the composition notebook](https://github.com/owuordickson/gp-mining/blob/main/examples/joint_effect.ipynb).
