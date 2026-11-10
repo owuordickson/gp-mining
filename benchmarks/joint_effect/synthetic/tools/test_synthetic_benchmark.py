@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def test_composed_features_use_repository_descriptors_and_keep_density_in_ablations():
+def test_composed_features_use_repository_descriptors_and_ablate_gcs_columns():
     from benchmarks.joint_effect.uea.tools.features import build_features
 
     # Both increasing: forward (0,1), (0,2), (1,2), and (3,2) in reverse.
@@ -11,8 +11,10 @@ def test_composed_features_use_repository_descriptors_and_keep_density_in_ablati
     np.testing.assert_allclose(gp[0, -2:], [4 / 6, 3 / 6])
     np.testing.assert_array_equal(gcs[:, : gp.shape[1]], gp)
     # A triangle and one isolated observation.
-    np.testing.assert_allclose(gcs[0, -3:], [2, 2 / 3, 2 / 9])
-    for index, name in enumerate(("connectivity", "singularity", "dispersion")):
+    np.testing.assert_allclose(gcs[0, -4:], [3 / 6, 2, 2 / 3, 2 / 9])
+    for index, name in enumerate(
+        ("density", "connectivity", "singularity", "dispersion")
+    ):
         np.testing.assert_array_equal(
             features[f"gcs_no_{name}"], np.delete(gcs, gp.shape[1] + index, axis=1)
         )
@@ -108,3 +110,28 @@ def test_graank_discovers_families_within_recordings_and_ranks_mean_full_support
         ((0, -1), (1, 1)),
     )
     assert select_patterns(cases, max_patterns=4, min_support=0.21) == selected[:2]
+
+
+def test_empty_pattern_intersection_is_valid():
+    from benchmarks.joint_effect.uea.tools.features import build_features
+
+    x = np.array([[[1, 1], [2, 2], [3, 3]]], dtype=float)
+    features = build_features(x, (((0, 1), (1, -1)),)).matrices
+    np.testing.assert_array_equal(features["gp"][0, -2:], [0, 0])
+    np.testing.assert_array_equal(features["gcs"][0, -4:], [0, 3, 0, 0])
+
+
+def test_run_without_command_line_arguments(tmp_path, monkeypatch):
+    import json
+
+    from benchmarks.joint_effect import benchmark
+
+    monkeypatch.setattr(benchmark, "HERE", tmp_path)
+    monkeypatch.setattr(benchmark, "RUN_EXPERIMENT", "synthetic")
+    assert benchmark.main() == 0
+
+    (manifest_path,) = tmp_path.glob("synthetic/results/*/run.json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["experiment"] == "synthetic"
+    assert {run["dataset"] for run in manifest["runs"]} == {"shared", "timing"}
+    assert manifest["arguments"]["seeds"] == [0]

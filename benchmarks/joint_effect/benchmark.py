@@ -1,9 +1,10 @@
-"""Command-line entry point for the joint-effect benchmark."""
+"""Run the joint-effect benchmark from an IDE or the command line."""
 
 import argparse
 import csv
 import json
 import platform
+import sys
 from collections import defaultdict
 from dataclasses import asdict
 from datetime import UTC, datetime
@@ -11,12 +12,44 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import numpy as np
-from synthetic.tools import suite as synthetic_suite
-from uea.tools import suite as uea_suite
-from uea.tools.evaluation import Protocol, evaluate_split
+
+if __name__ == "__main__":
+    # Use this checkout's SO4GP even if the interpreter has an older install.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+
+if __package__:
+    from .synthetic.tools import suite as synthetic_suite
+    from .uea.tools import suite as uea_suite
+    from .uea.tools.evaluation import Protocol, evaluate_split
+else:
+    from synthetic.tools import suite as synthetic_suite
+    from uea.tools import suite as uea_suite
+    from uea.tools.evaluation import Protocol, evaluate_split
 
 HERE = Path(__file__).resolve().parent
 SUITES = {"uea": uea_suite, "synthetic": synthetic_suite}
+
+# These settings apply when the IDE's Run button passes no arguments.
+RUN_EXPERIMENT = "uea"
+RUN_OPTIONS = {
+    "uea": ("--datasets", "ERing"),
+    "synthetic": (
+        "--seeds",
+        "0",
+        "--noise",
+        "0.5",
+        "--train-size",
+        "32",
+        "--test-size",
+        "24",
+        "--max-patterns",
+        "8",
+        "--folds",
+        "2",
+        "--bootstrap",
+        "100",
+    ),
+}
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -67,8 +100,10 @@ def _summarize(rows: list[dict], *, paired: bool = False) -> list[dict]:
 
 
 def _versions() -> dict[str, str]:
-    versions = {"python": platform.python_version()}
-    for package in ("numpy", "scikit-learn", "so4gp", "torch"):
+    from so4gp import __version__ as so4gp_version
+
+    versions = {"python": platform.python_version(), "so4gp": so4gp_version}
+    for package in ("numpy", "scikit-learn", "torch"):
         try:
             versions[package] = version(package)
         except PackageNotFoundError:
@@ -77,6 +112,9 @@ def _versions() -> dict[str, str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run explicit arguments or use the settings in RUN_EXPERIMENT and RUN_OPTIONS."""
+    if argv is None:
+        argv = [RUN_EXPERIMENT]#, *RUN_OPTIONS.get(RUN_EXPERIMENT, ())]
     parser = _parser()
     args = parser.parse_args(argv)
     protocol = Protocol(
@@ -127,4 +165,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:] or None))

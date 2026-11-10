@@ -97,6 +97,14 @@ these numeric features and the known stroke labels in the training recordings.
 For a test recording, it receives the feature values, predicts a stroke, and
 the benchmark compares that prediction with the label supplied by the archive.
 
+## Run from an IDE
+
+Open [benchmark.py](benchmark.py) and click **Run**. With no arguments, it runs
+the UEA benchmark on **ERing** using the cached archive in `uea/data`. Edit
+`RUN_EXPERIMENT` to select `uea` or `synthetic`, and edit `RUN_OPTIONS` to change
+the dataset or other settings. If your Run configuration supplies arguments,
+the runner uses those arguments. Direct launches load SO4GP from this checkout.
+
 ## Run from the repository root
 
 Use the repository's Python environment with an editable install of GP-Mining.

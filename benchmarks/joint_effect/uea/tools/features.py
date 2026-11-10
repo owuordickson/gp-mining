@@ -89,7 +89,7 @@ def _standard(case: np.ndarray) -> np.ndarray:
 
 
 def _describe(bitmap: PairwiseMatrix, n: int) -> GP:
-    pairs = GP.gen_gradual_warping_set(bitmap.packed_bin_mat, n)
+    pairs = GP.gen_gradual_concordance_set(bitmap.packed_bin_mat, n)
     gp = GP()
     if not gp.compute_descriptors(pairs, n):
         raise ValueError("Invalid concordance pairs")
