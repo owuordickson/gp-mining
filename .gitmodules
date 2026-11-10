@@ -1,0 +1,3 @@
+[submodule "benchmarks/causal_discovery/causalrivers"]
+	path = benchmarks/causal_discovery/causalrivers
+	url = https://github.com/owuordickson/causalrivers.git
