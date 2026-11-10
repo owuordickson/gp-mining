@@ -143,12 +143,16 @@ noise levels.
 
 ## Protocol
 
-The benchmark selects two-channel GPs by their average full support on the
-training recordings. Each selected pattern family contributes both inverse
-forms, such as `A+ B-` and `A- B+`. Set an even `--max-patterns` and use
-`--min-support` to filter by average training support. Full support uses both
-orientations of the packed bitmap. Directional density and the structural
-descriptors use earlier-to-later pairs.
+SO4GP's GRAANK runs its Apriori search on each training recording, stopping
+at two-channel patterns. The search considers every family with positive
+full support in that recording. The benchmark ranks the discovered families
+by their mean full support across all training recordings, including zero
+for recordings in which a family was absent. It retains both inverse forms
+of each selected family, such as `A+ B-` and `A- B+`. Set an even
+`--max-patterns` and use `--min-support` to filter by mean training support
+(default 0.2). SO4GP computes full support from both orientations of the packed
+bitmap. Directional density and the structural descriptors use earlier-to-later
+pairs.
 
 **Method** names a way to represent a recording. **Features** lists the input
 columns for that method's classifier.
@@ -165,8 +169,9 @@ columns for that method's classifier.
 
 For an empty concordance set, connectivity is the observation count. Undefined
 separation and singularity statistics use zero in the feature matrix, and
-density records the empty set. The implementation calls
-GP.gen_gradual_concordance_set and GP.compute_descriptors for the descriptors.
+density records the empty set. The benchmark uses SO4GP to build packed
+bitmaps, intersect them, extract concordance sets, and compute support,
+density, and the structural descriptors.
 
 The classifier is **regularized logistic regression**
 (`sklearn.linear_model.LogisticRegression`). The benchmark trains a separate
@@ -194,6 +199,8 @@ are collected in [benchmarking-results.json](benchmarking-results.json).
 - run.json records dataset dimensions, final and fold-local pattern
   vocabularies, mining and feature extraction times, software versions, and
   settings. Feature extraction is shared across the compared methods.
+  GP timing covers support. GCS timing includes directional density, which
+  both methods use.
   Intervals for the archive describe held-out cases conditional on the
   published training split.
 
@@ -204,10 +211,13 @@ study with its own streamflow label and time-block protocol.
 Run the tests for both suites from the repository root.
 
 ```powershell
-python -m pytest benchmarks/joint_effect -q
+python -m pytest --import-mode=importlib benchmarks/joint_effect -q
 ```
 
 ## Reference runs
+
+The tables below report the earlier direct-search protocol, with a mean
+training support cutoff of 0.4.
 
 **BA means balanced accuracy.** For each class, divide the number of correctly
 predicted recordings by the number of recordings with that true label. Average

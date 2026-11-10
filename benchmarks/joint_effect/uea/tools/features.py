@@ -1,12 +1,14 @@
 """Packed comparison features with a vocabulary fitted on training cases."""
 
 from dataclasses import dataclass
-from itertools import combinations
 from time import perf_counter
 
 import numpy as np
+import pandas as pd
 
-from so4gp.gradual_patterns import GP
+from so4gp.algorithms import GRAANK
+from so4gp.data_gp import DataGP
+from so4gp.gradual_patterns import GP, PairwiseMatrix
 
 type Pattern = tuple[tuple[int, int], tuple[int, int]]
 
@@ -20,30 +22,24 @@ class FeatureSet:
     seconds: dict[str, float]
 
 
-def _packed_items(case: np.ndarray) -> np.ndarray:
-    n, channels = case.shape
-    packed = np.empty((2 * channels, (n * n + 7) // 8), dtype=np.uint8)
-    for channel, column in enumerate(case.T):
-        forward = column[:, None] < column[None, :]
-        packed[2 * channel] = np.packbits(forward, bitorder="big")
-        packed[2 * channel + 1] = np.packbits(forward.T, bitorder="big")
-    return packed
+def _recording_frame(case: np.ndarray) -> pd.DataFrame:
+    # Numeric column labels would be interpreted by DataGP as a data row.
+    return pd.DataFrame(case, columns=[f"channel_{i}" for i in range(case.shape[1])])
 
 
-def _item_index(channel: int, sign: int) -> int:
-    return 2 * channel + int(sign < 0)
+def _item_key(channel: int, sign: int) -> str:
+    return f"{channel}{'+' if sign > 0 else '-'}"
 
 
-def _indices(patterns: tuple[Pattern, ...]) -> tuple[np.ndarray, np.ndarray]:
-    left = np.array([_item_index(*pattern[0]) for pattern in patterns], dtype=int)
-    right = np.array([_item_index(*pattern[1]) for pattern in patterns], dtype=int)
-    return left, right
+def _inverse(pattern: Pattern) -> Pattern:
+    (a, sign_a), (b, sign_b) = pattern
+    return (a, -sign_a), (b, -sign_b)
 
 
 def select_patterns(
     sequences: np.ndarray, *, max_patterns: int, min_support: float
 ) -> tuple[Pattern, ...]:
-    """Rank inverse families by mean full support and keep both orientations."""
+    """Discover with GRAANK and rank inverse families by mean full support."""
     if max_patterns < 2 or max_patterns % 2:
         raise ValueError("max_patterns must be a positive even integer")
     if not 0 <= min_support <= 1:
@@ -52,30 +48,31 @@ def select_patterns(
     if cases == 0 or n < 2 or channels < 2:
         raise ValueError("Pattern selection needs cases with >=2 times and channels")
 
-    families = tuple(
-        ((a, 1), (b, sign))
-        for a, b in combinations(range(channels), 2)
-        for sign in (1, -1)
-    )
-    left, right = _indices(families)
-    totals = np.zeros(len(families), dtype=np.float64)
+    pair_count = GP.pair_count(n)
+    totals: dict[Pattern, int] = {}
     for case in sequences:
-        packed = _packed_items(case)
-        for start in range(0, len(families), 128):
-            batch = slice(start, start + 128)
-            intersections = packed[left[batch]] & packed[right[batch]]
-            totals[batch] += np.bitwise_count(intersections).sum(axis=1)
+        miner = GRAANK(_recording_frame(case), min_sup=0)
+        miner.discover(max_iteration=2, compute_descriptors=False)
+        engine = miner.mining_engine
+        bins = engine.valid_bins
+        assert bins is not None
+        for gp in engine.gradual_patterns or ():
+            left, right = sorted(gp.gradual_items, key=lambda gi: gi.attribute_col)
+            a, b = int(left.attribute_col), int(right.attribute_col)
+            sign = 1 if left.symbol == right.symbol else -1
+            family = ((a, 1), (b, sign))
+            # Use exact library support. GP.support rounds its value for display.
+            scored = GP.perform_and(bins[left.to_string()], bins[right.to_string()], n)
+            totals[family] = totals.get(family, 0) + round(scored.support * pair_count)
 
-    means = totals / (cases * GP.pair_count(n))
-    # Stable ordering makes ties reproducible without looking at test cases.
-    ranked = np.argsort(-means, kind="stable")[: max_patterns // 2]
+    # Undiscovered families contribute zero on that recording. Rank by exact
+    # counts and use channel order, then same direction, for support ties.
+    ranked = sorted(totals, key=lambda p: (-totals[p], p[0][0], p[1][0], -p[1][1]))
     selected = []
-    for index in ranked:
-        if means[index] < min_support:
-            continue
-        pattern = families[index]
-        (a, sign_a), (b, sign_b) = pattern
-        selected.extend((pattern, ((a, -sign_a), (b, -sign_b))))
+    for pattern in ranked[: max_patterns // 2]:
+        if totals[pattern] / (cases * pair_count) < min_support:
+            break
+        selected.extend((pattern, _inverse(pattern)))
     return tuple(selected)
 
 
@@ -91,7 +88,8 @@ def _standard(case: np.ndarray) -> np.ndarray:
     return np.concatenate((means, case.std(axis=0), slopes, correlation[upper]))
 
 
-def _describe(pairs: np.ndarray, n: int) -> GP:
+def _describe(bitmap: PairwiseMatrix, n: int) -> GP:
+    pairs = GP.gen_gradual_concordance_set(bitmap.packed_bin_mat, n)
     gp = GP()
     if not gp.compute_descriptors(pairs, n):
         raise ValueError("Invalid concordance pairs")
@@ -104,8 +102,12 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
     if cases == 0 or n < 2 or channels < 2:
         raise ValueError("Feature extraction needs cases with >=2 times and channels")
 
-    total_pairs = GP.pair_count(n)
-    left, right = _indices(patterns)
+    item_keys = [
+        _item_key(channel, sign) for channel in range(channels) for sign in (1, -1)
+    ]
+    pattern_keys = tuple(
+        (_item_key(*left), _item_key(*right)) for left, right in patterns
+    )
     standard = np.empty((cases, 3 * channels + channels * (channels - 1) // 2))
     gi = np.empty((cases, 2 * channels, 5))
     gp_basic = np.empty((cases, len(patterns), 2))
@@ -119,9 +121,12 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
         seconds["standard"] += perf_counter() - start
 
         start = perf_counter()
-        packed = _packed_items(case)
-        for item, bits in enumerate(packed):
-            desc = _describe(GP.gen_gradual_concordance_set(bits, n), n)
+        data = DataGP(_recording_frame(case), min_sup=0)
+        data.fit_bitmap()
+        bins = data.valid_bins
+        assert bins is not None
+        for item, key in enumerate(item_keys):
+            desc = _describe(bins[key], n)
             gi[index, item] = (
                 desc.density,
                 desc.avg_deviation_from_diagonal,
@@ -131,23 +136,20 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
             )
         seconds["gi"] += perf_counter() - start
 
-        start = perf_counter()
-        intersections = packed[left] & packed[right]
-        supports = np.bitwise_count(intersections).sum(axis=1) / total_pairs
-        pairs = [GP.gen_gradual_concordance_set(bits, n) for bits in intersections]
-        gp_basic[index, :, 0] = supports
-        gp_basic[index, :, 1] = [len(pair_set) / total_pairs for pair_set in pairs]
-        seconds["gp"] += perf_counter() - start
+        for pattern, (left, right) in enumerate(pattern_keys):
+            start = perf_counter()
+            bitmap = GP.perform_and(bins[left], bins[right], n)
+            seconds["gp"] += perf_counter() - start
 
-        start = perf_counter()
-        for pattern, pair_set in enumerate(pairs):
-            desc = _describe(pair_set, n)
+            start = perf_counter()
+            desc = _describe(bitmap, n)
+            gp_basic[index, pattern] = (bitmap.support, desc.density)
             gp_extra[index, pattern] = (
                 desc.graph_connectivity,
                 desc.singularity_score,
                 desc.rank_dispersion,
             )
-        seconds["gcs"] += perf_counter() - start
+            seconds["gcs"] += perf_counter() - start
 
     # Undefined descriptors on empty sets use zero. Density is present in
     # every corresponding baseline and distinguishes that case.

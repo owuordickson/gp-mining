@@ -23,7 +23,7 @@ CONTRASTS = (
 @dataclass(frozen=True)
 class Protocol:
     max_patterns: int = 24
-    min_support: float = 0.4
+    min_support: float = 0.2
     folds: int = 3
     c_grid: tuple[float, ...] = (0.1, 1.0, 10.0)
     bootstrap: int = 1000

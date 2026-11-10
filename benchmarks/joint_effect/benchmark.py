@@ -28,7 +28,7 @@ def _parser() -> argparse.ArgumentParser:
         suite.add_arguments(mode)
         mode.add_argument("--output", type=Path, help="A new directory for reports")
         mode.add_argument("--max-patterns", type=int, default=24)
-        mode.add_argument("--min-support", type=float, default=0.4)
+        mode.add_argument("--min-support", type=float, default=Protocol.min_support)
         mode.add_argument("--folds", type=int, default=3)
         mode.add_argument("--c-grid", type=float, nargs="+", default=[0.1, 1.0, 10.0])
         mode.add_argument("--bootstrap", type=int, default=1000)
@@ -115,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = {
         "experiment": args.experiment,
         "arguments": vars(args),
-        "protocol": asdict(protocol),
+        "protocol": {**asdict(protocol), "pattern_miner": "SO4GP GRAANK (Apriori)"},
         "versions": _versions(),
         "runs": runs,
     }

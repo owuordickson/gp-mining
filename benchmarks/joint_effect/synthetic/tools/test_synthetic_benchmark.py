@@ -75,3 +75,36 @@ def test_pattern_mining_uses_fold_training_and_never_test(monkeypatch):
     assert seen[-1] == set(range(12))
     assert [row["method"] for row in result["metrics"]] == list(METHODS)
     assert all(0 <= row["macro_f1"] <= 1 for row in result["metrics"])
+
+
+def test_graank_discovers_families_within_recordings_and_ranks_mean_full_support(
+    monkeypatch,
+):
+    from benchmarks.joint_effect.uea.tools.features import select_patterns
+    from so4gp.algorithms import GRAANK
+
+    cases = np.array(
+        [
+            [[1, 3], [2, 4], [3, 1], [4, 2], [5, 5]],
+            [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]],
+        ],
+        dtype=float,
+    )
+    discover = GRAANK.discover
+    observed = []
+
+    def observe(miner, *args, **kwargs):
+        result = discover(miner, *args, **kwargs)
+        observed.append(miner.mining_engine.data.copy())
+        return result
+
+    monkeypatch.setattr(GRAANK, "discover", observe)
+    selected = select_patterns(cases, max_patterns=4, min_support=0.2)
+    np.testing.assert_array_equal(np.stack(observed), cases)
+    assert selected == (
+        ((0, 1), (1, 1)),
+        ((0, -1), (1, -1)),
+        ((0, 1), (1, -1)),
+        ((0, -1), (1, 1)),
+    )
+    assert select_patterns(cases, max_patterns=4, min_support=0.21) == selected[:2]
