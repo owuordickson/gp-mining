@@ -11,10 +11,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
 
-if __package__:
-    from .features import DESCRIPTORS, METHODS, build_features, select_patterns
-else:
-    from features import DESCRIPTORS, METHODS, build_features, select_patterns
+from .features import DESCRIPTORS, METHODS, build_features, select_patterns
 
 CONTRASTS = (
     ("gp", "gi"),

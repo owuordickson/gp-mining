@@ -100,8 +100,8 @@ the benchmark compares that prediction with the label supplied by the archive.
 ## Run from the repository root
 
 Use the repository's Python environment with an editable install of GP-Mining.
-The runner uses NumPy, scikit-learn, and the descriptor implementation on this
-branch. Dataset access uses the Python standard library.
+The runner uses the shared feature extraction and evaluation code in `uea/tools`.
+Dataset access uses the Python standard library.
 
 ```powershell
 python -m pip install -e .
@@ -109,8 +109,8 @@ python benchmarks/joint_effect/benchmark.py uea --download
 python benchmarks/joint_effect/benchmark.py synthetic
 ```
 
-The UEA run uses the published train and test files for BasicMotions,
-RacketSports, and NATOPS. No fork is needed. To run offline, place the official
+The UEA benchmark uses published train and test splits for the 11
+datasets in the reference runs. To run offline, place the official
 ZIP for each dataset or its two `.ts` files under `benchmarks/joint_effect/uea/data`.
 Use `--data-dir` for another location and `--datasets` to select a subset.
 
@@ -168,12 +168,14 @@ separation and singularity statistics use zero in the feature matrix, and
 density records the empty set. The implementation calls
 GP.gen_gradual_concordance_set and GP.compute_descriptors for the descriptors.
 
-The benchmark trains a separate logistic regression model for each feature set.
-All models use the same stratified training folds and regularization grid.
-Each fold selects patterns using its own training cases. The final patterns are
-selected on the full training split and applied to every test recording.
-Feature standardization is fitted inside each model's training pipeline.
-Validation balanced accuracy selects regularization.
+The classifier is **regularized logistic regression**
+(`sklearn.linear_model.LogisticRegression`). The benchmark trains a separate
+model for each feature set and standardizes the feature columns with
+`StandardScaler`, fitted on training data. The models use the same stratified
+folds and try the same regularization values (`C` = 0.1, 1, and 10 by default).
+Each model selects its `C` by validation balanced accuracy. Each fold selects
+patterns using its own training cases. The final patterns are selected on the
+full training split and applied to every test recording.
 
 ## Reports
 
@@ -213,23 +215,31 @@ the resulting percentages to give every class equal weight. For example, if
 the four strokes are correctly classified 90%, 80%, 70%, and 60% of the time,
 the balanced accuracy is 75%. Higher BA is better.
 
-The UEA reference runs use the published splits and the default protocol.
-Scores are percentages. Differences and paired 95% bootstrap intervals are
-in percentage points. [UEA metrics](uea/results/uea-20261109T133818769079Z/metrics.csv)
-and [paired intervals](uea/results/uea-20261109T133818769079Z/paired_contrasts.csv).
+The UEA runs use the published splits and the same protocol for 11 datasets. Scores are percentages. Differences and paired 95% bootstrap intervals are in percentage points.
+
+- Original three datasets. [Metrics](uea/results/uea-20261109T133818769079Z/metrics.csv) and [paired intervals](uea/results/uea-20261109T133818769079Z/paired_contrasts.csv).
+- 8 added datasets. [Metrics](uea/results/uea-extension-20261110/metrics.csv) and [paired intervals](uea/results/uea-extension-20261110/paired_contrasts.csv).
 
 | Dataset | Standard BA | GP BA | GCS BA | GCS - GP BA (95% interval) | GP macro-F1 | GCS macro-F1 | Elapsed (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | BasicMotions | 97.5 | 92.5 | 95.0 | +2.5 [-5.0, +10.0] | 92.3 | 95.0 | 27.7 |
 | RacketSports | 77.5 | 78.2 | 84.2 | +5.9 [+0.5, +11.3] | 78.4 | 84.0 | 16.4 |
 | NATOPS | 90.6 | 68.3 | 70.0 | +1.7 [-1.1, +4.4] | 67.6 | 69.6 | 101.9 |
+| ArticularyWordRecognition | 93.3 | 96.0 | 96.7 | +0.7 [-0.7, +2.0] | 95.9 | 96.6 | 249.0 |
+| AtrialFibrillation | 33.3 | 33.3 | 13.3 | -20.0 [-40.0, +0.0] | 31.6 | 12.1 | 49.6 |
+| ERing | 73.7 | 86.7 | 86.3 | -0.4 [-3.3, +2.6] | 86.7 | 86.4 | 7.6 |
+| Epilepsy | 92.2 | 67.6 | 45.1 | -22.5 [-32.0, -12.9] | 67.5 | 45.0 | 182.5 |
+| FingerMovements | 55.1 | 51.0 | 52.2 | +1.1 [-7.9, +10.2] | 51.0 | 51.7 | 100.1 |
+| LSST | 31.3 | 23.9 | 23.8 | -0.1 [-2.8, +2.1] | 24.4 | 24.4 | 448.5 |
+| Libras | 69.4 | 76.7 | 73.9 | -2.8 [-6.7, +1.1] | 75.9 | 73.1 | 13.8 |
+| PenDigits | 73.4 | 78.0 | 81.8 | +3.8 [+2.8, +4.8] | 77.9 | 81.7 | 132.3 |
 
-The standard features scored highest on BasicMotions and NATOPS. GCS scored
-highest on RacketSports among the three methods shown. The comparison between
-`gp` and `gcs` measures the contribution of the extra GCS columns because both
-use the same selected patterns and the same support and density features. The
-test BA rose on all three datasets, and RacketSports was the only one whose
-paired 95% interval for that difference excluded zero.
+GCS scored higher than ordinary GP on 6 of 11 datasets and higher than the
+standard baseline on 5 of 11. The ordinary GP comparison measures the
+contribution of the added GCS descriptors with the selected patterns,
+support, and density held fixed. The paired 95% interval for GCS minus GP
+was entirely above zero on RacketSports and PenDigits. The paired 95%
+interval was entirely below zero on Epilepsy.
 
 The [synthetic summaries](synthetic/results/synthetic-full/summary.csv) and
 [paired summaries](synthetic/results/synthetic-full/paired_summary.csv) cover five

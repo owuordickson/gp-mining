@@ -8,7 +8,19 @@ from zipfile import ZipFile
 
 import numpy as np
 
-DATASETS = ("BasicMotions", "RacketSports", "NATOPS")
+DATASETS = (
+    "BasicMotions",
+    "RacketSports",
+    "NATOPS",
+    "AtrialFibrillation",
+    "Epilepsy",
+    "ERing",
+    "FingerMovements",
+    "ArticularyWordRecognition",
+    "Libras",
+    "LSST",
+    "PenDigits",
+)
 BASE_URL = "https://www.timeseriesclassification.com/aeon-toolkit"
 _MAX_BYTES = 64 * 1024 * 1024
 

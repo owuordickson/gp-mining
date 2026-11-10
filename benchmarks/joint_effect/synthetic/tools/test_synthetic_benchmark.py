@@ -2,7 +2,7 @@ import numpy as np
 
 
 def test_composed_features_use_repository_descriptors_and_keep_density_in_ablations():
-    from benchmarks.joint_effect.features import build_features
+    from benchmarks.joint_effect.uea.tools.features import build_features
 
     # Both increasing: forward (0,1), (0,2), (1,2), and (3,2) in reverse.
     x = np.array([[[1, 1], [2, 2], [4, 4], [3, 0]]], dtype=float)
@@ -19,7 +19,7 @@ def test_composed_features_use_repository_descriptors_and_keep_density_in_ablati
 
 
 def test_reverse_only_support_and_empty_descriptors():
-    from benchmarks.joint_effect.features import build_features
+    from benchmarks.joint_effect.uea.tools.features import build_features
 
     x = np.array([[[3, 3], [2, 2], [1, 1]]], dtype=float)
     features = build_features(x, (((0, 1), (1, 1)),)).matrices
@@ -29,7 +29,7 @@ def test_reverse_only_support_and_empty_descriptors():
 
 
 def test_pattern_selection_keeps_both_directions():
-    from benchmarks.joint_effect.features import select_patterns
+    from benchmarks.joint_effect.uea.tools.features import select_patterns
 
     x = np.tile(np.arange(8, dtype=float)[None, :, None], (2, 1, 3))
     patterns = select_patterns(x, max_patterns=2, min_support=1)
@@ -37,8 +37,8 @@ def test_pattern_selection_keeps_both_directions():
 
 
 def test_timing_layout_matches_gp_support_and_density():
-    from benchmarks.joint_effect.features import build_features
-    from benchmarks.joint_effect.synthetic.generator import _timing_case
+    from benchmarks.joint_effect.synthetic.tools.generator import _timing_case
+    from benchmarks.joint_effect.uea.tools.features import build_features
 
     patterns = (((0, 1), (1, 1)), ((0, -1), (1, -1)))
     cases = np.stack([_timing_case(y, np.random.default_rng(7), 0.5) for y in (0, 1)])
@@ -48,8 +48,8 @@ def test_timing_layout_matches_gp_support_and_density():
 
 
 def test_pattern_mining_uses_fold_training_and_never_test(monkeypatch):
-    from benchmarks.joint_effect import evaluation
-    from benchmarks.joint_effect.features import METHODS, select_patterns
+    from benchmarks.joint_effect.uea.tools import evaluation
+    from benchmarks.joint_effect.uea.tools.features import METHODS, select_patterns
 
     train = np.random.default_rng(5).normal(size=(12, 8, 3))
     train[:, 0, 0] = np.arange(12)

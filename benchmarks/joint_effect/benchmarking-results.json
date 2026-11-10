@@ -30,7 +30,8 @@
             0.10000000000000009
           ]
         },
-        "elapsed_seconds": 27.654600200010464
+        "elapsed_seconds": 27.654600200010464,
+        "run_id": "uea-20261109T133818769079Z"
       },
       {
         "dataset": "RacketSports",
@@ -50,7 +51,8 @@
             0.11275213137580609
           ]
         },
-        "elapsed_seconds": 16.365418300032616
+        "elapsed_seconds": 16.365418300032616,
+        "run_id": "uea-20261109T133818769079Z"
       },
       {
         "dataset": "NATOPS",
@@ -70,9 +72,194 @@
             0.04444444444444451
           ]
         },
-        "elapsed_seconds": 101.85664229997201
+        "elapsed_seconds": 101.85664229997201,
+        "run_id": "uea-20261109T133818769079Z"
+      },
+      {
+        "dataset": "ArticularyWordRecognition",
+        "balanced_accuracy": {
+          "standard": 0.9333333333333332,
+          "gp": 0.96,
+          "gcs": 0.9666666666666666
+        },
+        "macro_f1": {
+          "gp": 0.9591593681680638,
+          "gcs": 0.9660068511198946
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": 0.006666666666666599,
+          "paired_95_interval": [
+            -0.00666666666666649,
+            0.020000000000000018
+          ]
+        },
+        "elapsed_seconds": 248.99227809999866,
+        "run_id": "uea-extension-20261110"
+      },
+      {
+        "dataset": "AtrialFibrillation",
+        "balanced_accuracy": {
+          "standard": 0.3333333333333333,
+          "gp": 0.3333333333333333,
+          "gcs": 0.13333333333333333
+        },
+        "macro_f1": {
+          "gp": 0.3157509157509158,
+          "gcs": 0.12121212121212122
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": -0.19999999999999998,
+          "paired_95_interval": [
+            -0.4,
+            0.0
+          ]
+        },
+        "elapsed_seconds": 49.64632290000009,
+        "run_id": "uea-extension-20261110"
+      },
+      {
+        "dataset": "ERing",
+        "balanced_accuracy": {
+          "standard": 0.737037037037037,
+          "gp": 0.8666666666666667,
+          "gcs": 0.862962962962963
+        },
+        "macro_f1": {
+          "gp": 0.8665500300550238,
+          "gcs": 0.8642285337588889
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": -0.0037037037037036535,
+          "paired_95_interval": [
+            -0.033333333333333326,
+            0.025925925925925797
+          ]
+        },
+        "elapsed_seconds": 7.562610100001621,
+        "run_id": "uea-extension-20261110"
+      },
+      {
+        "dataset": "Epilepsy",
+        "balanced_accuracy": {
+          "standard": 0.9220985691573926,
+          "gp": 0.6760333863275041,
+          "gcs": 0.4514308426073132
+        },
+        "macro_f1": {
+          "gp": 0.6753181679230996,
+          "gcs": 0.45010656064565735
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": -0.2246025437201909,
+          "paired_95_interval": [
+            -0.320341812400636,
+            -0.12866918388977214
+          ]
+        },
+        "elapsed_seconds": 182.48857289999432,
+        "run_id": "uea-extension-20261110"
+      },
+      {
+        "dataset": "FingerMovements",
+        "balanced_accuracy": {
+          "standard": 0.5512204881952781,
+          "gp": 0.5104041616646658,
+          "gcs": 0.5218087234893958
+        },
+        "macro_f1": {
+          "gp": 0.50995099509951,
+          "gcs": 0.5169082125603865
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": 0.01140456182472993,
+          "paired_95_interval": [
+            -0.0788315326130451,
+            0.10205082032813119
+          ]
+        },
+        "elapsed_seconds": 100.08473899999808,
+        "run_id": "uea-extension-20261110"
+      },
+      {
+        "dataset": "LSST",
+        "balanced_accuracy": {
+          "standard": 0.313336498092241,
+          "gp": 0.23905921421990703,
+          "gcs": 0.23823478125830547
+        },
+        "macro_f1": {
+          "gp": 0.2444462568280627,
+          "gcs": 0.24396795671767948
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": -0.0008244329616015622,
+          "paired_95_interval": [
+            -0.027614538293688894,
+            0.02070261460468271
+          ]
+        },
+        "elapsed_seconds": 448.5186692999996,
+        "run_id": "uea-extension-20261110"
+      },
+      {
+        "dataset": "Libras",
+        "balanced_accuracy": {
+          "standard": 0.6944444444444444,
+          "gp": 0.7666666666666667,
+          "gcs": 0.7388888888888889
+        },
+        "macro_f1": {
+          "gp": 0.759224735224367,
+          "gcs": 0.7314481713463803
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": -0.02777777777777779,
+          "paired_95_interval": [
+            -0.06666666666666687,
+            0.011111111111111072
+          ]
+        },
+        "elapsed_seconds": 13.77913599999738,
+        "run_id": "uea-extension-20261110"
+      },
+      {
+        "dataset": "PenDigits",
+        "balanced_accuracy": {
+          "standard": 0.7340655432310792,
+          "gp": 0.7803464101479705,
+          "gcs": 0.8181416678075429
+        },
+        "macro_f1": {
+          "gp": 0.778670993356468,
+          "gcs": 0.8171133911393689
+        },
+        "gcs_minus_gp_balanced_accuracy": {
+          "estimate": 0.03779525765957248,
+          "paired_95_interval": [
+            0.028447668639027195,
+            0.04773158610103137
+          ]
+        },
+        "elapsed_seconds": 132.32069279999996,
+        "run_id": "uea-extension-20261110"
       }
-    ]
+    ],
+    "runs": {
+      "uea-20261109T133818769079Z": {
+        "metrics": "uea/results/uea-20261109T133818769079Z/metrics.csv",
+        "paired_contrasts": "uea/results/uea-20261109T133818769079Z/paired_contrasts.csv",
+        "summary": "uea/results/uea-20261109T133818769079Z/summary.csv",
+        "paired_summary": "uea/results/uea-20261109T133818769079Z/paired_summary.csv",
+        "manifest": "uea/results/uea-20261109T133818769079Z/run.json"
+      },
+      "uea-extension-20261110": {
+        "metrics": "uea/results/uea-extension-20261110/metrics.csv",
+        "paired_contrasts": "uea/results/uea-extension-20261110/paired_contrasts.csv",
+        "summary": "uea/results/uea-extension-20261110/summary.csv",
+        "paired_summary": "uea/results/uea-extension-20261110/paired_summary.csv",
+        "manifest": "uea/results/uea-extension-20261110/run.json"
+      }
+    }
   },
   "synthetic": {
     "reference_run": "synthetic-full",

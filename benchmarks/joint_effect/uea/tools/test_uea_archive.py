@@ -4,7 +4,7 @@ import numpy as np
 def test_archive_preserves_explicit_train_test_splits(tmp_path):
     from zipfile import ZipFile
 
-    from benchmarks.joint_effect.uea.archive import archive_split
+    from benchmarks.joint_effect.uea.tools.archive import archive_split
 
     header = "@timestamps false\n@classlabel true a b\n@data\n"
     with ZipFile(tmp_path / "BasicMotions.zip", "w") as archive:

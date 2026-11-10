@@ -11,7 +11,7 @@ def add_arguments(parser: ArgumentParser) -> None:
         "--datasets", choices=DATASETS, nargs="+", default=list(DATASETS)
     )
     parser.add_argument(
-        "--data-dir", type=Path, default=Path(__file__).resolve().parent / "data"
+        "--data-dir", type=Path, default=Path(__file__).resolve().parents[1] / "data"
     )
     parser.add_argument(
         "--download", action="store_true", help="Fetch missing official ZIPs"
