@@ -2,8 +2,6 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import precision_recall_fscore_support
-
 from baseline_methods import (
     run_classical_statistics,
     run_granger_causality,
@@ -11,6 +9,7 @@ from baseline_methods import (
     run_pcmci_tigramite,
     run_t_graank,
 )
+from sklearn.metrics import precision_recall_fscore_support
 
 
 def generate_timegraph_mock(length=1000):

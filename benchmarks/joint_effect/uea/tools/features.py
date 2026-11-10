@@ -12,7 +12,7 @@ from so4gp.gradual_patterns import GP, PairwiseMatrix
 
 type Pattern = tuple[tuple[int, int], tuple[int, int]]
 
-DESCRIPTORS = ("connectivity", "singularity", "dispersion")
+DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion")
 METHODS = ("standard", "gi", "gp", "gcs", *(f"gcs_no_{d}" for d in DESCRIPTORS))
 
 
@@ -89,7 +89,7 @@ def _standard(case: np.ndarray) -> np.ndarray:
 
 
 def _describe(bitmap: PairwiseMatrix, n: int) -> GP:
-    pairs = GP.gen_gradual_concordance_set(bitmap.packed_bin_mat, n)
+    pairs = GP.gen_gradual_warping_set(bitmap.packed_bin_mat, n)
     gp = GP()
     if not gp.compute_descriptors(pairs, n):
         raise ValueError("Invalid concordance pairs")
@@ -145,6 +145,7 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
             desc = _describe(bitmap, n)
             gp_basic[index, pattern] = (bitmap.support, desc.density)
             gp_extra[index, pattern] = (
+                desc.density,
                 desc.graph_connectivity,
                 desc.singularity_score,
                 desc.rank_dispersion,
