@@ -1,8 +1,0 @@
-product/
-datasets/
-outputs/
-.venv_review/
-.venv_test/
-product.zip
-
-**.pyc
