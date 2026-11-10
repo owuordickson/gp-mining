@@ -20,6 +20,13 @@ DATASETS = (
     "Libras",
     "LSST",
     "PenDigits",
+    "AppliancesEnergy_disc",
+    "EyesOpenShut",
+    "Handwriting",
+    "IRDS-EFL",
+    "JapaneseVowels_eq",
+    "SPHERE-WUS",
+    "UIPRMD-SSE-C"
 )
 BASE_URL = "https://www.timeseriesclassification.com/aeon-toolkit"
 _MAX_BYTES = 64 * 1024 * 1024
