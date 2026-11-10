@@ -235,8 +235,7 @@ the balanced accuracy is 75%. Higher BA is better.
 
 The UEA runs use the published splits and the same protocol for 11 datasets. Scores are percentages. Differences and paired 95% bootstrap intervals are in percentage points.
 
-- Original three datasets. [Metrics](uea/results/uea-20261109T133818769079Z/metrics.csv) and [paired intervals](uea/results/uea-20261109T133818769079Z/paired_contrasts.csv).
-- 8 added datasets. [Metrics](uea/results/uea-extension-20261110/metrics.csv) and [paired intervals](uea/results/uea-extension-20261110/paired_contrasts.csv).
+- 11 datasets. [Metrics](uea/results/uea-20261110T172511120121Z/metrics.csv) and [paired intervals](uea/results/uea-20261110T172511120121Z/paired_contrasts.csv).
 
 | Dataset | Standard BA | GP BA | GCS BA | GCS - GP BA (95% interval) | GP macro-F1 | GCS macro-F1 | Elapsed (s) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
