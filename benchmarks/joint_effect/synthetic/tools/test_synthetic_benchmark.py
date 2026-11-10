@@ -72,6 +72,7 @@ def test_pattern_mining_uses_fold_training_and_never_test(monkeypatch):
         seed=1,
         protocol=evaluation.Protocol(max_patterns=4, folds=3, bootstrap=10),
     )
+    assert result["cv_folds"] == len(result["cv"]) == 3
     assert len(seen) == 4
     assert all(len(fold) == 8 and fold < set(range(12)) for fold in seen[:-1])
     assert seen[-1] == set(range(12))
@@ -135,3 +136,27 @@ def test_run_without_command_line_arguments(tmp_path, monkeypatch):
     assert manifest["experiment"] == "synthetic"
     assert {run["dataset"] for run in manifest["runs"]} == {"shared", "timing"}
     assert manifest["arguments"]["seeds"] == [0]
+
+
+def test_cv_caps_folds_at_the_smallest_training_class():
+    from benchmarks.joint_effect.uea.tools.evaluation import Protocol, evaluate_split
+
+    train = np.tile(np.arange(8, dtype=float)[None, :, None], (8, 1, 2))
+    train[:2] += 20
+    labels = np.repeat(["rare", "common"], [2, 6])
+    test_idx = [0, 2]
+
+    result = evaluate_split(
+        train,
+        labels,
+        train[test_idx] + 0.25,
+        labels[test_idx],
+        seed=1,
+        protocol=Protocol(max_patterns=2, folds=3, c_grid=(10.0,), bootstrap=10),
+    )
+
+    assert result["cv_folds"] == len(result["cv"]) == 2
+    assert result["classes"] == ["common", "rare"]
+    standard = next(row for row in result["metrics"] if row["method"] == "standard")
+    assert standard["cv_balanced_accuracy"] == 1.0
+    assert standard["balanced_accuracy"] == 1.0

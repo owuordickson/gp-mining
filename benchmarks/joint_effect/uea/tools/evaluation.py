@@ -68,7 +68,7 @@ def _score_columns(point: np.ndarray, samples: np.ndarray) -> dict[str, float]:
     return fields
 
 
-def _check_inputs(x_train, y_train, x_test, y_test, protocol):
+def _check_inputs(x_train, y_train, x_test, y_test, protocol) -> tuple[np.ndarray, int]:
     if x_train.ndim != 3 or x_test.ndim != 3 or x_train.shape[1:] != x_test.shape[1:]:
         raise ValueError(
             "Expected train and test with matching time/channel dimensions"
@@ -82,15 +82,20 @@ def _check_inputs(x_train, y_train, x_test, y_test, protocol):
     labels, counts = np.unique(y_train, return_counts=True)
     if len(labels) < 2 or not np.array_equal(labels, np.unique(y_test)):
         raise ValueError("Train and test must contain the same two or more classes")
-    if protocol.folds < 2 or counts.min() < protocol.folds:
-        raise ValueError("Each training class needs at least as many cases as CV folds")
+    if protocol.folds < 2:
+        raise ValueError("CV folds must be at least two")
+    min_class_count = int(counts.min())
+    if min_class_count < 2:
+        raise ValueError(
+            "Each training class needs at least two cases for stratified CV"
+        )
     if protocol.bootstrap < 1:
         raise ValueError("bootstrap must be positive")
     if not protocol.c_grid or any(
         not np.isfinite(c) or c <= 0 for c in protocol.c_grid
     ):
         raise ValueError("The C grid must contain finite positive values")
-    return labels
+    return labels, min(protocol.folds, min_class_count)
 
 
 def _prepare(x_train, x_eval, protocol):
@@ -123,13 +128,13 @@ def evaluate_split(
     protocol: Protocol = Protocol(),
 ) -> dict:
     """Tune on fold-local training data, refit on training, then score test once."""
-    labels = _check_inputs(x_train, y_train, x_test, y_test, protocol)
+    labels, cv_folds = _check_inputs(x_train, y_train, x_test, y_test, protocol)
     y_train, y_test = np.searchsorted(labels, y_train), np.searchsorted(labels, y_test)
     grid = tuple(sorted(set(protocol.c_grid)))
     validation = {method: np.zeros(len(grid)) for method in METHODS}
     tune_seconds = dict.fromkeys(METHODS, 0.0)
     fold_details = []
-    cv = StratifiedKFold(n_splits=protocol.folds, shuffle=True, random_state=seed)
+    cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=seed)
     total_start = perf_counter()
 
     # Limit BLAS threads so all methods share the same compute configuration.
@@ -167,9 +172,7 @@ def evaluate_split(
                     "method": method,
                     "features": train.matrices[method].shape[1],
                     "c": grid[best],
-                    "cv_balanced_accuracy": float(
-                        validation[method][best] / protocol.folds
-                    ),
+                    "cv_balanced_accuracy": float(validation[method][best] / cv_folds),
                     "tune_seconds": tune_seconds[method],
                     "fit_seconds": fit_seconds,
                     "predict_seconds": predict_seconds,
@@ -201,6 +204,7 @@ def evaluate_split(
         "observations": x_train.shape[1],
         "channels": x_train.shape[2],
         "classes": labels.tolist(),
+        "cv_folds": cv_folds,
         "cv": fold_details,
         "final": timing,
         "total_seconds": perf_counter() - total_start,

@@ -62,7 +62,12 @@ def _parser() -> argparse.ArgumentParser:
         mode.add_argument("--output", type=Path, help="A new directory for reports")
         mode.add_argument("--max-patterns", type=int, default=24)
         mode.add_argument("--min-support", type=float, default=Protocol.min_support)
-        mode.add_argument("--folds", type=int, default=3)
+        mode.add_argument(
+            "--folds",
+            type=int,
+            default=Protocol.folds,
+            help="Maximum number of stratified cross-validation folds",
+        )
         mode.add_argument("--c-grid", type=float, nargs="+", default=[0.1, 1.0, 10.0])
         mode.add_argument("--bootstrap", type=int, default=1000)
     return parser
@@ -141,7 +146,8 @@ def main(argv: list[str] | None = None) -> int:
         runs.append({**info, **run})
         print(
             f"{info['dataset']} seed={info['seed']} noise={info['noise']} "
-            f"patterns={len(run['patterns'])} elapsed={run['total_seconds']:.2f}s",
+            f"folds={run['cv_folds']} patterns={len(run['patterns'])} "
+            f"elapsed={run['total_seconds']:.2f}s",
             flush=True,
         )
 

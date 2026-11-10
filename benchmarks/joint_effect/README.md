@@ -186,9 +186,12 @@ The classifier is **regularized logistic regression**
 model for each feature set and standardizes the feature columns with
 `StandardScaler`, fitted on training data. The models use the same stratified
 folds and try the same regularization values (`C` = 0.1, 1, and 10 by default).
-Each model selects its `C` by validation balanced accuracy. Each fold selects
-patterns using its own training cases. The final patterns are selected on the
-full training split and applied to every test recording.
+Each model selects its `C` by validation balanced accuracy. The requested fold
+count is capped at the size of the smallest training class, so Handwriting
+uses two folds with the default settings. Stratified CV requires at least two
+recordings per training class. Each fold selects patterns using its own training
+cases. The final patterns are selected on the full training split and applied to
+every test recording.
 
 ## Reports
 
@@ -204,9 +207,10 @@ are collected in [benchmarking-results.json](benchmarking-results.json).
 - summary.csv and paired_summary.csv give means and sample standard deviations
   across independent runs at each dataset or noise level. A single run has no
   across-run standard deviation.
-- run.json records dataset dimensions, final and fold-local pattern
-  vocabularies, mining and feature extraction times, software versions, and
-  settings. Feature extraction is shared across the compared methods.
+- run.json records dataset dimensions, the effective fold count per dataset,
+  final and fold-local pattern vocabularies, mining and feature extraction times,
+  software versions, and settings. Feature extraction is shared across the
+  compared methods.
   GP timing covers support. GCS timing includes directional density, which
   both methods use.
   Intervals for the archive describe held-out cases conditional on the
