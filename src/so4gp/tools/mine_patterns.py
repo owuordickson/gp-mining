@@ -35,8 +35,8 @@ def mine_gps(
     Extract standard co-occurring gradual patterns from a tabular dataset.
 
     Analyzes numerical and categorical datasets to find parallel trends (e.g.,
-    'The more X increases, the more Y decreases') based on Gradual Warping Set
-    (GWS) descriptors.
+    'The more X increases, the more Y decreases') based on Gradual Concordance Set
+    (GCS) descriptors.
 
     Args:
         data: Matrix containing row data. The first row must contain column headers.
@@ -71,14 +71,20 @@ def mine_gps(
           calculated support fell below the min_support threshold.
         - Patterns: A list of discovered patterns. Each pattern is a list of strings
           starting with the trend description followed by 6 structural metrics:
-            1. sup: Proportion of dataset rows matching the pattern.
-            2. density: Ratio of concordant index pairs vs all possible pairs.
-            3. avg_dev: Mean absolute distance |i - j| across all pairs in W_g.
-            4. dispersion: Standard deviation of |i - j| index differences.
-            5. connect: Count of connected components when W_g is mapped as a graph.
-            6. singularity_scr: Node degree skewness indicating index concentration.
+            1. sup: Full bitmap comparison count divided by C(n, 2).
+            2. density: Stored forward pair count divided by C(n, 2).
+            3. avg_dev: Mean separation j - i across stored pairs (i, j), i < j.
+            4. dispersion: Population variance of those j - i separations.
+            5. connect: Undirected connected component count, including isolated
+               observations.
+            6. singularity_scr: Maximum vertex degree divided by stored pair count.
+
+        Pairs use zero-based observation indices. An empty GCS has density 0 and
+        n connected components; avg_dev, dispersion, and singularity_scr are NaN
+        (rendered as "nan" in the metric strings).
 
         Example Output Payload:
+        The metrics below describe four observations with all six forward pairs.
         {
             "Algorithm": "GRAANK",
             "Run-time": "1.329559 seconds",
@@ -87,10 +93,10 @@ def mine_gps(
                     "Expenses-, Age+",
                     "sup=1.0",
                     "density=1.0",
-                    "avg_dev=2.0",
-                    "dispersion=1.0",
+                    "avg_dev=1.667",
+                    "dispersion=0.556",
                     "connect=1",
-                    "singularity_scr=0.0"
+                    "singularity_scr=0.5"
                 ]
             ],
             "Invalid Count": "9"
@@ -192,15 +198,22 @@ def mine_tgps(
         - Time Data: Extracted step delays represented in elapsed epoch/seconds.
         - Transformed Data: The resulting matrix after time-lag alignment is applied.
         - Patterns: Discovered cross-temporal trends followed by 6 structural metrics:
-            1. sup: Proportion of dataset rows matching the temporal trend.
-            2. density: Ratio of concordant temporal index pairs vs total possible
-            pairs.
-            3. avg_dev: Mean absolute distance |i - j| across temporal pairs in W_g.
-            4. dispersion: Standard deviation of |i - j| cross-temporal index distances.
-            5. connect: Connected graph components calculated across time gaps.
-            6. singularity_scr: Degree skewness tracking heavy index temporal bias.
+            1. sup: Full transformed bitmap comparison count divided by C(n, 2).
+            2. density: Stored forward pair count divided by C(n, 2), where n is the
+               number of transformed observations.
+            3. avg_dev: Mean separation j - i across stored pairs (i, j), i < j.
+            4. dispersion: Population variance of those j - i separations.
+            5. connect: Undirected connected component count, including isolated
+               transformed observations.
+            6. singularity_scr: Maximum vertex degree divided by stored pair count.
+
+        Pairs use zero-based transformed observation indices. An empty GCS has
+        density 0 and n connected components; avg_dev, dispersion, and
+        singularity_scr are NaN (rendered as "nan" in the metric strings).
 
         Example Output Payload:
+        The metrics below describe four transformed observations with all six
+        forward pairs.
         {
             "Algorithm": "TGradAMI",
             "Minimum Representation": "0.60",
@@ -212,23 +225,27 @@ def mine_tgps(
                 [
                     "Age+, (Expenses-) +2.0 months",
                     "sup=1.0",
-                    "density=0.3",
-                    "avg_dev=1.333",
-                    "dispersion=0.471",
+                    "density=1.0",
+                    "avg_dev=1.667",
+                    "dispersion=0.556",
                     "connect=1",
-                    "singularity_scr=0.8"
+                    "singularity_scr=0.5"
                 ]
             ],
             "Transformation Steps": {"2": 2, "3": 2, "4": 2},
             "Time Data": [
                 ["Salary", "Cars", "Expenses"],
                 ["5270400.0", "5270400.0", "5270400.0"],
+                ["5270400.0", "5270400.0", "5270400.0"],
+                ["5270400.0", "5270400.0", "5270400.0"],
                 ["5270400.0", "5270400.0", "5270400.0"]
             ],
             "Transformed Data": [
                 ["Date", "Age", "Salary", "Cars", "Expenses"],
                 ["2021-03", 30, 4, 2, 7],
-                ["2021-04", 35, 1, 1, 6]
+                ["2021-04", 35, 1, 1, 6],
+                ["2021-05", 40, 3, 2, 5],
+                ["2021-06", 45, 2, 1, 4]
             ]
         }
     """

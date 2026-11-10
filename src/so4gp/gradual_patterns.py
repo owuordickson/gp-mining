@@ -12,8 +12,8 @@
 A collection of Gradual Pattern classes and methods.
 """
 
-import copy
 from dataclasses import dataclass
+from typing import overload
 
 import numpy as np
 import torch
@@ -279,7 +279,7 @@ class GP:
 
         :return: List of descriptors
         """
-        if self.density <= 0:
+        if self.graph_connectivity == 0:
             params = (
                 [f"sup={self.support}, conf={self.confidence}"]
                 if not descriptor_title
@@ -293,25 +293,25 @@ class GP:
                 params = [
                     f"sup={self.support}",
                     f"conf={self.confidence}",
-                    f"density={self.density}",
-                    f"avg_dev={self.avg_deviation_from_diagonal}",
-                    f"dispersion={self.rank_dispersion}",
+                    f"density={round(self.density, 3)}",
+                    f"avg_dev={round(self.avg_deviation_from_diagonal, 3)}",
+                    f"dispersion={round(self.rank_dispersion, 3)}",
                     f"connect={self.graph_connectivity}",
-                    f"singularity_scr={self.singularity_score}",
+                    f"singularity_scr={round(self.singularity_score, 3)}",
                 ]
             else:
                 params = [
                     {"Support": f"{self.support}"},
                     {"Confidence": f"{self.confidence}"},
-                    {"Density": f"{self.density}"},
+                    {"Density": f"{round(self.density, 3)}"},
                     {
                         "Avg. Deviation from Diagonal": (
-                            f"{self.avg_deviation_from_diagonal}"
+                            f"{round(self.avg_deviation_from_diagonal, 3)}"
                         )
                     },
-                    {"Rank Dispersion": f"{self.rank_dispersion}"},
+                    {"Rank Dispersion": f"{round(self.rank_dispersion, 3)}"},
                     {"Graph Connectivity": f"{self.graph_connectivity}"},
-                    {"Singularity Score": f"{self.singularity_score}"},
+                    {"Singularity Score": f"{round(self.singularity_score, 3)}"},
                 ]
         return params
 
@@ -421,7 +421,7 @@ class GP:
         # pattern = [('2', "+"), ('4', "+")]
         min_supp = data_gp.thd_supp
         n = data_gp.attr_size
-        gi_dict: dict | None = copy.deepcopy(data_gp.valid_bins)
+        gi_dict = data_gp.valid_bins
         if gi_dict is None:
             return self
 
@@ -429,7 +429,7 @@ class GP:
         target_gi = self.get_target_gi(target_col)
 
         pw_mat_1: PairwiseMatrix = gi_dict[target_gi.to_string()]
-        target_gi_supp = copy.copy(pw_mat_1.support)
+        target_gi_supp = pw_mat_1.support
         time_lag = gi_dict[target_gi.to_string()].time_lag
         GP.add_gradual_item_strict(
             gen_pattern, target_gi, target_col=target_col, time_lag=time_lag
@@ -452,56 +452,44 @@ class GP:
         if len(gen_pattern.gradual_items) <= 1:
             return self
         else:
-            # if compute_descriptors:
-            #    warping_set_arr: np.ndarray = np.array(
-            #        DataGP.gen_gradual_warping_set(pw_mat.bin_mat, as_array=True)
-            #    )
-            #    rand_gp.compute_descriptors(warping_set_arr, obj_count=self.row_count)
             conf = gen_pattern.support / round(target_gi_supp, 3)
             gen_pattern.confidence = conf
             return gen_pattern
 
     def validate_via_tree(self, d_gp):
-        """
-        Validates a candidate gradual pattern (GP) based on support computation. A GP is
-        invalid if its support value is
-        less than the minimum support threshold set by the user. It applies a
-        depth-first (FP-Growth) approach
-        to compute support.
+        """Validate a candidate by intersecting both orientations separately.
 
-        :param d_gp: Data_GP object
-        :type d_gp: so4gp.DataGP
+        Args:
+            d_gp: Dataset with a fitted :attr:`DataGP.concordance_set`.
 
-        :return: A valid GP or an empty GP
+        Returns:
+            A validated pattern or the original candidate if fewer than two
+            items meet the support threshold.
         """
-        if d_gp.warping_set is None:
+        concordance_sets = d_gp.concordance_set
+        if concordance_sets is None:
             return self
 
-        min_supp = d_gp.thd_supp
-        n = d_gp.attr_size
         gen_pattern = GP()
-        """type gen_pattern: GP"""
-        temp_tids = None
+        forward = reverse = None
+        total_pairs = GP.pair_count(d_gp.attr_size)
         for gi in self.gradual_items:
-            node = gi.to_string()
-            node_inv = GI.swap_gi_symbol(gi).to_string()
-            for gi_str, gi_tids in d_gp.warping_set.items():
-                if (node == gi_str) or (node_inv == gi_str):
-                    if temp_tids is None:
-                        temp_tids = set(gi_tids)
-                        gen_pattern.add_gradual_item(gi)
-                    else:
-                        temp = set(copy.deepcopy(temp_tids or {}))
-                        temp = temp.intersection(set(gi_tids))
-                        supp = float(len(temp)) / GP.pair_count(n)
-                        if supp >= min_supp:
-                            temp_tids = copy.deepcopy(temp)
-                            gen_pattern.add_gradual_item(gi)
-                            gen_pattern.support = supp
-        if len(gen_pattern.gradual_items) <= 1:
-            return self
-        else:
-            return gen_pattern
+            key = gi.to_string()
+            inverse_key = GI.swap_gi_symbol(gi).to_string()
+            if key not in concordance_sets or inverse_key not in concordance_sets:
+                continue
+            next_forward = {tuple(pair) for pair in concordance_sets[key]}
+            next_reverse = {tuple(pair) for pair in concordance_sets[inverse_key]}
+            if forward is not None and reverse is not None:
+                next_forward.intersection_update(forward)
+                next_reverse.intersection_update(reverse)
+            support = (len(next_forward) + len(next_reverse)) / total_pairs
+            if support >= d_gp.thd_supp:
+                forward, reverse = next_forward, next_reverse
+                gen_pattern.add_gradual_item(gi)
+                gen_pattern.support = support
+
+        return gen_pattern if len(gen_pattern.gradual_items) > 1 else self
 
     def check_am(self, gp_list: list[GP | TGP] | None, subset: bool = True) -> bool:
         """
@@ -564,254 +552,94 @@ class GP:
 
     def compute_descriptors(
         self,
-        warping_set: np.ndarray | torch.Tensor | None,
+        concordance_set: np.ndarray | torch.Tensor | None,
         obj_count: int,
     ) -> bool:
-        """
-        Compute gradual warping set (GWS) descriptors.
+        """Compute structural descriptors of a gradual concordance set.
 
-        The descriptors are defined as:
+        Each distinct zero-based pair has ``0 <= i < j < obj_count``.
+        Density is the number of stored pairs divided by ``C(n, 2)``.
+        Mean separation and rank dispersion are the mean and population
+        variance of ``j - i``, respectively. Connectivity is the number
+        of undirected connected components, including isolated objects.
+        Singularity is the maximum vertex degree divided by the pair count.
 
-        1. Density (ρ_g):
-            Proportion of concordant index pairs relative to all possible pairs::
-
-                ρ_g = |W_g| / C(n, 2)
-
-        2. Average Deviation from Diagonal (μ_g):
-            Mean absolute distance between paired indices::
-
-                μ_g = mean(|i - j|)
-
-        3. Rank Dispersion (σ_g):
-            Standard deviation of the absolute index distances::
-
-                σ_g = std(|i - j|)
-
-        4. Graph Connectivity (κ_g):
-            Number of connected components when ``W_g`` is interpreted as
-            an undirected graph.
-
-        5. Singularity Score (S_g):
-            Normalized variance of node degrees::
-
-                S_g = Var(degree) / mean(degree)
-
-            Higher values indicate greater concentration of edge participation
-            among a smaller number of nodes.
-
-        When ``warping_set`` is a CUDA tensor, numerical calculations and
-        graph connectivity are performed on the GPU. When it is a NumPy
-        array or CPU tensor, NumPy/Python implementations are used.
+        An empty concordance set has zero density and one component per
+        object. Its mean separation, dispersion, and singularity are
+        represented by ``NaN``. Tensor calculations stay on the input device.
 
         Args:
-            warping_set:
-                Array or tensor of shape ``(k, 2)`` containing index pairs
-                ``(i, j)``.
-            obj_count:
-                Total number of objects.
+            concordance_set: Array or tensor of shape ``(k, 2)`` with
+                distinct upper-triangular comparison pairs.
+            obj_count: Number of observations in the comparison matrix.
 
         Returns:
-            True if descriptors are computed successfully, otherwise False.
+            True if the descriptors were computed.
         """
-        if warping_set is None or len(warping_set) == 0 or obj_count < 2:
+        if concordance_set is None or obj_count < 2:
             return False
 
-        # ------------------------------------------------------------------
-        # Prepare warping set
-        # ------------------------------------------------------------------
-        is_tensor = isinstance(warping_set, torch.Tensor)
-        w_set_cpu = None
-        w_set_gpu = None
+        is_tensor = isinstance(concordance_set, torch.Tensor)
+        pairs = concordance_set if is_tensor else np.asarray(concordance_set)
+        if pairs.ndim == 1 and len(pairs) == 0:
+            pairs = pairs.reshape(0, 2)
+        if pairs.ndim != 2 or pairs.shape[1] != 2:
+            return False
 
-        if is_tensor:
-            w_set_gpu = warping_set
-            if w_set_gpu.ndim != 2 or w_set_gpu.shape[1] != 2:
+        pair_count = len(pairs)
+        if pair_count == 0:
+            self._density = 0.0
+            self._avg_dev_from_diag = float("nan")
+            self._rank_dispersion = float("nan")
+            self._graph_connectivity = obj_count
+            self._singularity_score = float("nan")
+            return True
+
+        if isinstance(pairs, torch.Tensor):
+            if (
+                pairs.is_floating_point()
+                or pairs.is_complex()
+                or pairs.dtype == torch.bool
+            ):
+                return False
+            edges = pairs.long()
+            rows, cols = edges[:, 0], edges[:, 1]
+            if ((rows < 0) | (cols >= obj_count) | (rows >= cols)).any().item():
                 return False
 
-            # Edge indices must be integers.
-            # w_set_gpu = w_set_gpu.long()
+            gaps = (cols - rows).to(torch.float64)
+            mean_gap = gaps.mean().item()
+            dispersion = gaps.var(correction=0).item()
+            degrees = torch.bincount(rows, minlength=obj_count)
+            degrees += torch.bincount(cols, minlength=obj_count)
+            max_degree = degrees.max().item()
 
-            i_vals = w_set_gpu[:, 0]
-            j_vals = w_set_gpu[:, 1]
-
-            pair_count = len(w_set_gpu)
-        else:
-            w_set_cpu = np.asarray(warping_set)
-            if w_set_cpu.ndim != 2:  # or w_set.shape[1] != 2:
-                return False
-
-            i_vals = w_set_cpu[:, 0]
-            j_vals = w_set_cpu[:, 1]
-
-            pair_count = len(w_set_cpu)
-        total_pairs = (obj_count * (obj_count - 1)) / 2.0
-
-        # ------------------------------------------------------------------
-        # Density
-        # ------------------------------------------------------------------
-        def compute_density() -> float:
-            """
-            Compute warping set density.
-
-            ρ_g = |W_g| / C(n, 2)
-            """
-            return float(pair_count) / total_pairs
-
-        # ------------------------------------------------------------------
-        # Average deviation from diagonal
-        # ------------------------------------------------------------------
-        def compute_avg_dev_from_diagonal() -> float:
-            """
-            Compute average absolute distance from the diagonal.
-            """
-            if isinstance(i_vals, torch.Tensor) and isinstance(j_vals, torch.Tensor):
-                deviations = torch.abs(i_vals - j_vals)
-                return deviations.float().mean().item()
-            else:
-                deviations = np.abs(i_vals - j_vals)
-                return float(np.mean(deviations))
-
-        # ------------------------------------------------------------------
-        # Rank dispersion
-        # ------------------------------------------------------------------
-        def compute_rank_dispersion() -> float:
-            """
-            Compute standard deviation of index distances.
-            """
-            if isinstance(i_vals, torch.Tensor) and isinstance(j_vals, torch.Tensor):
-                deviations = torch.abs(i_vals - j_vals).float()
-                # correction=0 gives population standard deviation,
-                # equivalent to np.std(..., ddof=0).
-                return deviations.std(correction=0).item()
-
-            deviations = np.abs(i_vals - j_vals)
-            return float(np.std(deviations))
-
-        # ------------------------------------------------------------------
-        # Graph connectivity - GPU
-        # ------------------------------------------------------------------
-        def compute_graph_connectivity_gpu(
-            edges: torch.Tensor | None,
-            active_only: bool = True,
-        ) -> int:
-            """
-            Compute connected components using GPU label propagation.
-
-            The graph is treated as undirected.
-
-            Each node initially receives its own label. During each iteration,
-            the minimum label is propagated across every edge in both
-            directions. The process terminates when labels no longer change.
-
-            Args:
-                edges:
-                    CUDA tensor of shape ``(k, 2)`` containing graph edges.
-                active_only:
-                    If True, only nodes appearing in ``edges`` are counted.
-                    If False, all ``obj_count`` nodes are counted.
-
-            Returns:
-                Number of connected components.
-            """
-            if edges is None:
-                return 0
-
-            device = edges.device
-
-            # --------------------------------------------------------------
-            # Initialize node labels
-            # --------------------------------------------------------------
-            labels = torch.arange(
-                obj_count,
-                device=device,
-                dtype=torch.long,
-            )
-
-            # --------------------------------------------------------------
-            # Active nodes
-            # --------------------------------------------------------------
-            # if active_only:
-            #    active_nodes = torch.unique(edges)
-
-            # --------------------------------------------------------------
-            # Edge endpoints
-            # --------------------------------------------------------------
-            u = edges[:, 0]
-            v = edges[:, 1]
-
-            # --------------------------------------------------------------
-            # Iterative label propagation
-            # --------------------------------------------------------------
-            #
-            # For an undirected edge (u, v):
-            #
-            #     label[u] <- min(label[u], label[v])
-            #     label[v] <- min(label[v], label[u])
-            #
-            # scatter_reduce performs the operation for all edges in
-            # parallel.
-            #
+            labels = torch.arange(obj_count, device=edges.device)
             for _ in range(obj_count - 1):
-                new_labels = labels.clone()
-
-                # Propagate v -> u
-                new_labels.scatter_reduce_(
-                    dim=0,
-                    index=u,
-                    src=labels[v],
-                    reduce="amin",
-                    include_self=True,
-                )
-
-                # Propagate u -> v
-                new_labels.scatter_reduce_(
-                    dim=0,
-                    index=v,
-                    src=labels[u],
-                    reduce="amin",
-                    include_self=True,
-                )
-
-                # Stop when no labels changed.
-                if torch.equal(
-                    new_labels,
-                    labels,
-                ):
-                    labels = new_labels
+                updated = labels.clone()
+                updated.scatter_reduce_(0, rows, labels[cols], reduce="amin")
+                updated.scatter_reduce_(0, cols, labels[rows], reduce="amin")
+                if torch.equal(updated, labels):
                     break
+                labels = updated
+            components = torch.unique(labels).numel()
+        else:
+            if pairs.dtype.kind not in "iu":
+                return False
+            edges = pairs.astype(np.int64, copy=False)
+            rows, cols = edges[:, 0], edges[:, 1]
+            if np.any((rows < 0) | (cols >= obj_count) | (rows >= cols)):
+                return False
 
-                labels = new_labels
+            gaps = cols - rows
+            mean_gap = float(gaps.mean())
+            dispersion = float(gaps.var())
+            degrees = np.bincount(rows, minlength=obj_count)
+            degrees += np.bincount(cols, minlength=obj_count)
+            max_degree = int(degrees.max())
 
-            # --------------------------------------------------------------
-            # Count components
-            # --------------------------------------------------------------
-            if active_only:
-                active_nodes = torch.unique(edges)
-                component_count = torch.unique(labels[active_nodes]).numel()
-            else:
-                component_count = torch.unique(labels).numel()
-            return int(component_count)
-
-        # ------------------------------------------------------------------
-        # Graph connectivity - NumPy
-        # ------------------------------------------------------------------
-        def compute_graph_connectivity_cpu(
-            edges: np.ndarray | None,
-            active_only: bool = True,
-        ) -> int:
-            """
-            Compute connected components using CPU union-find.
-            """
-            if edges is None:
-                return 0
-
-            if active_only:
-                nodes = np.unique(edges)
-            else:
-                nodes = range(obj_count)
-
-            parent = {int(node): int(node) for node in nodes}
-            count = len(parent)
+            parent = list(range(obj_count))
+            components = obj_count
 
             def find(node: int) -> int:
                 while parent[node] != node:
@@ -819,117 +647,19 @@ class GP:
                     node = parent[node]
                 return node
 
-            for u, v in edges:
-                u = int(u)
-                v = int(v)
+            for row, col in edges:
+                left, right = find(int(row)), find(int(col))
+                if left != right:
+                    parent[left] = right
+                    components -= 1
+                    if components == 1:
+                        break
 
-                if u not in parent or v not in parent:
-                    continue
-
-                root_u = find(u)
-                root_v = find(v)
-
-                if root_u != root_v:
-                    parent[root_u] = root_v
-                    count -= 1
-            return count
-
-        # ------------------------------------------------------------------
-        # Select connectivity implementation
-        # ------------------------------------------------------------------
-        def compute_graph_connectivity(
-            active_only: bool = True,
-        ) -> int:
-            """
-            Compute graph connectivity using the appropriate backend.
-            """
-            if isinstance(w_set_gpu, torch.Tensor):
-                return compute_graph_connectivity_gpu(
-                    w_set_gpu,
-                    active_only=active_only,
-                )
-            else:
-                return compute_graph_connectivity_cpu(
-                    w_set_cpu,
-                    active_only=active_only,
-                )
-
-        # ------------------------------------------------------------------
-        # Singularity score
-        # ------------------------------------------------------------------
-        def compute_singularity_score() -> float:
-            """
-            Compute normalized variance of node degrees.
-
-            S_g = Var(degree) / mean(degree)
-            """
-            if isinstance(i_vals, torch.Tensor) and isinstance(j_vals, torch.Tensor):
-                # Each edge contributes one degree to each endpoint.
-                degree = (
-                    torch.bincount(
-                        i_vals,
-                        minlength=obj_count,
-                    )
-                    + torch.bincount(
-                        j_vals,
-                        minlength=obj_count,
-                    )
-                ).float()
-
-                mean_deg = degree.mean()
-                if mean_deg.item() == 0.0:
-                    return 0.0
-
-                variance = degree.var(correction=0)
-                return (variance / mean_deg).item()
-            elif isinstance(i_vals, np.ndarray) and isinstance(j_vals, np.ndarray):
-                # --------------------------------------------------------------
-                # NumPy implementation
-                # --------------------------------------------------------------
-                degree = np.zeros(
-                    obj_count,
-                    dtype=np.int64,
-                )
-
-                np.add.at(
-                    degree,
-                    i_vals.astype(np.int64),
-                    1,
-                )
-                np.add.at(
-                    degree,
-                    j_vals.astype(np.int64),
-                    1,
-                )
-
-                mean_deg = np.mean(degree)
-                if mean_deg == 0.0:
-                    return 0.0
-
-                return float(np.var(degree) / mean_deg)
-            return float(0)
-
-        # ------------------------------------------------------------------
-        # Compute descriptors
-        # ------------------------------------------------------------------
-        self._density = round(
-            compute_density(),
-            3,
-        )
-        self._avg_dev_from_diag = round(
-            compute_avg_dev_from_diagonal(),
-            3,
-        )
-        self._rank_dispersion = round(
-            compute_rank_dispersion(),
-            3,
-        )
-        self._graph_connectivity = compute_graph_connectivity(active_only=True)
-        self._singularity_score = round(
-            compute_singularity_score(),
-            3,
-        )
-
+        self._density = pair_count / GP.pair_count(obj_count)
+        self._avg_dev_from_diag = mean_gap
+        self._rank_dispersion = dispersion
+        self._graph_connectivity = components
+        self._singularity_score = max_degree / pair_count
         return True
 
     @staticmethod
@@ -1023,92 +753,84 @@ class GP:
         return new_gp
 
     @staticmethod
+    @overload
+    def _unpack_bitmap(packed: np.ndarray, n: int) -> np.ndarray: ...
+
+    @staticmethod
+    @overload
+    def _unpack_bitmap(packed: torch.Tensor, n: int) -> torch.Tensor: ...
+
+    @staticmethod
+    @overload
+    def _unpack_bitmap(
+        packed: np.ndarray | torch.Tensor, n: int
+    ) -> np.ndarray | torch.Tensor: ...
+
+    @staticmethod
+    def _unpack_bitmap(
+        packed: np.ndarray | torch.Tensor, n: int
+    ) -> np.ndarray | torch.Tensor:
+        """Recover an MSB-first, row-major bitmap and discard padding bits."""
+        if isinstance(packed, torch.Tensor):
+            masks = packed.new_tensor([128, 64, 32, 16, 8, 4, 2, 1])
+            return (packed[:, None] & masks).flatten()[: n * n].reshape(n, n)
+        return np.unpackbits(packed, count=n * n, bitorder="big").reshape(n, n)
+
+    @staticmethod
     def get_selected_rows(
         packed_bit_mat: np.ndarray | torch.Tensor, dim: int
     ) -> np.ndarray | torch.Tensor:
-        """
-        Get objects participating in at least one active warping relation.
-
-        Returns:
-            Unique object indices.
-        """
-
-        edge_list = GP.gen_gradual_warping_set(
-            packed_bit_mat,
-            dim,
-        )
-        if isinstance(edge_list, torch.Tensor):
-            return torch.unique(edge_list.flatten())
-        return np.unique(edge_list.flatten())
-
-    @staticmethod
-    def gen_gradual_warping_set(
-        packed_pairwise_mat: np.ndarray | torch.Tensor, n: int
-    ) -> np.ndarray | torch.Tensor:
-        """
-        A method that decomposes the pairwise matrix of a gradual item/pattern into a
-        warping set. Attributes that have
-        strong correlation will produce a warping set with dense zigzag patterns when
-        plotted as a graph. Those with weak
-        correlation will produce a warping set with sparse zigzag patterns.
-
-        :param packed_pairwise_mat: The pairwise matrix of a gradual item/pattern,
-            reduced to packed bits.
-        :param n: Number of rows/columns in the unpacked pairwise matrix.
-
-        :return: A list array of the warping path (as an edge list) as a numpy array.
-        """
-
-        if isinstance(packed_pairwise_mat, torch.Tensor):
-            return GP.gen_gradual_warping_set_gpu(packed_pairwise_mat, n)
-
-        pairwise_mat = (
-            np.unpackbits(packed_pairwise_mat, count=n * n).reshape(n, n).astype(bool)
-        )
-        edge_lst: list[tuple[int, int]] = [
-            (i, j)
-            for i, row in enumerate(pairwise_mat)
-            for j, val in enumerate(row)
-            if val
-        ]
-        edge_lst = sorted(edge_lst, key=lambda x: x[0])
-        return np.array(edge_lst)
-
-    @staticmethod
-    def gen_gradual_warping_set_gpu(
-        packed: torch.Tensor,
-        n: int,
-    ) -> torch.Tensor:
-        """Convert a packed CUDA bitmap directly to edge indices.
+        """Return observation indices appearing in either bitmap orientation.
 
         Args:
-            packed: 1-D uint8 CUDA tensor containing the packed bitmap.
-            n: Number of rows/columns in the original pairwise matrix.
+            packed_bit_mat: Full packed pairwise comparison matrix.
+            dim: Number of observations in the original matrix.
 
         Returns:
-            CUDA tensor of shape (E, 2), where each row is ``(i, j)``.
+            Sorted unique indices of observations participating in at least
+            one supporting comparison.
         """
+        bitmap = GP._unpack_bitmap(packed_bit_mat, dim)
+        if isinstance(bitmap, torch.Tensor):
+            return torch.nonzero(bitmap.any(dim=0) | bitmap.any(dim=1)).flatten()
+        return np.flatnonzero(bitmap.any(axis=0) | bitmap.any(axis=1))
 
-        bit_masks = torch.tensor(
-            [128, 64, 32, 16, 8, 4, 2, 1],
-            dtype=torch.uint8,
-            device=packed.device,
-        )
+    @staticmethod
+    def gen_gradual_concordance_set(
+        packed_pairwise_mat: np.ndarray | torch.Tensor, n: int
+    ) -> np.ndarray | torch.Tensor:
+        """Extract the true upper-triangular comparisons of a packed bitmap.
 
-        # Determine which bits are set.
-        bits = (packed[:, None] & bit_masks).flatten()
+        Args:
+            packed_pairwise_mat: One-dimensional packed bytes for the full
+                comparison matrix, stored in row-major order.
+            n: Number of observations in the unpacked matrix.
 
-        # Remove np.packbits() padding.
-        bits = bits[: n * n]
+        Returns:
+            Zero-based pairs ``(i, j)`` with ``i < j``, as an array or tensor
+            of shape ``(k, 2)`` on the same backend as the packed bitmap.
+        """
+        if isinstance(packed_pairwise_mat, torch.Tensor):
+            return GP.gen_gradual_concordance_set_gpu(packed_pairwise_mat, n)
 
-        # Get flattened positions of set bits.
-        positions = torch.nonzero(bits, as_tuple=False).flatten()
+        bitmap = GP._unpack_bitmap(packed_pairwise_mat, n)
+        pairs = np.argwhere(bitmap)
+        return pairs[pairs[:, 0] < pairs[:, 1]]
 
-        # Convert flattened indices to (row, column).
-        rows = positions // n
-        cols = positions % n
+    @staticmethod
+    def gen_gradual_concordance_set_gpu(packed: torch.Tensor, n: int) -> torch.Tensor:
+        """Extract zero-based upper-triangular pairs on the tensor device.
 
-        return torch.stack((rows, cols), dim=1)
+        Args:
+            packed: One-dimensional unsigned-byte tensor of packed comparisons.
+            n: Number of observations in the unpacked matrix.
+
+        Returns:
+            Tensor of shape ``(k, 2)`` containing pairs ``(i, j)`` with ``i < j``.
+        """
+        bitmap = GP._unpack_bitmap(packed, n)
+        pairs = torch.nonzero(bitmap)
+        return pairs[pairs[:, 0] < pairs[:, 1]]
 
     @staticmethod
     def perform_and(
@@ -1117,18 +839,30 @@ class GP:
         dim: int,
         time_data: dict | None = None,
     ) -> PairwiseMatrix:
-        """
-        Perform logical AND operation on two bitmaps.
+        """Intersect packed pairwise bitmaps and compute full support.
 
-        :param bin_data_1: Bitmap 1
-        :param bin_data_2: bitmap 2
-        :param dim: dimension of the bitmaps
-        :param time_data: (optional) time data for estimating time lag
-        """
+        Corresponding bytes are combined with bitwise AND. A population
+        count sums the set bits directly, using the existing pair-count
+        normalization. Packing uses row-major order with zero-filled padding.
 
+        Args:
+            bin_data_1: First packed bitmap and its pattern metadata.
+            bin_data_2: Second packed bitmap and its pattern metadata.
+            dim: Number of observations in each unpacked matrix.
+            time_data: Optional metadata for estimating the time lag.
+
+        Returns:
+            The packed intersection and its support.
+        """
         if bin_data_1 is None or bin_data_2 is None:
+            other = bin_data_1 if bin_data_2 is None else bin_data_2
+            size = (dim * dim + 7) // 8
+            if other is not None and isinstance(other.packed_bin_mat, torch.Tensor):
+                packed_zeros = other.packed_bin_mat.new_zeros(size)
+            else:
+                packed_zeros = np.zeros(size, dtype=np.uint8)
             return PairwiseMatrix(
-                packed_bin_mat=np.zeros((dim, dim)),
+                packed_bin_mat=packed_zeros,
                 support=0,
                 confidence=0,
                 pattern=set(),
@@ -1155,7 +889,7 @@ class GP:
                 dtype=torch.int64,
                 device=packed_bit_mat.device,
             )
-            sup = bit_counts[packed_bit_mat.long()].sum().item() / GP.pair_count(n=dim)
+            set_bits = int(bit_counts[packed_bit_mat.long()].sum().item())
         else:
             if isinstance(packed_2, torch.Tensor):
                 raise TypeError(
@@ -1164,11 +898,10 @@ class GP:
                 )
 
             packed_bit_mat = np.bitwise_and(packed_1, packed_2)
-            bit_counts = np.array(
-                [i.bit_count() for i in range(256)],
-                dtype=np.uint8,
-            )
-            sup = bit_counts[packed_bit_mat].sum() / GP.pair_count(n=dim)
+            counts = np.bitwise_count(packed_bit_mat)
+            set_bits = int(counts.sum(dtype=np.uint64).item())
+
+        sup = set_bits / GP.pair_count(n=dim)
 
         # Combine gradual items
         gp = bin_data_1.pattern | bin_data_2.pattern
