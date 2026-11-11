@@ -81,6 +81,7 @@ The benchmark turns the set of pairs into numbers. Connectivity counts the
 groups of readings linked by the pairs, including isolated readings.
 Singularity is the largest fraction of pairs that touch any one reading.
 Rank dispersion measures how much the gaps between paired readings vary.
+Average separation is the mean gap, measured in observation steps.
 Full support also counts pairs that match when read in reverse, giving
 263 / 435 ≈ 0.6046.
 
@@ -228,10 +229,10 @@ python -m pytest --import-mode=importlib benchmarks/joint_effect -q
 
 ## Reference runs
 
-The saved tables below use the earlier feature construction with a shared
+The UEA table below uses the earlier feature construction with a shared
 pattern vocabulary, combined GI/GP/GCS feature blocks, and a mean training
-support cutoff of 0.4. The current runner uses separate feature matrices
-and mines patterns within each recording.
+support cutoff of 0.4. The synthetic results use the current separate
+feature matrices and patterns mined within each recording.
 
 **BA means balanced accuracy.** For each class, divide the number of correctly
 predicted recordings by the number of recordings with that true label. Average
@@ -264,20 +265,34 @@ support, and density held fixed. The paired 95% interval for GCS minus GP
 was entirely above zero on RacketSports and PenDigits. The paired 95%
 interval was entirely below zero on Epilepsy.
 
-The [synthetic summaries](synthetic/results/synthetic-full/summary.csv) and
-[paired summaries](synthetic/results/synthetic-full/paired_summary.csv) cover five
-seeds per regime and noise level. The paired columns report the mean and
-sample standard deviation of the differences across seeds.
+### Synthetic results: current feature matrices
 
-| Regime | Noise | GP BA (%) | GCS BA (%) | GCS - GP BA (pp, mean +/- SD) | GCS - GP macro-F1 (pp, mean +/- SD) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| shared | 0.0 | 84.0 | 81.7 | -2.3 +/- 2.7 | -2.2 +/- 2.7 |
-| shared | 0.5 | 78.5 | 79.8 | +1.2 +/- 5.1 | +1.3 +/- 5.2 |
-| shared | 1.0 | 71.8 | 68.0 | -3.8 +/- 7.1 | -3.7 +/- 7.2 |
-| timing | 0.0 | 66.5 | 100.0 | +33.5 +/- 10.7 | +33.8 +/- 10.7 |
-| timing | 0.5 | 63.3 | 100.0 | +36.8 +/- 6.8 | +36.8 +/- 6.8 |
-| timing | 1.0 | 56.5 | 100.0 | +43.5 +/- 9.0 | +43.8 +/- 9.4 |
+The [summaries](synthetic/results/synthetic-full/summary.csv) and [paired summaries](synthetic/results/synthetic-full/paired_summary.csv) cover 30 runs: two regimes,
+three noise levels, and five seeds. Each run uses 120 training and 80 test
+recordings, a support cutoff of 0.2, and at most 24 GRAANK patterns per
+recording. Python's hash seed was fixed at 0; the [manifest](synthetic/results/synthetic-full/run.json)
+records the settings and source hashes. Only the synthetic benchmark was rerun.
 
-The timing layouts also change univariate temporal order. The GI baseline
-measures what the individual-item descriptors capture, and the ordinary GP
-baseline controls for their contribution together with support and density.
+BA columns are means across five seeds. Difference columns give the paired
+mean +/- sample standard deviation in percentage points, rather than confidence intervals.
+
+| Regime | Noise | Standard BA (%) | GI BA (%) | GP BA (%) | GCS BA (%) | GCS - GP BA (pp) | GCS - GP macro-F1 (pp) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| shared | 0.0 | 80.25 | 50.75 | 83.50 | 87.50 | +4.00 +/- 3.35 | +3.99 +/- 3.36 |
+| shared | 0.5 | 76.25 | 48.75 | 76.50 | 81.00 | +4.50 +/- 4.01 | +4.49 +/- 3.96 |
+| shared | 1.0 | 68.25 | 49.00 | 69.25 | 69.25 | +0.00 +/- 5.08 | -0.01 +/- 5.00 |
+| timing | 0.0 | 51.00 | 73.75 | 47.75 | 97.25 | +49.50 +/- 8.08 | +49.53 +/- 8.07 |
+| timing | 0.5 | 49.75 | 72.75 | 51.25 | 98.00 | +46.75 +/- 3.14 | +46.87 +/- 3.16 |
+| timing | 1.0 | 50.00 | 75.25 | 53.00 | 99.50 | +46.50 +/- 3.35 | +46.94 +/- 3.14 |
+
+GCS has higher mean BA than GP in five settings and ties it in the sixth;
+it exceeds Standard in all six. Gains over GP are modest and vary across
+seeds for shared signals, but reach 46.50--49.50 percentage points for timing.
+The GI baseline also captures some timing information because the layouts
+change individual-channel order.
+
+Removing average separation lowers mean BA by 0.50--4.00 points across the
+six settings. Removing rank dispersion lowers timing BA by 16.25--28.00
+points. Other ablations sometimes improve scores, so every descriptor does
+not help equally. These results support GCS for these synthetic tasks;
+performance on other datasets requires separate evaluation.
