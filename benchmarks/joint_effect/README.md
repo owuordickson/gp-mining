@@ -89,7 +89,7 @@ columns. Each pattern slot contributes five descriptors. Unused slots contain
 zeros. This table shows the five GCS values for the illustrated pattern, with
 the recording's original label alongside them.
 
-| Directional density | Connected groups | Singularity | Rank dispersion | Mean index gap | Known label |
+| Directional density | Connected groups | Singularity | Rank dispersion | Average separation | Known label |
 | ---: | ---: | ---: | ---: | ---: | --- |
 | 0.2805 | 1 | 0.1393 | 33.82 | 9.57 | `Badminton_Smash` |
 
@@ -167,14 +167,14 @@ The output matrices represent separate inputs to matched classifiers.
 | Method | Features |
 | --- | --- |
 | standard | Channel means, population standard deviations, linear trends, and Pearson correlations between distinct channels. |
-| gi | Density, connectivity, singularity, rank dispersion, and mean index gap for each signed channel in fixed channel/sign positions. |
+| gi | Density, connectivity, singularity, rank dispersion, and average separation for each signed channel in fixed channel/sign positions. |
 | gp | Support and confidence for each retained GRAANK pattern. |
-| gcs | Density, connectivity, singularity, rank dispersion, and mean index gap for each retained GRAANK pattern. |
+| gcs | Density, connectivity, singularity, rank dispersion, and average separation for each retained GRAANK pattern. |
 | gcs_no_density | The GCS matrix with density removed from every pattern slot. |
 | gcs_no_connectivity | The GCS matrix with connectivity removed from every pattern slot. |
 | gcs_no_singularity | The GCS matrix with singularity removed from every pattern slot. |
 | gcs_no_dispersion | The GCS matrix with rank dispersion removed from every pattern slot. |
-| gcs_no_avg_deviation | The GCS matrix with mean index gap removed from every pattern slot. |
+| gcs_no_avg_separation | The GCS matrix with average separation removed from every pattern slot. |
 
 GI columns retain channel identities when pruning removes an item. GP and
 GCS blocks use the miner's result order independently for each recording.

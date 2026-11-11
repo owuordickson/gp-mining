@@ -11,7 +11,7 @@ from so4gp.gradual_patterns import GI, GP, PairwiseMatrix
 
 type Pattern = tuple[tuple[int, int], tuple[int, int]]
 
-DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion", "avg_deviation")
+DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion", "avg_separation")
 METHODS = ("standard", "gi", "gp", "gcs", *(f"gcs_no_{d}" for d in DESCRIPTORS))
 
 CONTRASTS = (
@@ -186,7 +186,8 @@ def build_features(
     matrix contains support and confidence per pattern. The GCS matrix
     contains density, connectivity, singularity, dispersion, and mean index
     separation per pattern, in DESCRIPTORS order. Each ablation removes its
-    named GCS descriptor from every pattern slot.
+    named GCS descriptor from every pattern slot. The avg_separation
+    descriptor is the mean j - i over canonical pairs, in observation steps.
 
     Pruned GI slots and unused GP/GCS slots are zero-filled. Undefined
     statistics of empty concordance sets are converted from NaN to zero.
