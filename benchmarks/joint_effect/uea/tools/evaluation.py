@@ -148,7 +148,6 @@ def _prepare(x_train, x_eval, config):
         features, and a dictionary of mining and extraction durations in seconds.
     """
     start = perf_counter()
-    #patterns = select_patterns(x_train, max_patterns=config.max_patterns, min_support=config.min_support)
     mining_duration = perf_counter() - start
     train = build_features(x_train, max_patterns=config.max_patterns, min_support=config.min_support)
     evaluation = build_features(x_eval, max_patterns=config.max_patterns, min_support=config.min_support)
