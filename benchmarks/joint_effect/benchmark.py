@@ -20,11 +20,11 @@ if __name__ == "__main__":
 if __package__:
     from .synthetic.tools import data_tools as synthetic_data_tools
     from .uea.tools import data_tools as uea_data_tools
-    from .uea.tools.evaluation import Protocol, evaluate_split
+    from .uea.tools.evaluation import Configs, evaluate_split
 else:
     from synthetic.tools import data_tools as synthetic_data_tools
     from uea.tools import data_tools as uea_data_tools
-    from uea.tools.evaluation import Protocol, evaluate_split
+    from uea.tools.evaluation import Configs, evaluate_split
 
 PARENT_PATH = Path(__file__).resolve().parent
 EXPERIMENT = {"uea": uea_data_tools, "synthetic": synthetic_data_tools}
@@ -61,11 +61,11 @@ def _parser() -> argparse.ArgumentParser:
         exp_tools.add_arguments(mode)  # Updates and adds to mode specific (uea or synthetic) arguments
         mode.add_argument("--output", type=Path, help="A new directory for reports")
         mode.add_argument("--max-patterns", type=int, default=24)
-        mode.add_argument("--min-support", type=float, default=Protocol.min_support)
+        mode.add_argument("--min-support", type=float, default=Configs.min_support)
         mode.add_argument(
             "--folds",
             type=int,
-            default=Protocol.folds,
+            default=Configs.folds,
             help="Maximum number of stratified cross-validation folds",
         )
         mode.add_argument("--c-grid", type=float, nargs="+", default=[0.1, 1.0, 10.0])
@@ -119,10 +119,10 @@ def _versions() -> dict[str, str]:
 def main(argv: list[str] | None = None) -> int:
     """Run explicit arguments or use the settings in RUN_EXPERIMENT and RUN_OPTIONS."""
     if argv is None:
-        argv = [RUN_EXPERIMENT]#, *RUN_OPTIONS.get(RUN_EXPERIMENT, ())]
+        argv = [RUN_EXPERIMENT, *RUN_OPTIONS.get(RUN_EXPERIMENT, ())]
     parser = _parser()
     args = parser.parse_args(argv)
-    protocol = Protocol(
+    configs = Configs(
         max_patterns=args.max_patterns,
         min_support=args.min_support,
         folds=args.folds,
@@ -139,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"Output already exists: {output}")
     metrics, contrasts, runs = [], [], []
     for metadata, train_test_data in EXPERIMENT[args.experiment].fetch_data(args):
-        run = evaluate_split(*train_test_data, seed=metadata["random_seed"], protocol=protocol)
+        run = evaluate_split(*train_test_data, seed=metadata["random_seed"], configs=configs)
         common = {k: metadata[k] for k in ("dataset_name", "noise_type", "random_seed")}
         metrics.extend({**common, **row} for row in run.pop("metrics"))
         contrasts.extend({**common, **row} for row in run.pop("contrasts"))
@@ -159,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = {
         "experiment": args.experiment,
         "arguments": vars(args),
-        "protocol": {**asdict(protocol), "pattern_miner": "SO4GP GRAANK (Apriori)"},
+        "configs": {**asdict(configs), "pattern_miner": "SO4GP GRAANK (Apriori)"},
         "versions": _versions(),
         "runs": runs,
     }

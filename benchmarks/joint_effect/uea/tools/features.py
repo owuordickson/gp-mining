@@ -23,7 +23,7 @@ CONTRASTS = (
 
 
 @dataclass(frozen=True)
-class Protocol:
+class Configs:
     """Configure pattern selection, classifier tuning, and uncertainty.
 
     Every feature method uses the same folds and C grid. The evaluator

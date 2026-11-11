@@ -99,7 +99,7 @@ def test_pattern_mining_uses_fold_training_and_never_test(monkeypatch):
         test,
         np.arange(6) % 2,
         seed=1,
-        protocol=evaluation.Protocol(max_patterns=4, folds=3, bootstrap=10),
+        configs=evaluation.Configs(max_patterns=4, folds=3, bootstrap=10),
     )
     assert result["cv_folds"] == len(result["cv"]) == 3
     assert len(seen) == 4
@@ -190,7 +190,7 @@ def test_cv_caps_folds_at_the_smallest_training_class():
     Use separable signals with two rare-class training cases, request
     three folds, and require two folds with correctly averaged scores.
     """
-    from benchmarks.joint_effect.uea.tools.evaluation import Protocol, evaluate_split
+    from benchmarks.joint_effect.uea.tools.evaluation import Configs, evaluate_split
 
     train = np.tile(np.arange(8, dtype=float)[None, :, None], (8, 1, 2))
     train[:2] += 20
@@ -203,7 +203,7 @@ def test_cv_caps_folds_at_the_smallest_training_class():
         train[test_idx] + 0.25,
         labels[test_idx],
         seed=1,
-        protocol=Protocol(max_patterns=2, folds=3, c_grid=(10.0,), bootstrap=10),
+        configs=Configs(max_patterns=2, folds=3, c_grid=(10.0,), bootstrap=10),
     )
 
     assert result["cv_folds"] == len(result["cv"]) == 2
