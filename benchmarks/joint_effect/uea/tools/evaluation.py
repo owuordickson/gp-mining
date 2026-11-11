@@ -146,13 +146,13 @@ def _prepare(x_train, x_eval, config):
 
     Returns:
         A tuple containing patterns, training features, evaluation
-        features, and a dictionary of mining and extraction timings.
+        features, and a dictionary of mining and extraction durations in seconds.
     """
     start = perf_counter()
     patterns = select_patterns(
         x_train, max_patterns=config.max_patterns, min_support=config.min_support
     )
-    mining_seconds = perf_counter() - start
+    mining_duration = perf_counter() - start
     train = build_features(x_train, patterns)
     evaluation = build_features(x_eval, patterns)
     return (
@@ -160,9 +160,9 @@ def _prepare(x_train, x_eval, config):
         train,
         evaluation,
         {
-            "pattern_mining_seconds": mining_seconds,
-            "train_feature_seconds": train.seconds,
-            "evaluation_feature_seconds": evaluation.seconds,
+            "pattern_mining_duration": mining_duration,
+            "training_duration": train.run_time,
+            "evaluation_duration": evaluation.run_time,
         },
     )
 
@@ -200,7 +200,7 @@ def evaluate_split(
         A report dictionary containing method metrics, paired
         contrasts, the final vocabulary, dataset dimensions, original
         class labels, the effective fold count, fold-level and final
-        extraction details, and elapsed seconds.
+        extraction details, and elapsed time in seconds.
 
     Raises:
         ValueError: Input validation, pattern selection, or feature
@@ -210,7 +210,7 @@ def evaluate_split(
     y_train, y_test = np.searchsorted(labels, y_train), np.searchsorted(labels, y_test)
     grid = tuple(sorted(set(config.c_grid)))
     validation = {method: np.zeros(len(grid)) for method in METHODS}
-    tune_seconds = dict.fromkeys(METHODS, 0.0)
+    tuning_duration_dict = dict.fromkeys(METHODS, 0.0)
     fold_details = []
     cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=seed)
     total_start = perf_counter()
@@ -218,10 +218,10 @@ def evaluate_split(
     # Limit BLAS threads so all methods share the same compute configuration.
     with threadpool_limits(limits=1):
         for train_idx, validation_idx in cv.split(x_train, y_train):
-            patterns, train, heldout, timing = _prepare(
+            patterns, train, heldout, elapsed_time_info = _prepare(
                 x_train[train_idx], x_train[validation_idx], config
             )
-            fold_details.append({"patterns": patterns, **timing})
+            fold_details.append({"patterns": patterns, **elapsed_time_info})
             for method in METHODS:
                 start = perf_counter()
                 for index, c in enumerate(grid):
@@ -231,9 +231,9 @@ def evaluate_split(
                     validation[method][index] += balanced_accuracy_score(
                         y_train[validation_idx], pred
                     )
-                tune_seconds[method] += perf_counter() - start
+                tuning_duration_dict[method] += perf_counter() - start
 
-        patterns, train, test, timing = _prepare(x_train, x_test, config)
+        patterns, train, test, elapsed_time_info = _prepare(x_train, x_test, config)
         predictions = []
         model_details = []
         for method in METHODS:
@@ -241,19 +241,19 @@ def evaluate_split(
             model = _classifier(grid[best])
             start = perf_counter()
             model.fit(train.matrices[method], y_train)
-            fit_seconds = perf_counter() - start
+            fitting_duration = perf_counter() - start
             start = perf_counter()
             predictions.append(model.predict(test.matrices[method]))
-            predict_seconds = perf_counter() - start
+            prediction_duration = perf_counter() - start
             model_details.append(
                 {
                     "method": method,
                     "features": train.matrices[method].shape[1],
                     "c": grid[best],
                     "cv_balanced_accuracy": float(validation[method][best] / cv_folds),
-                    "tune_seconds": tune_seconds[method],
-                    "fit_seconds": fit_seconds,
-                    "predict_seconds": predict_seconds,
+                    "tuning_duration": tuning_duration_dict[method],
+                    "fitting_duration": fitting_duration,
+                    "prediction_duration": prediction_duration,
                 }
             )
 
@@ -284,6 +284,6 @@ def evaluate_split(
         "classes": labels.tolist(),
         "cv_folds": cv_folds,
         "cv": fold_details,
-        "final": timing,
-        "total_seconds": perf_counter() - total_start,
+        "final": elapsed_time_info,
+        "total_time": perf_counter() - total_start,
     }

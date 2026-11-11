@@ -52,11 +52,11 @@ class FeatureSet:
     Attributes:
         matrices: A feature matrix for each method, with one row per
             recording and columns in the order used by build_features.
-        seconds: Durations in seconds for the shared standard, GI, GP
+        run_time: Durations in seconds for the shared standard, GI, GP
             support, and GCS descriptor extraction stages.
     """
     matrices: dict[str, np.ndarray]
-    seconds: dict[str, float]
+    run_time: dict[str, float]
 
 
 def _recording_frame(case: np.ndarray) -> pd.DataFrame:
@@ -241,13 +241,13 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
     gi = np.empty((cases, 2 * channels, 5))
     gp_basic = np.empty((cases, len(patterns), 2))
     gp_extra = np.empty((cases, len(patterns), len(DESCRIPTORS)))
-    seconds = dict.fromkeys(("standard", "gi", "gp", "gcs"), 0.0)
+    elapsed_time_dict = dict.fromkeys(("standard", "gi", "gp", "gcs"), 0.0)
 
     for index, raw_case in enumerate(sequences):
         case = np.asarray(raw_case, dtype=np.float64)
         start = perf_counter()
         standard[index] = _standard(case)
-        seconds["standard"] += perf_counter() - start
+        elapsed_time_dict["standard"] += perf_counter() - start
 
         start = perf_counter()
         data = DataGP(_recording_frame(case), min_sup=0)
@@ -263,12 +263,12 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
                 desc.singularity_score,
                 desc.rank_dispersion,
             )
-        seconds["gi"] += perf_counter() - start
+        elapsed_time_dict["gi"] += perf_counter() - start
 
         for pattern, (left, right) in enumerate(pattern_keys):
             start = perf_counter()
             bitmap = GP.perform_and(bins[left], bins[right], n)
-            seconds["gp"] += perf_counter() - start
+            elapsed_time_dict["gp"] += perf_counter() - start
 
             start = perf_counter()
             desc = _describe(bitmap, n)
@@ -279,7 +279,7 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
                 desc.singularity_score,
                 desc.rank_dispersion,
             )
-            seconds["gcs"] += perf_counter() - start
+            elapsed_time_dict["gcs"] += perf_counter() - start
 
     # Undefined descriptors on empty sets use zero. Density is present in
     # every corresponding baseline and distinguishes that case.
@@ -295,4 +295,4 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
     for i, descriptor in enumerate(DESCRIPTORS):
         remaining = np.delete(gp_extra, i, axis=2).reshape(cases, -1)
         matrices[f"gcs_no_{descriptor}"] = np.concatenate((ordinary, remaining), axis=1)
-    return FeatureSet(matrices, seconds)
+    return FeatureSet(matrices, elapsed_time_dict)
