@@ -155,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
             f"{metadata['dataset_name']} seed={metadata['random_seed']} "
             f"noise={metadata['noise_level']} "
             f"folds={run['cv_folds']} patterns={len(run['patterns'])} "
-            f"elapsed={run['total_seconds']:.2f}s",
+            f"elapsed={run['total_time']:.2f}s",
             flush=True,
         )
 
