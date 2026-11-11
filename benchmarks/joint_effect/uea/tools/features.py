@@ -90,7 +90,7 @@ def _standard_features(recording: np.ndarray) -> np.ndarray:
     return np.concatenate((means, recording.std(axis=0), slopes, correlation[upper]))
 
 
-def _gradual_features(recording: np.ndarray, min_sup: float, num_objects: int, max_pat: int) -> tuple[list, list, list]:
+def _gradual_features(recording: np.ndarray, min_sup: float, num_objects: int, max_pat: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     def _compute_descriptors(bitmap: PairwiseMatrix, n: int) -> GP:
         """Compute SO4GP descriptors from a packed comparison bitmap.
@@ -141,7 +141,7 @@ def _gradual_features(recording: np.ndarray, min_sup: float, num_objects: int, m
             gp.singularity_score,
             gp.rank_dispersion,
             gp.avg_deviation_from_diagonal])
-    return lst_gi, lst_gp_basic, lst_gp_extra
+    return np.array(lst_gi), np.array(lst_gp_basic), np.array(lst_gp_extra)
 
 
 def build_features(sequences: np.ndarray, max_patterns: int, min_support: float) -> FeatureSet:
@@ -179,21 +179,11 @@ def build_features(sequences: np.ndarray, max_patterns: int, min_support: float)
             "and two channels"
         )
 
-    standard = np.zeros(
-        (num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2)
-    )
-    lst_gi = [[] for _ in range(num_recordings)]
-    lst_gp_basic = [[] for _ in range(num_recordings)]
-    lst_gp_extra = [[] for _ in range(num_recordings)]
-    #gi = np.zeros((num_recordings, 2 * num_channels, 5))
-    #gp_basic = np.zeros((num_recordings, len(patterns), 2))
-    #gp_extra = np.zeros((num_recordings, len(patterns), len(DESCRIPTORS)))
+    standard = np.zeros((num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2))
+    gi_only = np.zeros((num_recordings, 2 * num_channels * len(DESCRIPTORS)))
+    gp_basic = np.zeros((num_recordings, max_patterns * 2))
+    gp_extra = np.zeros((num_recordings, max_patterns * len(DESCRIPTORS)))
     elapsed_time_dict = dict.fromkeys(("standard", "gradual_patterns"), 0.0)
-    # print(f"Std:\n{standard}\nGI:\n{gi}\nGP:\n{gp_basic}\nGCS:\n{gp_extra}")
-    #print(f"items:\n{item_keys}\n\npatterns:\n{pattern_keys}\n")
-    #print(sequences[0])
-    #return
-    max_pat_count = 5
 
     for index, raw_recording in enumerate(sequences):
         recording = np.asarray(raw_recording, dtype=np.float64)
@@ -205,28 +195,22 @@ def build_features(sequences: np.ndarray, max_patterns: int, min_support: float)
 
         # GP Features: Support, Density, Deviation, Dispersion, Connectivity, Singularity
         start = perf_counter()
-        l_gi, l_gp, l_gcs = _gradual_features(recording, min_support, num_observations, max_pat_count)
-        lst_gi[index].extend(l_gi)
-        lst_gp_basic[index].extend(l_gp)
-        lst_gp_extra[index].extend(l_gcs)
+        arr_gi, arr_gp, arr_gcs = _gradual_features(recording, min_support, num_observations, max_patterns)
+        gi_only[index, :arr_gi.shape[0]] = arr_gi
+        gp_basic[index, :arr_gp.shape[0]] = arr_gp
+        gp_extra[index, :arr_gcs.shape[0]] = arr_gcs
         elapsed_time_dict["gradual_patterns"] += perf_counter() - start
 
-    # Convert GP features to arrays
-    gi = np.array(lst_gi)
-    gp_basic = np.array(lst_gp_basic)
-    gp_extra = np.array(lst_gp_extra)
-
-    gi = np.nan_to_num(gi, nan=0.0)
+    gi_only = np.nan_to_num(gi_only, nan=0.0)
     gp_basic = np.nan_to_num(gp_basic, nan=0.0)
     gp_extra = np.nan_to_num(gp_extra, nan=0.0)
-    print(f"std: {standard.shape}, gi: {gi.shape}, gp_basic: {gp_basic.shape} gp_extra: {gp_extra.shape}")
+    print(f"std: {standard.shape}, gi: {gi_only.shape}, gp_basic: {gp_basic.shape} gp_extra: {gp_extra.shape}")
 
-    #gi = np.nan_to_num(gi.reshape(num_recordings, -1), nan=0.0)
     #gp_extra = np.nan_to_num(gp_extra, nan=0.0)
     #ordinary = np.concatenate((gi, gp_basic.reshape(num_recordings, -1)), axis=1)
     matrices = {
         "standard": standard,
-        "gi": gi,
+        "gi": gi_only,
         "gp": gp_basic,
         "gcs": gp_extra,
     }
