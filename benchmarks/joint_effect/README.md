@@ -117,8 +117,9 @@ python benchmarks/joint_effect/benchmark.py uea --download
 python benchmarks/joint_effect/benchmark.py synthetic
 ```
 
-The UEA benchmark uses published train and test splits for the 11
-datasets in the reference runs. To run offline, place the official
+The UEA benchmark uses the existing published train and test splits for the 11
+datasets in the reference runs. The load_splits function preserves the
+recording membership and labels supplied in the TRAIN and TEST files. To run offline, place the official
 ZIP for each dataset or its two `.ts` files under `benchmarks/joint_effect/uea/data`.
 Use `--data-dir` for another location and `--datasets` to select a subset.
 
@@ -134,9 +135,11 @@ For a small local check:
 python benchmarks/joint_effect/benchmark.py synthetic --seeds 0 --noise 0.5 --train-size 32 --test-size 24 --max-patterns 8 --folds 2 --bootstrap 100
 ```
 
-The synthetic suite generates independent train and test sequences in memory
-for each seed and noise level. The default sweep uses five seeds and three
-noise levels.
+The synthetic generate_splits function generates recordings directly into
+the configured training and test sets for each seed and noise level. The
+existing train_size and test_size settings establish the split sizes, and
+independent child seeds supply their recordings and labels. The default
+sweep uses five seeds and three noise levels.
 
 - **Shared**. Three of six channels share a changing latent signal inside a
   random interval in the positive class. The negative class has independent
@@ -207,7 +210,8 @@ are collected in [benchmarking-results.json](benchmarking-results.json).
 - summary.csv and paired_summary.csv give means and sample standard deviations
   across independent runs at each dataset or noise level. A single run has no
   across-run standard deviation.
-- run.json records dataset dimensions, the effective fold count per dataset,
+- run.json records the BenchmarkConfig settings under config, dataset
+  dimensions, and the effective fold count per dataset,
   final and fold-local pattern vocabularies, mining and feature extraction times,
   software versions, and settings. Feature extraction is shared across the
   compared methods.

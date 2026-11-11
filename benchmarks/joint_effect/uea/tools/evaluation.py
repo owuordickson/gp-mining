@@ -10,7 +10,13 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
 
-from .features import Configs, CONTRASTS, METHODS, build_features, select_patterns
+from .features import (
+    CONTRASTS,
+    METHODS,
+    BenchmarkConfig,
+    build_features,
+    select_patterns,
+)
 
 
 def _classifier(c: float):
@@ -90,7 +96,7 @@ def _score_columns(point: np.ndarray, samples: np.ndarray) -> dict[str, float]:
     return fields
 
 
-def _check_inputs(x_train, y_train, x_test, y_test, configs) -> tuple[np.ndarray, int]:
+def _check_inputs(x_train, y_train, x_test, y_test, config) -> tuple[np.ndarray, int]:
     """Validate a split and determine its feasible stratified fold count.
 
     Check sequence dimensions, finite values, label lengths, matching
@@ -117,23 +123,21 @@ def _check_inputs(x_train, y_train, x_test, y_test, configs) -> tuple[np.ndarray
     labels, counts = np.unique(y_train, return_counts=True)
     if len(labels) < 2 or not np.array_equal(labels, np.unique(y_test)):
         raise ValueError("Train and test must contain the same two or more classes")
-    if configs.folds < 2:
+    if config.folds < 2:
         raise ValueError("CV folds must be at least two")
     min_class_count = int(counts.min())
     if min_class_count < 2:
         raise ValueError(
             "Each training class needs at least two cases for stratified CV"
         )
-    if configs.bootstrap < 1:
+    if config.bootstrap < 1:
         raise ValueError("bootstrap must be positive")
-    if not configs.c_grid or any(
-        not np.isfinite(c) or c <= 0 for c in configs.c_grid
-    ):
+    if not config.c_grid or any(not np.isfinite(c) or c <= 0 for c in config.c_grid):
         raise ValueError("The C grid must contain finite positive values")
-    return labels, min(configs.folds, min_class_count)
+    return labels, min(config.folds, min_class_count)
 
 
-def _prepare(x_train, x_eval, configs):
+def _prepare(x_train, x_eval, config):
     """Mine patterns on training cases and encode training and held-out cases.
 
     Select the vocabulary using x_train alone, then pass that same
@@ -146,7 +150,7 @@ def _prepare(x_train, x_eval, configs):
     """
     start = perf_counter()
     patterns = select_patterns(
-        x_train, max_patterns=configs.max_patterns, min_support=configs.min_support
+        x_train, max_patterns=config.max_patterns, min_support=config.min_support
     )
     mining_seconds = perf_counter() - start
     train = build_features(x_train, patterns)
@@ -170,7 +174,7 @@ def evaluate_split(
     y_test: np.ndarray,
     *,
     seed: int,
-    configs: Configs = Configs(),
+    config: BenchmarkConfig = BenchmarkConfig(),
 ) -> dict:
     """Tune matched classifiers on training folds and score a held-out split.
 
@@ -190,7 +194,7 @@ def evaluate_split(
         x_test: Held-out array with the same observation/channel shape.
         y_test: One class label per held-out recording.
         seed: Seed for fold shuffling and bootstrap resampling.
-        configs: Shared vocabulary, tuning, and resampling settings.
+        config: Shared vocabulary, tuning, and resampling settings.
 
     Returns:
         A report dictionary containing method metrics, paired
@@ -202,9 +206,9 @@ def evaluate_split(
         ValueError: Input validation, pattern selection, or feature
             extraction fails.
     """
-    labels, cv_folds = _check_inputs(x_train, y_train, x_test, y_test, configs)
+    labels, cv_folds = _check_inputs(x_train, y_train, x_test, y_test, config)
     y_train, y_test = np.searchsorted(labels, y_train), np.searchsorted(labels, y_test)
-    grid = tuple(sorted(set(configs.c_grid)))
+    grid = tuple(sorted(set(config.c_grid)))
     validation = {method: np.zeros(len(grid)) for method in METHODS}
     tune_seconds = dict.fromkeys(METHODS, 0.0)
     fold_details = []
@@ -215,7 +219,7 @@ def evaluate_split(
     with threadpool_limits(limits=1):
         for train_idx, validation_idx in cv.split(x_train, y_train):
             patterns, train, heldout, timing = _prepare(
-                x_train[train_idx], x_train[validation_idx], configs
+                x_train[train_idx], x_train[validation_idx], config
             )
             fold_details.append({"patterns": patterns, **timing})
             for method in METHODS:
@@ -229,7 +233,7 @@ def evaluate_split(
                     )
                 tune_seconds[method] += perf_counter() - start
 
-        patterns, train, test, timing = _prepare(x_train, x_test, configs)
+        patterns, train, test, timing = _prepare(x_train, x_test, config)
         predictions = []
         model_details = []
         for method in METHODS:
@@ -254,7 +258,7 @@ def evaluate_split(
             )
 
     points = np.stack([_metrics(y_test, pred, len(labels)) for pred in predictions])
-    samples = _intervals(y_test, predictions, len(labels), configs.bootstrap, seed)
+    samples = _intervals(y_test, predictions, len(labels), config.bootstrap, seed)
     metrics = [
         {**detail, **_score_columns(points[i], samples[:, i])}
         for i, detail in enumerate(model_details)

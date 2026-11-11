@@ -1,4 +1,9 @@
-"""Read the official UEA train and test splits from local files or the archive."""
+"""Load UEA datasets with their existing published train/test splits.
+
+The original TRAIN and TEST files determine split membership. Reading
+local files or downloading the archive preserves each recording, its
+label, and its position within the published split.
+"""
 
 from io import BytesIO
 from pathlib import Path
@@ -46,7 +51,7 @@ def _parse_ts(content: bytes, name: str) -> tuple[np.ndarray, np.ndarray]:
         name: Split filename included in parsing error messages.
 
     Returns:
-        A float64 array shaped (cases, observations, channels) and
+        A float64 array shaped (n_recordings, n_observations, n_channels) and
         a one-dimensional array of the original string labels.
 
     Raises:
@@ -136,10 +141,14 @@ def _zip_splits(source: Path | BytesIO, names: tuple[str, str]) -> tuple[bytes, 
     return parts[0], parts[1]
 
 
-def download_n_split(
+def load_splits(
     dataset: str, data_dir: Path, *, download: bool = False
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Load a dataset's published training and test recordings.
+    """Load recordings with their existing published train/test assignments.
+
+    Read training and test data from the archive's separate TRAIN and TEST
+    files. The returned arrays retain those existing split memberships,
+    recording order, and labels for use by the benchmark.
 
     Look for extracted .ts files in the dataset subfolder and data_dir,
     then try the cached ZIP. When download is enabled and local data
@@ -155,7 +164,7 @@ def download_n_split(
 
     Returns:
         x_train, y_train, x_test, y_test. Sequence arrays use
-        (cases, observations, channels) order, and labels retain
+        (n_recordings, n_observations, n_channels) order, and labels retain
         their original string values and published split membership.
 
     Raises:

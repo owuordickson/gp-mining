@@ -5,12 +5,12 @@ def test_archive_preserves_explicit_train_test_splits(tmp_path):
     """Verify split membership and array axes using a small nested ZIP.
 
     Write distinct training and test values and label orders, load
-    them through archive_split, and compare the returned recordings
+    them through load_splits, and compare the returned recordings
     and labels with the published order in the fixture.
     """
     from zipfile import ZipFile
 
-    from benchmarks.joint_effect.uea.tools.download import download_n_split
+    from benchmarks.joint_effect.uea.tools.download import load_splits
 
     header = "@timestamps false\n@classlabel true a b\n@data\n"
     with ZipFile(tmp_path / "BasicMotions.zip", "w") as archive:
@@ -20,7 +20,7 @@ def test_archive_preserves_explicit_train_test_splits(tmp_path):
         archive.writestr(
             "nested/BasicMotions_TEST.ts", header + "8,9:2,1:b\n7,8:0,1:a\n"
         )
-    train, y_train, test, y_test = download_n_split("BasicMotions", tmp_path)
+    train, y_train, test, y_test = load_splits("BasicMotions", tmp_path)
     np.testing.assert_array_equal(train[0], [[1, 3], [2, 4]])
     np.testing.assert_array_equal(test[0], [[8, 2], [9, 1]])
     assert y_train.tolist() == ["a", "b"]

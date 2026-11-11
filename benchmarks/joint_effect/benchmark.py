@@ -20,11 +20,11 @@ if __name__ == "__main__":
 if __package__:
     from .synthetic.tools import data_tools as synthetic_data_tools
     from .uea.tools import data_tools as uea_data_tools
-    from .uea.tools.evaluation import Configs, evaluate_split
+    from .uea.tools.evaluation import BenchmarkConfig, evaluate_split
 else:
     from synthetic.tools import data_tools as synthetic_data_tools
     from uea.tools import data_tools as uea_data_tools
-    from uea.tools.evaluation import Configs, evaluate_split
+    from uea.tools.evaluation import BenchmarkConfig, evaluate_split
 
 PARENT_PATH = Path(__file__).resolve().parent
 EXPERIMENT = {"uea": uea_data_tools, "synthetic": synthetic_data_tools}
@@ -58,14 +58,17 @@ def _parser() -> argparse.ArgumentParser:
 
     for name, exp_tools in EXPERIMENT.items():
         mode = modes.add_parser(name, help=exp_tools.__doc__)
-        exp_tools.add_arguments(mode)  # Updates and adds to mode specific (uea or synthetic) arguments
+        # Register the arguments specific to this experiment.
+        exp_tools.add_arguments(mode)
         mode.add_argument("--output", type=Path, help="A new directory for reports")
         mode.add_argument("--max-patterns", type=int, default=24)
-        mode.add_argument("--min-support", type=float, default=Configs.min_support)
+        mode.add_argument(
+            "--min-support", type=float, default=BenchmarkConfig.min_support
+        )
         mode.add_argument(
             "--folds",
             type=int,
-            default=Configs.folds,
+            default=BenchmarkConfig.folds,
             help="Maximum number of stratified cross-validation folds",
         )
         mode.add_argument("--c-grid", type=float, nargs="+", default=[0.1, 1.0, 10.0])
@@ -82,9 +85,9 @@ def _csv(path: Path, rows: list[dict]) -> None:
 
 def _summarize(rows: list[dict], *, paired: bool = False) -> list[dict]:
     keys = (
-        ("dataset_name", "noise_type", "method", "baseline")
+        ("dataset_name", "noise_level", "method", "baseline")
         if paired
-        else ("dataset_name", "noise_type", "method")
+        else ("dataset_name", "noise_level", "method")
     )
     groups = defaultdict(list)
     for row in rows:
@@ -122,7 +125,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = [RUN_EXPERIMENT, *RUN_OPTIONS.get(RUN_EXPERIMENT, ())]
     parser = _parser()
     args = parser.parse_args(argv)
-    configs = Configs(
+    config = BenchmarkConfig(
         max_patterns=args.max_patterns,
         min_support=args.min_support,
         folds=args.folds,
@@ -130,22 +133,27 @@ def main(argv: list[str] | None = None) -> int:
         bootstrap=args.bootstrap,
     )
     output = args.output or (
-            PARENT_PATH
-            / args.experiment
-            / "results"
-            / f"{args.experiment}-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}"
+        PARENT_PATH
+        / args.experiment
+        / "results"
+        / f"{args.experiment}-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}"
     )
     if output.exists():
         parser.error(f"Output already exists: {output}")
     metrics, contrasts, runs = [], [], []
     for metadata, train_test_data in EXPERIMENT[args.experiment].fetch_data(args):
-        run = evaluate_split(*train_test_data, seed=metadata["random_seed"], configs=configs)
-        common = {k: metadata[k] for k in ("dataset_name", "noise_type", "random_seed")}
+        run = evaluate_split(
+            *train_test_data, seed=metadata["random_seed"], config=config
+        )
+        common = {
+            k: metadata[k] for k in ("dataset_name", "noise_level", "random_seed")
+        }
         metrics.extend({**common, **row} for row in run.pop("metrics"))
         contrasts.extend({**common, **row} for row in run.pop("contrasts"))
         runs.append({**metadata, **run})
         print(
-            f"{metadata['dataset_name']} seed={metadata['random_seed']} noise={metadata['noise_type']} "
+            f"{metadata['dataset_name']} seed={metadata['random_seed']} "
+            f"noise={metadata['noise_level']} "
             f"folds={run['cv_folds']} patterns={len(run['patterns'])} "
             f"elapsed={run['total_seconds']:.2f}s",
             flush=True,
@@ -159,7 +167,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = {
         "experiment": args.experiment,
         "arguments": vars(args),
-        "configs": {**asdict(configs), "pattern_miner": "SO4GP GRAANK (Apriori)"},
+        "config": {**asdict(config), "pattern_miner": "SO4GP GRAANK (Apriori)"},
         "versions": _versions(),
         "runs": runs,
     }

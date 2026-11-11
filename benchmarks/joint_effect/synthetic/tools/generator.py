@@ -1,4 +1,9 @@
-"""Synthetic tasks with independent train and test sequences."""
+"""Generate synthetic data directly into the configured train/test splits.
+
+The existing benchmark configuration supplies train_size and test_size.
+Independent child seeds generate recordings and labels for each split,
+establishing train/test membership before feature extraction.
+"""
 
 import numpy as np
 
@@ -104,15 +109,17 @@ def _timing_case(label: int, rng: np.random.Generator, noise: float) -> np.ndarr
     return values
 
 
-def generate_n_split(
+def generate_splits(
     regime: str, *, seed: int, noise: float, train_size: int, test_size: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate reproducible training and test splits for a synthetic task.
 
-    Choose the shared-interval or timing generator and spawn separate
-    child seeds for the two splits. Within each split, shuffle binary
-    y_labels balanced to within one case, then independently generate
-    a recording for each label.
+    Use the existing train_size and test_size configuration to establish
+    the training and test splits. Choose the shared-interval or timing
+    generator and spawn independent child seeds for the two splits.
+    Within each split, shuffle binary labels balanced to within one case
+    and generate a recording for each label. The returned arrays already
+    have their train/test assignments for the benchmark.
 
     Args:
         regime: Either 'shared' or 'timing'.
@@ -123,12 +130,13 @@ def generate_n_split(
 
     Returns:
         x_train, y_train, x_test, y_test. Recording arrays use
-        (x_data, _LENGTH, _CHANNELS) order, and label arrays contain
-        the generating process's binary outcomes.
+        (n_recordings, n_observations, n_channels) order. Each recording
+        contains _LENGTH observations and _CHANNELS channels. Label
+        arrays contain the generating process's binary outcomes.
 
     Raises:
         ValueError: The regime or noise is invalid, or either split
-            contains fewer than two x_data.
+            contains fewer than two recordings.
     """
     generators = {"shared": _shared_case, "timing": _timing_case}
     if regime not in generators:
@@ -136,12 +144,12 @@ def generate_n_split(
     if not np.isfinite(noise) or noise < 0:
         raise ValueError("noise must be finite and nonnegative")
     if min(train_size, test_size) < 2:
-        raise ValueError("Each split needs at least two x_data")
+        raise ValueError("Each split needs at least two recordings")
 
     def make_split(size: int, child_seed: np.random.SeedSequence):
         """Generate one labelled split from its dedicated child seed.
 
-        Randomly permute alternating binary y_labels and stack one new
+        Randomly permute alternating binary labels and stack one new
         regime-specific recording per label using the same split generator.
         """
         rng = np.random.default_rng(child_seed)
