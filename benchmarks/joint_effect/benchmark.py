@@ -18,16 +18,16 @@ if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 if __package__:
-    from .synthetic.tools import suite as synthetic_suite
-    from .uea.tools import suite as uea_suite
+    from .synthetic.tools import data_tools as synthetic_data_tools
+    from .uea.tools import data_tools as uea_data_tools
     from .uea.tools.evaluation import Protocol, evaluate_split
 else:
-    from synthetic.tools import suite as synthetic_suite
-    from uea.tools import suite as uea_suite
+    from synthetic.tools import data_tools as synthetic_data_tools
+    from uea.tools import data_tools as uea_data_tools
     from uea.tools.evaluation import Protocol, evaluate_split
 
-HERE = Path(__file__).resolve().parent
-SUITES = {"uea": uea_suite, "synthetic": synthetic_suite}
+PARENT_PATH = Path(__file__).resolve().parent
+EXPERIMENT = {"uea": uea_data_tools, "synthetic": synthetic_data_tools}
 
 # These settings apply when the IDE's Run button passes no arguments.
 RUN_EXPERIMENT = "uea"
@@ -56,9 +56,9 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_subparsers(dest="experiment", required=True)
 
-    for name, suite in SUITES.items():
-        mode = modes.add_parser(name, help=suite.__doc__)
-        suite.add_arguments(mode)
+    for name, exp_tools in EXPERIMENT.items():
+        mode = modes.add_parser(name, help=exp_tools.__doc__)
+        exp_tools.add_arguments(mode)  # Updates and adds to mode specific (uea or synthetic) arguments
         mode.add_argument("--output", type=Path, help="A new directory for reports")
         mode.add_argument("--max-patterns", type=int, default=24)
         mode.add_argument("--min-support", type=float, default=Protocol.min_support)
@@ -82,9 +82,9 @@ def _csv(path: Path, rows: list[dict]) -> None:
 
 def _summarize(rows: list[dict], *, paired: bool = False) -> list[dict]:
     keys = (
-        ("dataset", "noise", "method", "baseline")
+        ("dataset_name", "noise_type", "method", "baseline")
         if paired
-        else ("dataset", "noise", "method")
+        else ("dataset_name", "noise_type", "method")
     )
     groups = defaultdict(list)
     for row in rows:
@@ -130,22 +130,22 @@ def main(argv: list[str] | None = None) -> int:
         bootstrap=args.bootstrap,
     )
     output = args.output or (
-        HERE
-        / args.experiment
-        / "results"
-        / f"{args.experiment}-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}"
+            PARENT_PATH
+            / args.experiment
+            / "results"
+            / f"{args.experiment}-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}"
     )
     if output.exists():
         parser.error(f"Output already exists: {output}")
     metrics, contrasts, runs = [], [], []
-    for info, split in SUITES[args.experiment].cases(args):
-        run = evaluate_split(*split, seed=info["seed"], protocol=protocol)
-        common = {k: info[k] for k in ("dataset", "noise", "seed")}
+    for metadata, train_test_data in EXPERIMENT[args.experiment].fetch_data(args):
+        run = evaluate_split(*train_test_data, seed=metadata["random_seed"], protocol=protocol)
+        common = {k: metadata[k] for k in ("dataset_name", "noise_type", "random_seed")}
         metrics.extend({**common, **row} for row in run.pop("metrics"))
         contrasts.extend({**common, **row} for row in run.pop("contrasts"))
-        runs.append({**info, **run})
+        runs.append({**metadata, **run})
         print(
-            f"{info['dataset']} seed={info['seed']} noise={info['noise']} "
+            f"{metadata['dataset_name']} seed={metadata['random_seed']} noise={metadata['noise_type']} "
             f"folds={run['cv_folds']} patterns={len(run['patterns'])} "
             f"elapsed={run['total_seconds']:.2f}s",
             flush=True,

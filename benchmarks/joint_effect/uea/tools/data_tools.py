@@ -3,7 +3,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from .archive import BASE_URL, DATASETS, archive_split
+from .download import BASE_URL, DATASETS, download_n_split
 
 
 def add_arguments(parser: ArgumentParser) -> None:
@@ -25,7 +25,7 @@ def add_arguments(parser: ArgumentParser) -> None:
     parser.add_argument("--seed", type=int, default=0, help="CV and bootstrap seed")
 
 
-def cases(args: Namespace):
+def fetch_data(args: Namespace):
     """Yield each requested UEA split with its reporting metadata.
 
     Remove duplicate dataset names while preserving their first
@@ -34,10 +34,6 @@ def cases(args: Namespace):
     the four training/test arrays expected by evaluate_split.
     """
     for dataset in dict.fromkeys(args.datasets):
-        info = {
-            "dataset": dataset,
-            "noise": None,
-            "seed": args.seed,
-            "source_url": f"{BASE_URL}/{dataset}.zip",
-        }
-        yield info, archive_split(dataset, args.data_dir, download=args.download)
+        meta_data = {"dataset_name": dataset, "noise_type": None, "random_seed": args.seed, "source_url": f"{BASE_URL}/{dataset}.zip",}
+        train_test_data = download_n_split(dataset, args.data_dir, download=args.download)
+        yield meta_data, train_test_data

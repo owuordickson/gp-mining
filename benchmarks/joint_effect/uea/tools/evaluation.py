@@ -1,6 +1,5 @@
 """Tune matched classifiers and evaluate them on an untouched test split."""
 
-from dataclasses import dataclass
 from time import perf_counter
 
 import numpy as np
@@ -11,37 +10,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
 
-from .features import DESCRIPTORS, METHODS, build_features, select_patterns
-
-CONTRASTS = (
-    ("gp", "gi"),
-    ("gcs", "gp"),
-    *(("gcs", f"gcs_no_{d}") for d in DESCRIPTORS),
-)
-
-
-@dataclass(frozen=True)
-class Protocol:
-    """Configure pattern selection, classifier tuning, and uncertainty.
-
-    Every feature method uses the same folds and C grid. The evaluator
-    caps the requested folds by the smallest training class.
-
-    Attributes:
-        max_patterns: Maximum vocabulary size, including both inverse
-            orientations of every selected pattern family.
-        min_support: Inclusive cutoff on mean training full support.
-        folds: Maximum number of stratified training folds.
-        c_grid: Positive inverse-regularization values for logistic
-            regression.
-        bootstrap: Number of stratified resamples of held-out cases
-            used to estimate score and paired-difference intervals.
-    """
-    max_patterns: int = 24
-    min_support: float = 0.2
-    folds: int = 3
-    c_grid: tuple[float, ...] = (0.1, 1.0, 10.0)
-    bootstrap: int = 1000
+from .features import Protocol, CONTRASTS, METHODS, build_features, select_patterns
 
 
 def _classifier(c: float):

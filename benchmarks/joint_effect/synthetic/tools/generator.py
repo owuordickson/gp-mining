@@ -104,14 +104,14 @@ def _timing_case(label: int, rng: np.random.Generator, noise: float) -> np.ndarr
     return values
 
 
-def synthetic_split(
+def generate_n_split(
     regime: str, *, seed: int, noise: float, train_size: int, test_size: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Generate reproducible training and test splits for a synthetic task.
 
     Choose the shared-interval or timing generator and spawn separate
     child seeds for the two splits. Within each split, shuffle binary
-    labels balanced to within one case, then independently generate
+    y_labels balanced to within one case, then independently generate
     a recording for each label.
 
     Args:
@@ -123,12 +123,12 @@ def synthetic_split(
 
     Returns:
         x_train, y_train, x_test, y_test. Recording arrays use
-        (cases, _LENGTH, _CHANNELS) order, and label arrays contain
+        (x_data, _LENGTH, _CHANNELS) order, and label arrays contain
         the generating process's binary outcomes.
 
     Raises:
         ValueError: The regime or noise is invalid, or either split
-            contains fewer than two cases.
+            contains fewer than two x_data.
     """
     generators = {"shared": _shared_case, "timing": _timing_case}
     if regime not in generators:
@@ -136,18 +136,18 @@ def synthetic_split(
     if not np.isfinite(noise) or noise < 0:
         raise ValueError("noise must be finite and nonnegative")
     if min(train_size, test_size) < 2:
-        raise ValueError("Each split needs at least two cases")
+        raise ValueError("Each split needs at least two x_data")
 
     def make_split(size: int, child_seed: np.random.SeedSequence):
         """Generate one labelled split from its dedicated child seed.
 
-        Randomly permute alternating binary labels and stack one new
+        Randomly permute alternating binary y_labels and stack one new
         regime-specific recording per label using the same split generator.
         """
         rng = np.random.default_rng(child_seed)
-        labels = rng.permutation(np.arange(size) % 2)
-        cases = np.stack([generators[regime](int(y), rng, noise) for y in labels])
-        return cases, labels
+        y_labels = rng.permutation(np.arange(size) % 2)
+        x_data = np.stack([generators[regime](int(y), rng, noise) for y in y_labels])
+        return x_data, y_labels
 
     train_seed, test_seed = np.random.SeedSequence(seed).spawn(2)
-    return (*make_split(train_size, train_seed), *make_split(test_size, test_seed))
+    return *make_split(train_size, train_seed), *make_split(test_size, test_seed)

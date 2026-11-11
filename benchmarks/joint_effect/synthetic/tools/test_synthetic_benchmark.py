@@ -173,14 +173,14 @@ def test_run_without_command_line_arguments(tmp_path, monkeypatch):
 
     from benchmarks.joint_effect import benchmark
 
-    monkeypatch.setattr(benchmark, "HERE", tmp_path)
+    monkeypatch.setattr(benchmark, "PARENT_PATH", tmp_path)
     monkeypatch.setattr(benchmark, "RUN_EXPERIMENT", "synthetic")
     assert benchmark.main() == 0
 
     (manifest_path,) = tmp_path.glob("synthetic/results/*/run.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["experiment"] == "synthetic"
-    assert {run["dataset"] for run in manifest["runs"]} == {"shared", "timing"}
+    assert {run["dataset_name"] for run in manifest["runs"]} == {"shared", "timing"}
     assert manifest["arguments"]["seeds"] == [0]
 
 

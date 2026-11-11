@@ -136,7 +136,7 @@ def _zip_splits(source: Path | BytesIO, names: tuple[str, str]) -> tuple[bytes, 
     return parts[0], parts[1]
 
 
-def archive_split(
+def download_n_split(
     dataset: str, data_dir: Path, *, download: bool = False
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Load a dataset's published training and test recordings.

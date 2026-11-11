@@ -15,6 +15,35 @@ type Pattern = tuple[tuple[int, int], tuple[int, int]]
 DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion")
 METHODS = ("standard", "gi", "gp", "gcs", *(f"gcs_no_{d}" for d in DESCRIPTORS))
 
+CONTRASTS = (
+    ("gp", "gi"),
+    ("gcs", "gp"),
+    *(("gcs", f"gcs_no_{d}") for d in DESCRIPTORS),
+)
+
+
+@dataclass(frozen=True)
+class Protocol:
+    """Configure pattern selection, classifier tuning, and uncertainty.
+
+    Every feature method uses the same folds and C grid. The evaluator
+    caps the requested folds by the smallest training class.
+
+    Attributes:
+        max_patterns: Maximum vocabulary size, including both inverse
+            orientations of every selected pattern family.
+        min_support: Inclusive cutoff on mean training full support.
+        folds: Maximum number of stratified training folds.
+        c_grid: Positive inverse-regularization values for logistic
+            regression.
+        bootstrap: Number of stratified resamples of held-out cases
+            used to estimate score and paired-difference intervals.
+    """
+    max_patterns: int = 24
+    min_support: float = 0.2
+    folds: int = 3
+    c_grid: tuple[float, ...] = (0.1, 1.0, 10.0)
+    bootstrap: int = 1000
 
 @dataclass
 class FeatureSet:

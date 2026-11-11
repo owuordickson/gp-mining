@@ -3,7 +3,7 @@
 from argparse import ArgumentParser, Namespace
 from itertools import product
 
-from .generator import synthetic_split
+from .generator import generate_n_split
 
 
 def add_arguments(parser: ArgumentParser) -> None:
@@ -25,7 +25,7 @@ def add_arguments(parser: ArgumentParser) -> None:
     parser.add_argument("--test-size", type=int, default=80)
 
 
-def cases(args: Namespace):
+def fetch_data(args: Namespace):
     """Yield synthetic splits for each distinct experiment setting.
 
     Deduplicate regimes, noise levels, and seeds in their input order
@@ -33,17 +33,17 @@ def cases(args: Namespace):
     for each combination and yield its dataset/noise/seed metadata
     together with the four training/test arrays.
     """
-    for regime, noise, seed in product(
+    for regime, noise_level, random_seed in product(
         dict.fromkeys(args.regimes),
         dict.fromkeys(args.noise),
         dict.fromkeys(args.seeds),
     ):
-        info = {"dataset": regime, "noise": noise, "seed": seed}
-        split = synthetic_split(
+        meta_data = {"dataset_name": regime, "noise_type": noise_level, "random_seed": random_seed}
+        train_test_data = generate_n_split(
             regime,
-            seed=seed,
-            noise=noise,
+            seed=random_seed,
+            noise=noise_level,
             train_size=args.train_size,
             test_size=args.test_size,
         )
-        yield info, split
+        yield meta_data, train_test_data
