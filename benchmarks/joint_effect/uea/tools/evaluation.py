@@ -15,7 +15,6 @@ from .features import (
     METHODS,
     BenchmarkConfig,
     build_features,
-    select_patterns,
 )
 
 
@@ -149,14 +148,11 @@ def _prepare(x_train, x_eval, config):
         features, and a dictionary of mining and extraction durations in seconds.
     """
     start = perf_counter()
-    patterns = select_patterns(
-        x_train, max_patterns=config.max_patterns, min_support=config.min_support
-    )
+    #patterns = select_patterns(x_train, max_patterns=config.max_patterns, min_support=config.min_support)
     mining_duration = perf_counter() - start
-    train = build_features(x_train, patterns)
-    evaluation = build_features(x_eval, patterns)
+    train = build_features(x_train, max_patterns=config.max_patterns, min_support=config.min_support)
+    evaluation = build_features(x_eval, max_patterns=config.max_patterns, min_support=config.min_support)
     return (
-        patterns,
         train,
         evaluation,
         {
@@ -189,7 +185,8 @@ def evaluate_split(
     and paired method differences with stratified test resampling.
 
     Args:
-        x_train: Training array shaped (cases, observations, channels).
+        x_train: Training array shaped
+            (num_recordings, num_observations, num_channels).
         y_train: One class label per training recording.
         x_test: Held-out array with the same observation/channel shape.
         y_test: One class label per held-out recording.
@@ -218,10 +215,10 @@ def evaluate_split(
     # Limit BLAS threads so all methods share the same compute configuration.
     with threadpool_limits(limits=1):
         for train_idx, validation_idx in cv.split(x_train, y_train):
-            patterns, train, heldout, elapsed_time_info = _prepare(
+            train, heldout, elapsed_time_info = _prepare(
                 x_train[train_idx], x_train[validation_idx], config
             )
-            fold_details.append({"patterns": patterns, **elapsed_time_info})
+            fold_details.append({**elapsed_time_info})
             for method in METHODS:
                 start = perf_counter()
                 for index, c in enumerate(grid):
@@ -233,7 +230,7 @@ def evaluate_split(
                     )
                 tuning_duration_dict[method] += perf_counter() - start
 
-        patterns, train, test, elapsed_time_info = _prepare(x_train, x_test, config)
+        train, test, elapsed_time_info = _prepare(x_train, x_test, config)
         predictions = []
         model_details = []
         for method in METHODS:
@@ -276,7 +273,6 @@ def evaluate_split(
     return {
         "metrics": metrics,
         "contrasts": contrasts,
-        "patterns": patterns,
         "training_cases": len(x_train),
         "test_cases": len(x_test),
         "observations": x_train.shape[1],

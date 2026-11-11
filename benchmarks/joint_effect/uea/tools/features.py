@@ -7,12 +7,11 @@ import numpy as np
 import pandas as pd
 
 from so4gp.algorithms import GRAANK
-from so4gp.data_gp import DataGP
 from so4gp.gradual_patterns import GP, PairwiseMatrix
 
 type Pattern = tuple[tuple[int, int], tuple[int, int]]
 
-DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion")
+DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion", "avg_deviation")
 METHODS = ("standard", "gi", "gp", "gcs", *(f"gcs_no_{d}" for d in DESCRIPTORS))
 
 CONTRASTS = (
@@ -59,7 +58,7 @@ class FeatureSet:
     run_time: dict[str, float]
 
 
-def _recording_frame(case: np.ndarray) -> pd.DataFrame:
+def _recording_df(recording: np.ndarray) -> pd.DataFrame:
     # Numeric column labels would be interpreted by DataGP as a data row.
     """Give one recording the named columns expected by SO4GP.
 
@@ -67,95 +66,10 @@ def _recording_frame(case: np.ndarray) -> pd.DataFrame:
     such as channel_0. These names prevent DataGP from interpreting
     numeric column labels as an additional observation.
     """
-    return pd.DataFrame(case, columns=[f"channel_{i}" for i in range(case.shape[1])])
+    return pd.DataFrame(recording, columns=[f"channel_{i}" for i in range(recording.shape[1])])
 
 
-def _item_key(channel: int, sign: int) -> str:
-    """Encode a channel and direction as a SO4GP gradual-item key.
-
-    Append '+' to the zero-based channel index for a positive sign and
-    '-' otherwise, producing keys such as '0+' and '2-'.
-    """
-    return f"{channel}{'+' if sign > 0 else '-'}"
-
-
-def _inverse(pattern: Pattern) -> Pattern:
-    """Reverse both directions of a two-channel pattern.
-
-    Negate the two signs while retaining channel order. Both forms have
-    the same full support and can have different directional densities.
-    """
-    (a, sign_a), (b, sign_b) = pattern
-    return (a, -sign_a), (b, -sign_b)
-
-
-def select_patterns(
-    sequences: np.ndarray, *, max_patterns: int, min_support: float
-) -> tuple[Pattern, ...]:
-    """Learn a fixed vocabulary of two-channel patterns from training num_labels.
-
-    Run SO4GP's Apriori GRAANK separately on each recording, stopping at
-    two-item patterns and accepting candidates with positive full
-    support. Group a pattern with its inverse and sum its supporting
-    pair counts across recordings. An absent family contributes zero.
-    Use GP.perform_and to obtain support before GP's display rounding.
-
-    Rank families by mean full support, apply the inclusive support
-    cutoff, and retain both orientations of each selected family.
-    Support ties follow channel order, with equal directions first.
-
-    Args:
-        sequences: Training array shaped (labels, observations, channels).
-            Comparisons stay within each recording.
-        max_patterns: Positive even limit counting both orientations.
-        min_support: Minimum mean full support in the interval [0, 1].
-
-    Returns:
-        An ordered tuple of patterns. Each pattern contains two
-        (channel_index, sign) pairs, with signs +1 or -1.
-
-    Raises:
-        ValueError: The limit or cutoff is invalid, or the input has
-            no labels, fewer than two observations, or fewer than two
-            channels.
-    """
-    if max_patterns < 2 or max_patterns % 2:
-        raise ValueError("max_patterns must be a positive even integer")
-    if not 0 <= min_support <= 1:
-        raise ValueError("min_support must be in [0, 1]")
-    num_labels, num_observations, num_channels = sequences.shape
-    if num_labels == 0 or num_observations < 2 or num_channels < 2:
-        raise ValueError("Pattern selection needs num_labels with >=2 times and num_channels")
-
-    pair_count = GP.pair_count(num_observations)
-    totals: dict[Pattern, int] = {}
-    for case in sequences:
-        miner = GRAANK(_recording_frame(case), min_sup=0)
-        miner.discover(max_iteration=2, compute_descriptors=False)
-        engine = miner.mining_engine
-        bins = engine.valid_bins
-        assert bins is not None
-        for gp in engine.gradual_patterns or ():
-            left, right = sorted(gp.gradual_items, key=lambda gi: gi.attribute_col)
-            a, b = int(left.attribute_col), int(right.attribute_col)
-            sign = 1 if left.symbol == right.symbol else -1
-            family = ((a, 1), (b, sign))
-            # Use exact library support. GP.support rounds its value for display.
-            scored = GP.perform_and(bins[left.to_string()], bins[right.to_string()], num_observations)
-            totals[family] = totals.get(family, 0) + round(scored.support * pair_count)
-
-    # Undiscovered families contribute zero on that recording. Rank by exact
-    # counts and use channel order, then same direction, for support ties.
-    ranked = sorted(totals, key=lambda p: (-totals[p], p[0][0], p[1][0], -p[1][1]))
-    selected = []
-    for pattern in ranked[: max_patterns // 2]:
-        if totals[pattern] / (num_labels * pair_count) < min_support:
-            break
-        selected.extend((pattern, _inverse(pattern)))
-    return tuple(selected)
-
-
-def _standard_features(case: np.ndarray) -> np.ndarray:
+def _standard_features(recording: np.ndarray) -> np.ndarray:
     """Summarize one recording using moments, trends, and correlations.
 
     Return channel means, population standard deviations, and
@@ -165,47 +79,78 @@ def _standard_features(case: np.ndarray) -> np.ndarray:
     correlations. The output is a vector with 3*m + m*(m-1)/2 values
     for an input shaped (observations, m).
     """
-    means = case.mean(axis=0)
-    centered = case - means
-    time = np.linspace(-0.5, 0.5, len(case))
+    means = recording.mean(axis=0)
+    centered = recording - means
+    time = np.linspace(-0.5, 0.5, len(recording))
     slopes = time @ centered / (time @ time)
     norms = np.linalg.norm(centered, axis=0)
     unit = np.divide(centered, norms, out=np.zeros_like(centered), where=norms > 0)
     correlation = unit.T @ unit
-    upper = np.triu_indices(case.shape[1], k=1)
-    return np.concatenate((means, case.std(axis=0), slopes, correlation[upper]))
+    upper = np.triu_indices(recording.shape[1], k=1)
+    return np.concatenate((means, recording.std(axis=0), slopes, correlation[upper]))
 
 
-def _compute_descriptors(bitmap: PairwiseMatrix, n: int) -> GP:
-    """Compute SO4GP descriptors from a packed comparison bitmap.
+def _gradual_features(recording: np.ndarray, min_sup: float, num_objects: int, max_pat: int) -> tuple[list, list, list]:
 
-    Extract supporting pairs with i < j using
-    GP.gen_gradual_concordance_set, then delegate the descriptor
-    calculations to GP.compute_descriptors. Return the populated GP
-    object. Empty sets have zero density and n connected components,
-    with undefined separation and singularity statistics stored as NaN.
+    def _compute_descriptors(bitmap: PairwiseMatrix, n: int) -> GP:
+        """Compute SO4GP descriptors from a packed comparison bitmap.
 
-    Args:
-        bitmap: Packed pairwise matrix for one GI or GP.
-        n: Number of observations in the original square bitmap.
+        Extract supporting pairs with i < j using
+        GP.gen_gradual_concordance_set, then delegate the descriptor
+        calculations to GP.compute_descriptors. Return the populated GP
+        object. Empty sets have zero density and n connected components,
+        with undefined separation and singularity statistics stored as NaN.
 
-    Raises:
-        ValueError: SO4GP rejects the extracted concordance pairs.
-    """
-    pairs = GP.gen_gradual_concordance_set(bitmap.packed_bin_mat, n)
-    gp = GP()
-    if not gp.compute_descriptors(pairs, n):
-        raise ValueError("Invalid concordance pairs")
-    return gp
+        Args:
+            bitmap: Packed pairwise matrix for one GI or GP.
+            n: Number of observations in the original square bitmap.
+
+        Raises:
+            ValueError: SO4GP rejects the extracted concordance pairs.
+        """
+        pairs = GP.gen_gradual_concordance_set(bitmap.packed_bin_mat, n)
+        gp = GP()
+        if not gp.compute_descriptors(pairs, n):
+            raise ValueError("Invalid concordance pairs")
+        return gp
+
+    lst_gi = []
+    lst_gp_basic = []
+    lst_gp_extra = []
+    mine_obj = GRAANK(_recording_df(recording), min_sup=min_sup)
+    mine_obj.discover(max_iteration=2, compute_descriptors=True)
+    miner = mine_obj.mining_engine
+
+    for gp_set, gi_data in (miner.valid_bins or {}).items():
+        desc = _compute_descriptors(gi_data, num_objects)
+        lst_gi.extend([
+            desc.density,
+            desc.graph_connectivity,
+            desc.singularity_score,
+            desc.rank_dispersion,
+            desc.avg_deviation_from_diagonal
+        ])
+
+    for i, gp in enumerate(miner.gradual_patterns):
+        if i > max_pat:
+            break
+        lst_gp_basic.extend([gp.support, gp.confidence])
+        lst_gp_extra.extend([
+            gp.density,
+            gp.graph_connectivity,
+            gp.singularity_score,
+            gp.rank_dispersion,
+            gp.avg_deviation_from_diagonal])
+    return lst_gi, lst_gp_basic, lst_gp_extra
 
 
-def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> FeatureSet:
+def build_features(sequences: np.ndarray, max_patterns: int, min_support: float) -> FeatureSet:
     """Encode each recording using a fixed vocabulary and several baselines.
 
     Build SO4GP GI bitmaps for both directions of each channel. For
     every selected GP, intersect the constituent bitmaps with
     GP.perform_and and compute its concordance descriptors through
-    _describe. Apply the same ordered pattern columns to every case.
+    _compute_descriptors. Apply the same ordered pattern columns to every recording.
 
     The GI block contains density, mean separation, connectivity,
     singularity, and dispersion for each signed channel. The GP matrix
@@ -216,7 +161,7 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
     matrix. Undefined empty-set statistics become zero in the matrices.
 
     Args:
-        sequences: Array shaped (labels, observations, channels).
+        sequences: Array shaped (num_recordings, num_observations, num_channels).
         patterns: Ordered two-item patterns obtained from training data.
 
     Returns:
@@ -224,86 +169,69 @@ def build_features(sequences: np.ndarray, patterns: tuple[Pattern, ...]) -> Feat
         timings. All matrices contain one row per input recording.
 
     Raises:
-        ValueError: The input has no labels, fewer than two observations
+        ValueError: The input has no recordings, fewer than two observations
             or channels, or SO4GP cannot describe a concordance set.
     """
-    num_labels, num_observations, num_channels = sequences.shape
-    if num_labels == 0 or num_observations < 2 or num_channels < 2:
-        raise ValueError("Feature extraction needs num_labels with >=2 times and num_channels")
+    num_recordings, num_observations, num_channels = sequences.shape
+    if num_recordings == 0 or num_observations < 2 or num_channels < 2:
+        raise ValueError(
+            "Feature extraction requires recordings with at least two observations "
+            "and two channels"
+        )
 
-    item_keys = [
-        _item_key(channel, sign) for channel in range(num_channels) for sign in (1, -1)
-    ]
-    pattern_keys = tuple(
-        (_item_key(*left), _item_key(*right)) for left, right in patterns
+    standard = np.zeros(
+        (num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2)
     )
-
-    standard = np.zeros((num_labels, 3 * num_channels + num_channels * (num_channels - 1) // 2))
-    gi = np.zeros((num_labels, 2 * num_channels, 5))
-    gp_basic = np.zeros((num_labels, len(patterns), 2))
-    gp_extra = np.zeros((num_labels, len(patterns), len(DESCRIPTORS)))
-    elapsed_time_dict = dict.fromkeys(("standard", "gi", "gp", "gcs"), 0.0)
+    lst_gi = [[] for _ in range(num_recordings)]
+    lst_gp_basic = [[] for _ in range(num_recordings)]
+    lst_gp_extra = [[] for _ in range(num_recordings)]
+    #gi = np.zeros((num_recordings, 2 * num_channels, 5))
+    #gp_basic = np.zeros((num_recordings, len(patterns), 2))
+    #gp_extra = np.zeros((num_recordings, len(patterns), len(DESCRIPTORS)))
+    elapsed_time_dict = dict.fromkeys(("standard", "gradual_patterns"), 0.0)
     # print(f"Std:\n{standard}\nGI:\n{gi}\nGP:\n{gp_basic}\nGCS:\n{gp_extra}")
     #print(f"items:\n{item_keys}\n\npatterns:\n{pattern_keys}\n")
     #print(sequences[0])
     #return
+    max_pat_count = 5
 
-    for index, raw_case in enumerate(sequences):
-        case = np.asarray(raw_case, dtype=np.float64)
+    for index, raw_recording in enumerate(sequences):
+        recording = np.asarray(raw_recording, dtype=np.float64)
+
+        # Standard Features: Mean, Std. Dev. etc.
         start = perf_counter()
-        standard[index] = _standard_features(case)
+        standard[index] = _standard_features(recording)
         elapsed_time_dict["standard"] += perf_counter() - start
-        # print(f"\n{standard}")
-        # return
 
+        # GP Features: Support, Density, Deviation, Dispersion, Connectivity, Singularity
         start = perf_counter()
-        data = DataGP(_recording_frame(case), min_sup=0)
-        data.fit_bitmap()
-        bins = data.valid_bins
-        assert bins is not None
-        for item, key in enumerate(item_keys):
-            desc = _compute_descriptors(bins[key], num_observations)
-            gi[index, item] = (
-                desc.density,
-                desc.avg_deviation_from_diagonal,
-                desc.graph_connectivity,
-                desc.singularity_score,
-                desc.rank_dispersion,
-            )
-        elapsed_time_dict["gi"] += perf_counter() - start
+        l_gi, l_gp, l_gcs = _gradual_features(recording, min_support, num_observations, max_pat_count)
+        lst_gi[index].extend(l_gi)
+        lst_gp_basic[index].extend(l_gp)
+        lst_gp_extra[index].extend(l_gcs)
+        elapsed_time_dict["gradual_patterns"] += perf_counter() - start
 
-        for pattern, (left, right) in enumerate(pattern_keys):
-            start = perf_counter()
-            bitmap = GP.perform_and(bins[left], bins[right], num_observations)
-            elapsed_time_dict["gp"] += perf_counter() - start
+    # Convert GP features to arrays
+    gi = np.array(lst_gi)
+    gp_basic = np.array(lst_gp_basic)
+    gp_extra = np.array(lst_gp_extra)
 
-            start = perf_counter()
-            desc = _compute_descriptors(bitmap, num_observations)
-            gp_basic[index, pattern] = (bitmap.support, desc.density)
-            gp_extra[index, pattern] = (
-                desc.density,
-                desc.graph_connectivity,
-                desc.singularity_score,
-                desc.rank_dispersion,
-            )
-            elapsed_time_dict["gcs"] += perf_counter() - start
-
-    # Undefined descriptors on empty sets use zero. Density is present in every corresponding baseline and distinguishes that case.
-    gi = np.nan_to_num(gi.reshape(num_labels, -1), nan=0.0)
+    gi = np.nan_to_num(gi, nan=0.0)
+    gp_basic = np.nan_to_num(gp_basic, nan=0.0)
     gp_extra = np.nan_to_num(gp_extra, nan=0.0)
-    ordinary = np.concatenate((gi, gp_basic.reshape(num_labels, -1)), axis=1)
+    print(f"std: {standard.shape}, gi: {gi.shape}, gp_basic: {gp_basic.shape} gp_extra: {gp_extra.shape}")
+
+    #gi = np.nan_to_num(gi.reshape(num_recordings, -1), nan=0.0)
+    #gp_extra = np.nan_to_num(gp_extra, nan=0.0)
+    #ordinary = np.concatenate((gi, gp_basic.reshape(num_recordings, -1)), axis=1)
     matrices = {
         "standard": standard,
         "gi": gi,
-        "gp": ordinary,
-        "gcs": np.concatenate((ordinary, gp_extra.reshape(num_labels, -1)), axis=1),
+        "gp": gp_basic,
+        "gcs": gp_extra,
     }
     for i, descriptor in enumerate(DESCRIPTORS):
-        remaining = np.delete(gp_extra, i, axis=2).reshape(num_labels, -1)
-        matrices[f"gcs_no_{descriptor}"] = np.concatenate((ordinary, remaining), axis=1)
-    for k, val in matrices.items():
-        print(f"Key: {k}")
-        print(f"Value:\n{val}")
-        print("\n\n")
-    # print(matrices)
+        remaining = np.delete(gp_extra, i, axis=1)
+        matrices[f"gcs_no_{descriptor}"] = remaining
+
     return FeatureSet(matrices, elapsed_time_dict)
