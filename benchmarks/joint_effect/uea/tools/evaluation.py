@@ -137,25 +137,26 @@ def _check_inputs(x_train, y_train, x_test, y_test, config) -> tuple[np.ndarray,
 
 
 def _prepare(x_train, x_eval, config):
-    """Mine patterns on training cases and encode training and held-out cases.
+    """Encode both parts of a split through the shared feature builder.
 
-    Select the vocabulary using x_train alone, then pass that same
-    vocabulary to build_features for both arrays. Measure mining
-    duration separately from the shared feature extraction stages.
+    Call build_features separately on the training and evaluation recordings
+    using the same mining settings. Each recording supplies its own GRAANK
+    results. Timings include mining and descriptor extraction inside the
+    gradual_patterns stage.
 
     Returns:
-        A tuple containing patterns, training features, evaluation
-        features, and a dictionary of mining and extraction durations in seconds.
+        Training features, evaluation features, and their stage durations.
     """
-    start = perf_counter()
-    mining_duration = perf_counter() - start
-    train = build_features(x_train, max_patterns=config.max_patterns, min_support=config.min_support)
-    evaluation = build_features(x_eval, max_patterns=config.max_patterns, min_support=config.min_support)
+    train = build_features(
+        x_train, max_patterns=config.max_patterns, min_support=config.min_support
+    )
+    evaluation = build_features(
+        x_eval, max_patterns=config.max_patterns, min_support=config.min_support
+    )
     return (
         train,
         evaluation,
         {
-            "pattern_mining_duration": mining_duration,
             "training_duration": train.run_time,
             "evaluation_duration": evaluation.run_time,
         },
@@ -174,11 +175,11 @@ def evaluate_split(
     """Tune matched classifiers on training folds and score a held-out split.
 
     Encode labels as consecutive integers and create seeded stratified
-    folds, capped by the smallest training class. Each fold mines its
-    own vocabulary and fits its scaler using the fold's training cases.
-    Select C by mean validation balanced accuracy, resolving ties with
-    the smallest C. Then select patterns on all training cases, refit
-    each classifier, and predict the supplied test recordings.
+    folds, capped by the smallest training class. Encode each recording
+    through build_features and fit each scaler using the fold's training
+    features. Select C by mean validation balanced accuracy, resolving
+    ties with the smallest C. Then encode the original train/test splits,
+    refit each classifier on all training features, and predict test labels.
 
     Use one BLAS thread during fitting. Estimate 95% score intervals
     and paired method differences with stratified test resampling.
@@ -190,17 +191,16 @@ def evaluate_split(
         x_test: Held-out array with the same observation/channel shape.
         y_test: One class label per held-out recording.
         seed: Seed for fold shuffling and bootstrap resampling.
-        config: Shared vocabulary, tuning, and resampling settings.
+        config: Shared mining, tuning, and resampling settings.
 
     Returns:
         A report dictionary containing method metrics, paired
-        contrasts, the final vocabulary, dataset dimensions, original
+        contrasts, dataset dimensions, original
         class labels, the effective fold count, fold-level and final
         extraction details, and elapsed time in seconds.
 
     Raises:
-        ValueError: Input validation, pattern selection, or feature
-            extraction fails.
+        ValueError: Input validation or feature extraction fails.
     """
     labels, cv_folds = _check_inputs(x_train, y_train, x_test, y_test, config)
     y_train, y_test = np.searchsorted(labels, y_train), np.searchsorted(labels, y_test)

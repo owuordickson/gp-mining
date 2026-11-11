@@ -31,7 +31,8 @@ def fetch_data(args: Namespace):
     Deduplicate regimes, noise levels, and seeds in their input order
     and iterate over their Cartesian product. Call generate_splits
     for each combination and yield its dataset/noise/seed metadata
-    together with the four training/test arrays.
+    together with the four training/test arrays. The shared evaluator
+    passes each split to build_features for independent feature extraction.
     """
     for regime, noise_level, random_seed in product(
         dict.fromkeys(args.regimes),

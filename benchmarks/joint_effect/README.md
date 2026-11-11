@@ -66,7 +66,7 @@ table shows the original archive values for two of those readings.
 
 ### Encoded recording
 
-One pattern selected from the training recordings says
+A pattern mined from this recording says
 **Z acceleration increases while Y rotation rate decreases**. From reading 3
 to reading 16 in this recording, Z acceleration rises from 5.80 to 11.75 and Y
 rotation rate falls from 0.08 to −5.28. The pair `(3, 16)` therefore supports
@@ -84,18 +84,21 @@ Rank dispersion measures how much the gaps between paired readings vary.
 Full support also counts pairs that match when read in reverse, giving
 263 / 435 ≈ 0.6046.
 
-The encoded recording has 180 numeric features in the `gcs` method. The
-table shows the five columns for this one pattern. The label stays in a
-separate column and keeps its original value.
+With the default maximum of 24 patterns, the `gcs` method has 120 feature
+columns. Each pattern slot contributes five descriptors. Unused slots contain
+zeros. This table shows the five GCS values for the illustrated pattern, with
+the recording's original label alongside them.
 
-| Full support | Directional density | Connected groups | Singularity | Rank dispersion | Known label |
+| Directional density | Connected groups | Singularity | Rank dispersion | Mean index gap | Known label |
 | ---: | ---: | ---: | ---: | ---: | --- |
-| 0.6046 | 0.2805 | 1 | 0.1393 | 33.82 | `Badminton_Smash` |
+| 0.2805 | 1 | 0.1393 | 33.82 | 9.57 | `Badminton_Smash` |
 
-Each selected pattern contributes its own columns. The classifier learns from
-these numeric features and the known stroke labels in the training recordings.
-For a test recording, it receives the feature values, predicts a stroke, and
-the benchmark compares that prediction with the label supplied by the archive.
+Each recording supplies its own GRAANK results in the miner's output order.
+A slot can therefore describe different channel combinations in different
+recordings. The classifier learns from these descriptor vectors and the known
+stroke labels. For a test recording, it predicts one stroke label and the
+benchmark compares that prediction with the label supplied by the archive.
+
 
 ## Run from an IDE
 
@@ -154,35 +157,31 @@ sweep uses five seeds and three noise levels.
 
 ## Protocol
 
-SO4GP's GRAANK runs its Apriori search on each training recording, stopping
-at two-channel patterns. The search considers every family with positive
-full support in that recording. The benchmark ranks the discovered families
-by their mean full support across all training recordings, including zero
-for recordings in which a family was absent. It retains both inverse forms
-of each selected family, such as `A+ B-` and `A- B+`. Set an even
-`--max-patterns` and use `--min-support` to filter by mean training support
-(default 0.2). SO4GP computes full support from both orientations of the packed
-bitmap. Directional density and the structural descriptors use earlier-to-later
-pairs.
+The shared build_features function mines each recording independently using
+SO4GP's GRAANK, stopping at two-item patterns. The --min-support option is
+passed to the miner for each recording. The --max-patterns option limits
+the number of GRAANK results retained in that recording's feature row.
 
-**Method** names a way to represent a recording. **Features** lists the input
-columns for that method's classifier.
+The output matrices represent separate inputs to matched classifiers.
 
 | Method | Features |
 | --- | --- |
-| `standard` | The mean, standard deviation, and overall linear trend of each channel, plus the Pearson correlation between each pair of channels at matching times. |
-| `gi` | Each channel's increase and decrease described separately by density, mean gap, connectivity, singularity, and rank dispersion. |
-| `gp` | The `gi` columns plus full support and directional density for each selected two-channel GP. |
-| `gcs` | The `gp` columns plus connectivity, singularity, and rank dispersion for each selected two-channel GP. |
-| `gcs_no_connectivity` | The `gcs` columns with GP connectivity removed. |
-| `gcs_no_singularity` | The `gcs` columns with GP singularity removed. |
-| `gcs_no_dispersion` | The `gcs` columns with GP rank dispersion removed. |
+| standard | Channel means, population standard deviations, linear trends, and Pearson correlations between distinct channels. |
+| gi | Density, connectivity, singularity, rank dispersion, and mean index gap for each signed channel in fixed channel/sign positions. |
+| gp | Support and confidence for each retained GRAANK pattern. |
+| gcs | Density, connectivity, singularity, rank dispersion, and mean index gap for each retained GRAANK pattern. |
+| gcs_no_density | The GCS matrix with density removed from every pattern slot. |
+| gcs_no_connectivity | The GCS matrix with connectivity removed from every pattern slot. |
+| gcs_no_singularity | The GCS matrix with singularity removed from every pattern slot. |
+| gcs_no_dispersion | The GCS matrix with rank dispersion removed from every pattern slot. |
+| gcs_no_avg_deviation | The GCS matrix with mean index gap removed from every pattern slot. |
 
-For an empty concordance set, connectivity is the observation count. Undefined
-separation and singularity statistics use zero in the feature matrix, and
-density records the empty set. The benchmark uses SO4GP to build packed
-bitmaps, intersect them, extract concordance sets, and compute support,
-density, and the structural descriptors.
+GI columns retain channel identities when pruning removes an item. GP and
+GCS blocks use the miner's result order independently for each recording.
+Pruned GI slots and unused GP/GCS slots contain zeros. For a retained item
+whose canonical concordance set is empty, density is zero and connectivity
+counts all observations as isolated components. Undefined statistics become
+zero in the feature matrices. SO4GP computes mining scores and descriptors.
 
 The classifier is **regularized logistic regression**
 (`sklearn.linear_model.LogisticRegression`). The benchmark trains a separate
@@ -192,9 +191,9 @@ folds and try the same regularization values (`C` = 0.1, 1, and 10 by default).
 Each model selects its `C` by validation balanced accuracy. The requested fold
 count is capped at the size of the smallest training class, so Handwriting
 uses two folds with the default settings. Stratified CV requires at least two
-recordings per training class. Each fold selects patterns using its own training
-cases. The final patterns are selected on the full training split and applied to
-every test recording.
+recordings per training class. Features are built independently for each
+recording. Each fold fits its scaler and classifier on the fold's training
+features, and final models use all training features before scoring test cases.
 
 ## Reports
 
@@ -211,12 +210,9 @@ are collected in [benchmarking-results.json](benchmarking-results.json).
   across independent runs at each dataset or noise level. A single run has no
   across-run standard deviation.
 - run.json records the BenchmarkConfig settings under config, dataset
-  dimensions, and the effective fold count per dataset,
-  final and fold-local pattern vocabularies, mining and feature extraction times,
-  software versions, and settings. Feature extraction is shared across the
-  compared methods.
-  GP timing covers support. GCS timing includes directional density, which
-  both methods use.
+  dimensions, effective fold counts, software versions, and fold-level and
+  final extraction timings. The standard stage covers summary features.
+  The gradual_patterns stage covers GRAANK mining and GI/GP/GCS extraction.
   Intervals for the archive describe held-out cases conditional on the
   published training split.
 
@@ -232,8 +228,10 @@ python -m pytest --import-mode=importlib benchmarks/joint_effect -q
 
 ## Reference runs
 
-The tables below report the earlier direct-search protocol, with a mean
-training support cutoff of 0.4.
+The saved tables below use the earlier feature construction with a shared
+pattern vocabulary, combined GI/GP/GCS feature blocks, and a mean training
+support cutoff of 0.4. The current runner uses separate feature matrices
+and mines patterns within each recording.
 
 **BA means balanced accuracy.** For each class, divide the number of correctly
 predicted recordings by the number of recordings with that true label. Average

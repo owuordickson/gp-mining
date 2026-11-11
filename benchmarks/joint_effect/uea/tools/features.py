@@ -1,4 +1,4 @@
-"""Packed comparison features with a vocabulary fitted on training cases."""
+"""Encode each recording with independent standard, GI, GP, and GCS features."""
 
 from dataclasses import dataclass
 from time import perf_counter
@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from so4gp.algorithms import GRAANK
-from so4gp.gradual_patterns import GP, PairwiseMatrix
+from so4gp.gradual_patterns import GI, GP, PairwiseMatrix
 
 type Pattern = tuple[tuple[int, int], tuple[int, int]]
 
@@ -29,20 +29,22 @@ class BenchmarkConfig:
     caps the requested folds by the smallest training class.
 
     Attributes:
-        max_patterns: Maximum vocabulary size, including both inverse
-            orientations of every selected pattern family.
-        min_support: Inclusive cutoff on mean training full support.
+        max_patterns: Maximum number of two-item GRAANK results retained
+            per recording. Unused pattern slots are filled with zeros.
+        min_support: Minimum support passed to GRAANK for each recording.
         folds: Maximum number of stratified training folds.
         c_grid: Positive inverse-regularization values for logistic
             regression.
         bootstrap: Number of stratified resamples of held-out cases
             used to estimate score and paired-difference intervals.
     """
+
     max_patterns: int = 24
     min_support: float = 0.2
     folds: int = 3
     c_grid: tuple[float, ...] = (0.1, 1.0, 10.0)
     bootstrap: int = 1000
+
 
 @dataclass
 class FeatureSet:
@@ -51,9 +53,10 @@ class FeatureSet:
     Attributes:
         matrices: A feature matrix for each method, with one row per
             recording and columns in the order used by build_features.
-        run_time: Durations in seconds for the shared standard, GI, GP
-            support, and GCS descriptor extraction stages.
+        run_time: Durations in seconds for standard features and the
+            gradual_patterns stage, which includes mining and descriptors.
     """
+
     matrices: dict[str, np.ndarray]
     run_time: dict[str, float]
 
@@ -66,7 +69,9 @@ def _recording_df(recording: np.ndarray) -> pd.DataFrame:
     such as channel_0. These names prevent DataGP from interpreting
     numeric column labels as an additional observation.
     """
-    return pd.DataFrame(recording, columns=[f"channel_{i}" for i in range(recording.shape[1])])
+    return pd.DataFrame(
+        recording, columns=[f"channel_{i}" for i in range(recording.shape[1])]
+    )
 
 
 def _standard_features(recording: np.ndarray) -> np.ndarray:
@@ -90,23 +95,38 @@ def _standard_features(recording: np.ndarray) -> np.ndarray:
     return np.concatenate((means, recording.std(axis=0), slopes, correlation[upper]))
 
 
-def _gradual_features(recording: np.ndarray, min_sup: float, num_objects: int, max_pat: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _gradual_features(
+    recording: np.ndarray, min_sup: float, num_objects: int, max_pat: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Mine one recording and extract its independent GI, GP, and GCS blocks.
+
+    Run SO4GP's two-item Apriori GRAANK with descriptor computation enabled.
+    Store retained GIs in fixed channel/sign positions, with '+' before '-'.
+    Take up to max_pat GPs in the miner's output order. Each GP contributes
+    support and confidence to the GP block and the five DESCRIPTORS values
+    to the GCS block. GP and GCS slots refer to the same mined result.
+
+    Args:
+        recording: Array shaped (num_observations, num_channels).
+        min_sup: Support threshold passed directly to GRAANK.
+        num_objects: Observation count used to interpret GI bitmaps.
+        max_pat: Maximum number of returned GP results to encode.
+
+    Returns:
+        Flattened GI, GP, and GCS arrays. The GI array reserves both signs
+        of every channel. GP/GCS arrays contain the mined results, which
+        build_features pads to the configured maximum.
+    """
 
     def _compute_descriptors(bitmap: PairwiseMatrix, n: int) -> GP:
-        """Compute SO4GP descriptors from a packed comparison bitmap.
+        """Extract canonical pairs and compute their descriptors with SO4GP.
 
-        Extract supporting pairs with i < j using
-        GP.gen_gradual_concordance_set, then delegate the descriptor
-        calculations to GP.compute_descriptors. Return the populated GP
-        object. Empty sets have zero density and n connected components,
-        with undefined separation and singularity statistics stored as NaN.
-
-        Args:
-            bitmap: Packed pairwise matrix for one GI or GP.
-            n: Number of observations in the original square bitmap.
+        Use GP.gen_gradual_concordance_set to retain supporting i < j pairs,
+        then delegate to GP.compute_descriptors. Empty sets have zero
+        density and n components, with undefined statistics stored as NaN.
 
         Raises:
-            ValueError: SO4GP rejects the extracted concordance pairs.
+            ValueError: SO4GP rejects the extracted concordance set.
         """
         pairs = GP.gen_gradual_concordance_set(bitmap.packed_bin_mat, n)
         gp = GP()
@@ -114,64 +134,82 @@ def _gradual_features(recording: np.ndarray, min_sup: float, num_objects: int, m
             raise ValueError("Invalid concordance pairs")
         return gp
 
-    lst_gi = []
+    gi_features = np.zeros((2 * recording.shape[1], len(DESCRIPTORS)))
     lst_gp_basic = []
     lst_gp_extra = []
     mine_obj = GRAANK(_recording_df(recording), min_sup=min_sup)
     mine_obj.discover(max_iteration=2, compute_descriptors=True)
     miner = mine_obj.mining_engine
 
-    for gp_set, gi_data in (miner.valid_bins or {}).items():
+    for gi_key, gi_data in (miner.valid_bins or {}).items():
+        item = GI.from_string(gi_key)
+        slot = 2 * item.attribute_col + int(item.symbol == "-")
         desc = _compute_descriptors(gi_data, num_objects)
-        lst_gi.extend([
+        gi_features[slot] = (
             desc.density,
             desc.graph_connectivity,
             desc.singularity_score,
             desc.rank_dispersion,
-            desc.avg_deviation_from_diagonal
-        ])
+            desc.avg_deviation_from_diagonal,
+        )
 
-    for i, gp in enumerate(miner.gradual_patterns):
-        if i >= max_pat:
-            break
-        lst_gp_basic.extend([gp.support, gp.confidence])
-        lst_gp_extra.extend([
-            gp.density,
-            gp.graph_connectivity,
-            gp.singularity_score,
-            gp.rank_dispersion,
-            gp.avg_deviation_from_diagonal])
-    return np.array(lst_gi), np.array(lst_gp_basic), np.array(lst_gp_extra)
+    for gp in (miner.gradual_patterns or [])[:max_pat]:
+        lst_gp_basic.extend((gp.support, gp.confidence))
+        lst_gp_extra.extend(
+            (
+                gp.density,
+                gp.graph_connectivity,
+                gp.singularity_score,
+                gp.rank_dispersion,
+                gp.avg_deviation_from_diagonal,
+            )
+        )
+    return (
+        gi_features.ravel(),
+        np.asarray(lst_gp_basic, dtype=float),
+        np.asarray(lst_gp_extra, dtype=float),
+    )
 
 
-def build_features(sequences: np.ndarray, max_patterns: int, min_support: float) -> FeatureSet:
-    """Encode each recording using a fixed vocabulary and several baselines.
+def build_features(
+    sequences: np.ndarray, max_patterns: int, min_support: float
+) -> FeatureSet:
+    """Encode recordings using independent standard, GI, GP, and GCS matrices.
 
-    Build SO4GP GI bitmaps for both directions of each channel. For
-    every selected GP, intersect the constituent bitmaps with
-    GP.perform_and and compute its concordance descriptors through
-    _compute_descriptors. Apply the same ordered pattern columns to every recording.
+    For each recording, compute standard summaries and call _gradual_features
+    to mine GRAANK patterns and obtain SO4GP descriptors. Each matrix has one
+    row per recording. GI columns have fixed channel/sign identities. GP and
+    GCS slot i describes the i-th pattern returned for that recording, so
+    pattern identities can differ across recordings.
 
-    The GI block contains density, mean separation, connectivity,
-    singularity, and dispersion for each signed channel. The GP matrix
-    adds support and directional density per pattern. GCS adds another
-    block containing density, connectivity, singularity, and dispersion
-    in DESCRIPTORS order. Each ablation removes its named descriptor
-    from this additional block. Standard features form a separate
-    matrix. Undefined empty-set statistics become zero in the matrices.
+    The GI matrix contains five descriptors per signed channel. The GP
+    matrix contains support and confidence per pattern. The GCS matrix
+    contains density, connectivity, singularity, dispersion, and mean index
+    separation per pattern, in DESCRIPTORS order. Each ablation removes its
+    named GCS descriptor from every pattern slot.
+
+    Pruned GI slots and unused GP/GCS slots are zero-filled. Undefined
+    statistics of empty concordance sets are converted from NaN to zero.
+    Retained GIs with empty sets keep one component per observation.
 
     Args:
-        sequences: Array shaped (num_recordings, num_observations, num_channels).
-        patterns: Ordered two-item patterns obtained from training data.
+        sequences: Finite array shaped
+            (num_recordings, num_observations, num_channels).
+        max_patterns: Positive maximum number of mined patterns per recording.
+        min_support: Support threshold in [0, 1], passed to SO4GP GRAANK.
 
     Returns:
-        FeatureSet containing method matrices and shared extraction
-        timings. All matrices contain one row per input recording.
+        FeatureSet containing the method matrices and the standard and
+        gradual_patterns extraction durations in seconds.
 
     Raises:
-        ValueError: The input has no recordings, fewer than two observations
-            or channels, or SO4GP cannot describe a concordance set.
+        ValueError: The dimensions, pattern limit, or threshold are invalid,
+            or SO4GP cannot compute a concordance descriptor.
     """
+    if max_patterns < 1:
+        raise ValueError("max_patterns must be a positive integer")
+    if not 0 <= min_support <= 1:
+        raise ValueError("min_support must be in [0, 1]")
     num_recordings, num_observations, num_channels = sequences.shape
     if num_recordings == 0 or num_observations < 2 or num_channels < 2:
         raise ValueError(
@@ -179,7 +217,9 @@ def build_features(sequences: np.ndarray, max_patterns: int, min_support: float)
             "and two channels"
         )
 
-    standard = np.zeros((num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2))
+    standard = np.zeros(
+        (num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2)
+    )
     gi_only = np.zeros((num_recordings, 2 * num_channels * len(DESCRIPTORS)))
     gp_basic = np.zeros((num_recordings, max_patterns * 2))
     gp_extra = np.zeros((num_recordings, max_patterns * len(DESCRIPTORS)))
@@ -188,35 +228,31 @@ def build_features(sequences: np.ndarray, max_patterns: int, min_support: float)
     for index, raw_recording in enumerate(sequences):
         recording = np.asarray(raw_recording, dtype=np.float64)
 
-        # Standard Features: Mean, Std. Dev. etc.
         start = perf_counter()
         standard[index] = _standard_features(recording)
         elapsed_time_dict["standard"] += perf_counter() - start
 
-        # GP Features: Support, Density, Deviation, Dispersion, Connectivity, Singularity
         start = perf_counter()
-        arr_gi, arr_gp, arr_gcs = _gradual_features(recording, min_support, num_observations, max_patterns)
-        #print(arr_gp.shape)
-        gi_only[index, :arr_gi.shape[0]] = arr_gi
-        gp_basic[index, :arr_gp.shape[0]] = arr_gp
-        gp_extra[index, :arr_gcs.shape[0]] = arr_gcs
+        arr_gi, arr_gp, arr_gcs = _gradual_features(
+            recording, min_support, num_observations, max_patterns
+        )
+        gi_only[index] = arr_gi
+        gp_basic[index, : arr_gp.shape[0]] = arr_gp
+        gp_extra[index, : arr_gcs.shape[0]] = arr_gcs
         elapsed_time_dict["gradual_patterns"] += perf_counter() - start
 
     gi_only = np.nan_to_num(gi_only, nan=0.0)
     gp_basic = np.nan_to_num(gp_basic, nan=0.0)
     gp_extra = np.nan_to_num(gp_extra, nan=0.0)
-    #print(f"std: {standard.shape}, gi: {gi_only.shape}, gp_basic: {gp_basic.shape} gp_extra: {gp_extra.shape}")
-
-    #gp_extra = np.nan_to_num(gp_extra, nan=0.0)
-    #ordinary = np.concatenate((gi, gp_basic.reshape(num_recordings, -1)), axis=1)
     matrices = {
         "standard": standard,
         "gi": gi_only,
         "gp": gp_basic,
         "gcs": gp_extra,
     }
-    for i, descriptor in enumerate(DESCRIPTORS):
-        remaining = np.delete(gp_extra, i, axis=1)
+    gcs_blocks = gp_extra.reshape(num_recordings, max_patterns, len(DESCRIPTORS))
+    for column, descriptor in enumerate(DESCRIPTORS):
+        remaining = np.delete(gcs_blocks, column, axis=2).reshape(num_recordings, -1)
         matrices[f"gcs_no_{descriptor}"] = remaining
 
     return FeatureSet(matrices, elapsed_time_dict)
