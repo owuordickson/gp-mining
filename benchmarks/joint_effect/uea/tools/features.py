@@ -132,7 +132,7 @@ def _gradual_features(recording: np.ndarray, min_sup: float, num_objects: int, m
         ])
 
     for i, gp in enumerate(miner.gradual_patterns):
-        if i > max_pat:
+        if i >= max_pat:
             break
         lst_gp_basic.extend([gp.support, gp.confidence])
         lst_gp_extra.extend([
@@ -196,6 +196,7 @@ def build_features(sequences: np.ndarray, max_patterns: int, min_support: float)
         # GP Features: Support, Density, Deviation, Dispersion, Connectivity, Singularity
         start = perf_counter()
         arr_gi, arr_gp, arr_gcs = _gradual_features(recording, min_support, num_observations, max_patterns)
+        #print(arr_gp.shape)
         gi_only[index, :arr_gi.shape[0]] = arr_gi
         gp_basic[index, :arr_gp.shape[0]] = arr_gp
         gp_extra[index, :arr_gcs.shape[0]] = arr_gcs
@@ -204,7 +205,7 @@ def build_features(sequences: np.ndarray, max_patterns: int, min_support: float)
     gi_only = np.nan_to_num(gi_only, nan=0.0)
     gp_basic = np.nan_to_num(gp_basic, nan=0.0)
     gp_extra = np.nan_to_num(gp_extra, nan=0.0)
-    print(f"std: {standard.shape}, gi: {gi_only.shape}, gp_basic: {gp_basic.shape} gp_extra: {gp_extra.shape}")
+    #print(f"std: {standard.shape}, gi: {gi_only.shape}, gp_basic: {gp_basic.shape} gp_extra: {gp_extra.shape}")
 
     #gp_extra = np.nan_to_num(gp_extra, nan=0.0)
     #ordinary = np.concatenate((gi, gp_basic.reshape(num_recordings, -1)), axis=1)
