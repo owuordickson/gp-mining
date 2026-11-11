@@ -219,7 +219,7 @@ class GP:
         return self._density
 
     @property
-    def avg_deviation_from_diagonal(self) -> float:
+    def average_separation(self) -> float:
         return self._avg_separation
 
     @property
@@ -294,7 +294,7 @@ class GP:
                     f"sup={self.support}",
                     f"conf={self.confidence}",
                     f"density={round(self.density, 3)}",
-                    f"avg_dev={round(self.avg_deviation_from_diagonal, 3)}",
+                    f"avg_dev={round(self.average_separation, 3)}",
                     f"dispersion={round(self.rank_dispersion, 3)}",
                     f"connect={self.graph_connectivity}",
                     f"singularity_scr={round(self.singularity_score, 3)}",
@@ -306,7 +306,7 @@ class GP:
                     {"Density": f"{round(self.density, 3)}"},
                     {
                         "Avg. Deviation from Diagonal": (
-                            f"{round(self.avg_deviation_from_diagonal, 3)}"
+                            f"{round(self.average_separation, 3)}"
                         )
                     },
                     {"Rank Dispersion": f"{round(self.rank_dispersion, 3)}"},

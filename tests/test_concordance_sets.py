@@ -57,7 +57,7 @@ def test_descriptors_match_hand_calculated_values(
     assert pattern.compute_descriptors(backend(pairs), size)
 
     assert pattern.density == pytest.approx(density)
-    assert pattern.avg_deviation_from_diagonal == pytest.approx(mean_gap)
+    assert pattern.average_separation == pytest.approx(mean_gap)
     assert pattern.rank_dispersion == pytest.approx(variance)
     assert pattern.graph_connectivity == components
     assert pattern.singularity_score == pytest.approx(singularity)
@@ -72,7 +72,7 @@ def test_empty_concordance_set_resets_previous_descriptors(backend, pairs):
 
     assert pattern.density == 0.0
     assert pattern.graph_connectivity == 4
-    assert math.isnan(pattern.avg_deviation_from_diagonal)
+    assert math.isnan(pattern.average_separation)
     assert math.isnan(pattern.rank_dispersion)
     assert math.isnan(pattern.singularity_score)
 

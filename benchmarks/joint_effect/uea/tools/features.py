@@ -150,7 +150,7 @@ def _gradual_features(
             desc.graph_connectivity,
             desc.singularity_score,
             desc.rank_dispersion,
-            desc.avg_deviation_from_diagonal,
+            desc.average_separation,
         )
 
     for gp in (miner.gradual_patterns or [])[:max_pat]:
@@ -161,7 +161,7 @@ def _gradual_features(
                 gp.graph_connectivity,
                 gp.singularity_score,
                 gp.rank_dispersion,
-                gp.avg_deviation_from_diagonal,
+                gp.average_separation,
             )
         )
     return (
