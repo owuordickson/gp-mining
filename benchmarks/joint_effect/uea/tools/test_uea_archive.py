@@ -2,6 +2,12 @@ import numpy as np
 
 
 def test_archive_preserves_explicit_train_test_splits(tmp_path):
+    """Verify split membership and array axes using a small nested ZIP.
+
+    Write distinct training and test values and label orders, load
+    them through archive_split, and compare the returned recordings
+    and labels with the published order in the fixture.
+    """
     from zipfile import ZipFile
 
     from benchmarks.joint_effect.uea.tools.archive import archive_split

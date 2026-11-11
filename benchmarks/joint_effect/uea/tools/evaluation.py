@@ -22,6 +22,21 @@ CONTRASTS = (
 
 @dataclass(frozen=True)
 class Protocol:
+    """Configure pattern selection, classifier tuning, and uncertainty.
+
+    Every feature method uses the same folds and C grid. The evaluator
+    caps the requested folds by the smallest training class.
+
+    Attributes:
+        max_patterns: Maximum vocabulary size, including both inverse
+            orientations of every selected pattern family.
+        min_support: Inclusive cutoff on mean training full support.
+        folds: Maximum number of stratified training folds.
+        c_grid: Positive inverse-regularization values for logistic
+            regression.
+        bootstrap: Number of stratified resamples of held-out cases
+            used to estimate score and paired-difference intervals.
+    """
     max_patterns: int = 24
     min_support: float = 0.2
     folds: int = 3
@@ -30,10 +45,24 @@ class Protocol:
 
 
 def _classifier(c: float):
+    """Create the shared classifier pipeline for one regularization value.
+
+    Place StandardScaler before logistic regression so fitting learns
+    scaling statistics from the supplied training features. Use c as
+    the inverse regularization strength and allow 2,000 optimizer
+    iterations.
+    """
     return make_pipeline(StandardScaler(), LogisticRegression(C=c, max_iter=2000))
 
 
 def _metrics(y: np.ndarray, pred: np.ndarray, classes: int) -> np.ndarray:
+    """Calculate balanced accuracy and macro-F1 from encoded predictions.
+
+    Count true/predicted label combinations into a confusion matrix,
+    then average class recall and class F1. Inputs use integer labels
+    from zero through classes-1, and y must contain every class.
+    Return a two-value array in balanced-accuracy, macro-F1 order.
+    """
     confusion = np.bincount(y * classes + pred, minlength=classes**2)
     confusion = confusion.reshape(classes, classes)
     diagonal = confusion.diagonal()
@@ -48,6 +77,23 @@ def _metrics(y: np.ndarray, pred: np.ndarray, classes: int) -> np.ndarray:
 
 
 def _intervals(y, predictions, classes, draws, seed):
+    """Bootstrap held-out scores while preserving the observed class sizes.
+
+    Sample each true-label group with replacement using the seeded
+    generator. Reuse each sampled index vector for every method so
+    score differences can be evaluated on paired observations.
+
+    Args:
+        y: True labels encoded as integers from zero to classes-1.
+        predictions: Prediction arrays in METHODS order.
+        classes: Number of classes, all represented in y.
+        draws: Number of bootstrap resamples.
+        seed: Seed controlling the resampling generator.
+
+    Returns:
+        An array shaped (draws, methods, 2), whose last axis contains
+        balanced accuracy and macro-F1.
+    """
     rng = np.random.default_rng(seed)
     groups = [np.flatnonzero(y == label) for label in range(classes)]
     samples = np.empty((draws, len(METHODS), 2))
@@ -59,6 +105,13 @@ def _intervals(y, predictions, classes, draws, seed):
 
 
 def _score_columns(point: np.ndarray, samples: np.ndarray) -> dict[str, float]:
+    """Attach percentile intervals to a pair of point estimates.
+
+    Take the 2.5th and 97.5th percentiles of the bootstrap samples and
+    return named balanced-accuracy and macro-F1 fields with their
+    lower and upper bounds. The same calculation handles method
+    scores and paired score differences.
+    """
     low, high = np.quantile(samples, (0.025, 0.975), axis=0)
     fields = {}
     for i, metric in enumerate(("balanced_accuracy", "macro_f1")):
@@ -69,6 +122,19 @@ def _score_columns(point: np.ndarray, samples: np.ndarray) -> dict[str, float]:
 
 
 def _check_inputs(x_train, y_train, x_test, y_test, protocol) -> tuple[np.ndarray, int]:
+    """Validate a split and determine its feasible stratified fold count.
+
+    Check sequence dimensions, finite values, label lengths, matching
+    class sets, and the fold, bootstrap, and C-grid settings. Require
+    two training recordings per class, then cap the requested folds
+    at the smallest class size.
+
+    Returns:
+        The sorted original class labels and the effective fold count.
+
+    Raises:
+        ValueError: An input or protocol setting fails these checks.
+    """
     if x_train.ndim != 3 or x_test.ndim != 3 or x_train.shape[1:] != x_test.shape[1:]:
         raise ValueError(
             "Expected train and test with matching time/channel dimensions"
@@ -99,6 +165,16 @@ def _check_inputs(x_train, y_train, x_test, y_test, protocol) -> tuple[np.ndarra
 
 
 def _prepare(x_train, x_eval, protocol):
+    """Mine patterns on training cases and encode training and held-out cases.
+
+    Select the vocabulary using x_train alone, then pass that same
+    vocabulary to build_features for both arrays. Measure mining
+    duration separately from the shared feature extraction stages.
+
+    Returns:
+        A tuple containing patterns, training features, evaluation
+        features, and a dictionary of mining and extraction timings.
+    """
     start = perf_counter()
     patterns = select_patterns(
         x_train, max_patterns=protocol.max_patterns, min_support=protocol.min_support
@@ -127,7 +203,36 @@ def evaluate_split(
     seed: int,
     protocol: Protocol = Protocol(),
 ) -> dict:
-    """Tune on fold-local training data, refit on training, then score test once."""
+    """Tune matched classifiers on training folds and score a held-out split.
+
+    Encode labels as consecutive integers and create seeded stratified
+    folds, capped by the smallest training class. Each fold mines its
+    own vocabulary and fits its scaler using the fold's training cases.
+    Select C by mean validation balanced accuracy, resolving ties with
+    the smallest C. Then select patterns on all training cases, refit
+    each classifier, and predict the supplied test recordings.
+
+    Use one BLAS thread during fitting. Estimate 95% score intervals
+    and paired method differences with stratified test resampling.
+
+    Args:
+        x_train: Training array shaped (cases, observations, channels).
+        y_train: One class label per training recording.
+        x_test: Held-out array with the same observation/channel shape.
+        y_test: One class label per held-out recording.
+        seed: Seed for fold shuffling and bootstrap resampling.
+        protocol: Shared vocabulary, tuning, and resampling settings.
+
+    Returns:
+        A report dictionary containing method metrics, paired
+        contrasts, the final vocabulary, dataset dimensions, original
+        class labels, the effective fold count, fold-level and final
+        extraction details, and elapsed seconds.
+
+    Raises:
+        ValueError: Input validation, pattern selection, or feature
+            extraction fails.
+    """
     labels, cv_folds = _check_inputs(x_train, y_train, x_test, y_test, protocol)
     y_train, y_test = np.searchsorted(labels, y_train), np.searchsorted(labels, y_test)
     grid = tuple(sorted(set(protocol.c_grid)))

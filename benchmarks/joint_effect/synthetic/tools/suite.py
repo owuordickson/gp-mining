@@ -7,6 +7,12 @@ from .generator import synthetic_split
 
 
 def add_arguments(parser: ArgumentParser) -> None:
+    """Register synthetic generation options on the command parser.
+
+    Modify parser in place with regime, noise, and seed lists plus
+    training and test sizes. The suite combines these lists into
+    the requested experiment grid.
+    """
     parser.add_argument(
         "--regimes",
         choices=("shared", "timing"),
@@ -20,6 +26,13 @@ def add_arguments(parser: ArgumentParser) -> None:
 
 
 def cases(args: Namespace):
+    """Yield synthetic splits for each distinct experiment setting.
+
+    Deduplicate regimes, noise levels, and seeds in their input order
+    and iterate over their Cartesian product. Call synthetic_split
+    for each combination and yield its dataset/noise/seed metadata
+    together with the four training/test arrays.
+    """
     for regime, noise, seed in product(
         dict.fromkeys(args.regimes),
         dict.fromkeys(args.noise),
