@@ -7,6 +7,7 @@ import json
 
 # import torch
 import numpy as np
+import pandas as pds
 
 from .base.graank_alg import OrigGRAANK
 
@@ -435,3 +436,14 @@ class GRAANK:
             ),
         )
         return out
+
+    @classmethod
+    def build_gradual_features(cls, sequences: np.ndarray, max_patterns: int, pattern_level: int=2, ) -> pds.DataFrame:
+        """
+
+        :param sequences: np.ndarray of sequences (can be 2D or 3D)
+        :param max_patterns: the number of patterns to consider for each data-item in the sequence (if 3D) or all the data (if 2D), otherwise it mines all the possible patterns combinations.
+        :param pattern_level: the number of gradual items per pattern (1 if only gradual items of attributes, 2 if 2-item gradual patterns *default*, >n for n-item gradual patterns)
+
+        """
+        pass
