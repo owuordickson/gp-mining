@@ -2,6 +2,27 @@ import numpy as np
 import pytest
 
 
+def test_baseline_preserves_raw_values_in_one_row_per_recording():
+    """Keep raw readings in observation/channel order, including strided inputs."""
+    from benchmarks.joint_effect.uea.tools.features import build_features
+
+    recordings = np.array(
+        [
+            [[1, 10], [2, 20], [3, 30]],
+            [[4, 40], [5, 50], [6, 60]],
+        ],
+        dtype=np.float32,
+    )[:, ::-1, :]
+    original = recordings.copy()
+
+    features = build_features(recordings, max_patterns=2, min_support=0).matrices
+    np.testing.assert_array_equal(
+        features["baseline"],
+        [[3, 30, 2, 20, 1, 10], [6, 60, 5, 50, 4, 40]],
+    )
+    np.testing.assert_array_equal(recordings, original)
+
+
 def test_composed_features_are_separate_and_ablate_every_pattern():
     """Check independent feature blocks and remove a descriptor from every GP.
 
@@ -36,8 +57,10 @@ def test_reverse_only_support_and_empty_descriptors():
 
     x = np.array([[[3, 3], [2, 2], [1, 1]]], dtype=float)
     features = build_features(x, max_patterns=1, min_support=0).matrices
-    np.testing.assert_array_equal(features["gp"], [[1, 1]])
-    np.testing.assert_array_equal(features["gcs"], [[0, 3, 0, 0, 0]])
+    np.testing.assert_array_equal(features["gp"], [[1, 1, 0, 0]])
+    # The inverse-only retained GP has three isolated observations.
+    # The conflicting candidate has zero support, so its unused slot is zero.
+    np.testing.assert_array_equal(features["gcs"], [[0, 3, 0, 0, 0, 0, 0, 0, 0, 0]])
     assert all(np.isfinite(matrix).all() for matrix in features.values())
 
 
@@ -126,6 +149,8 @@ def test_feature_building_keeps_fold_and_test_recordings_separate(monkeypatch):
     assert seen[-2] == set(range(12))
     assert seen[-1] == set(range(20, 26))
     assert [row["method"] for row in result["metrics"]] == list(METHODS)
+    baseline = next(row for row in result["metrics"] if row["method"] == "baseline")
+    assert baseline["features"] == 24
     assert all(0 <= row["macro_f1"] <= 1 for row in result["metrics"])
 
 
@@ -142,8 +167,8 @@ def test_build_features_filters_support_per_recording_and_pads():
     )
     features = build_features(recordings, max_patterns=3, min_support=0.4).matrices
     np.testing.assert_allclose(features["gp"][:, 0], [0.6, 1])
-    np.testing.assert_array_equal(features["gp"][:, 2:], np.zeros((2, 4)))
-    np.testing.assert_array_equal(features["gcs"][:, 5:], np.zeros((2, 10)))
+    np.testing.assert_array_equal(features["gp"][:, 2:], np.zeros((2, 2)))
+    np.testing.assert_array_equal(features["gcs"][:, 5:], np.zeros((2, 5)))
 
 
 def test_gi_columns_keep_channel_identity_after_pruning():
@@ -239,7 +264,7 @@ def test_synthetic_runner_uses_build_features(tmp_path, monkeypatch):
     )
 
     assert observed
-    assert all(gp[1] == 4 and gcs[1] == 2 * len(DESCRIPTORS) for gp, gcs in observed)
+    assert all(gp[1] == 60 and gcs[1] == 30 * len(DESCRIPTORS) for gp, gcs in observed)
     (manifest_path,) = tmp_path.glob("synthetic/results/*/run.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert manifest["experiment"] == "synthetic"

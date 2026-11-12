@@ -85,8 +85,8 @@ Average separation is the mean gap, measured in observation steps.
 Full support also counts pairs that match when read in reverse, giving
 263 / 435 ≈ 0.6046.
 
-With the default maximum of 24 patterns, the `gcs` method has 120 feature
-columns. Each pattern slot contributes five descriptors. Unused slots contain
+With six channels, the `gcs` method reserves 30 two-item pattern slots,
+giving 150 feature columns. Each slot contributes five descriptors. Unused slots contain
 zeros. This table shows the five GCS values for the illustrated pattern, with
 the recording's original label alongside them.
 
@@ -160,13 +160,15 @@ sweep uses five seeds and three noise levels.
 
 The shared build_features function mines each recording independently using
 SO4GP's GRAANK, stopping at two-item patterns. The --min-support option is
-passed to the miner for each recording. The --max-patterns option limits
-the number of GRAANK results retained in that recording's feature row.
+passed to the miner for each recording. The current encoder reserves all
+two-item pattern slots: num_channels * (num_channels - 1). The legacy
+--max-patterns argument is still accepted but does not limit these slots.
 
 The output matrices represent separate inputs to matched classifiers.
 
 | Method | Features |
 | --- | --- |
+| baseline | All original sequence values, flattened into one row per recording in observation/channel order. |
 | standard | Channel means, population standard deviations, linear trends, and Pearson correlations between distinct channels. |
 | gi | Density, connectivity, singularity, rank dispersion, and average separation for each signed channel in fixed channel/sign positions. |
 | gp | Support and confidence for each retained GRAANK pattern. |
@@ -176,6 +178,10 @@ The output matrices represent separate inputs to matched classifiers.
 | gcs_no_singularity | The GCS matrix with singularity removed from every pattern slot. |
 | gcs_no_dispersion | The GCS matrix with rank dispersion removed from every pattern slot. |
 | gcs_no_avg_separation | The GCS matrix with average separation removed from every pattern slot. |
+
+For baseline, a recording with 30 readings and six channels supplies 180
+features. Its single activity label stays the same. The classifier uses
+the same training-only scaling and tuning as the other methods.
 
 GI columns retain channel identities when pruning removes an item. GP and
 GCS blocks use the miner's result order independently for each recording.
@@ -212,7 +218,8 @@ are collected in [benchmarking-results.json](benchmarking-results.json).
   across-run standard deviation.
 - run.json records the BenchmarkConfig settings under config, dataset
   dimensions, effective fold counts, software versions, and fold-level and
-  final extraction timings. The standard stage covers summary features.
+  final extraction timings. The baseline stage covers reshaping raw values;
+  the standard stage covers summary features.
   The gradual_patterns stage covers GRAANK mining and GI/GP/GCS extraction.
   Intervals for the archive describe held-out cases conditional on the
   published training split.
@@ -231,8 +238,8 @@ python -m pytest --import-mode=importlib benchmarks/joint_effect -q
 
 The UEA table below uses the earlier feature construction with a shared
 pattern vocabulary, combined GI/GP/GCS feature blocks, and a mean training
-support cutoff of 0.4. The synthetic results use the current separate
-feature matrices and patterns mined within each recording.
+support cutoff of 0.4. The saved synthetic runs use separate feature
+matrices, per-recording mining, and a 24-pattern limit.
 
 **BA means balanced accuracy.** For each class, divide the number of correctly
 predicted recordings by the number of recordings with that true label. Average
@@ -265,13 +272,14 @@ support, and density held fixed. The paired 95% interval for GCS minus GP
 was entirely above zero on RacketSports and PenDigits. The paired 95%
 interval was entirely below zero on Epilepsy.
 
-### Synthetic results: current feature matrices
+### Synthetic results: separate feature matrices
 
 The [summaries](synthetic/results/synthetic-full/summary.csv) and [paired summaries](synthetic/results/synthetic-full/paired_summary.csv) cover 30 runs: two regimes,
 three noise levels, and five seeds. Each run uses 120 training and 80 test
 recordings, a support cutoff of 0.2, and at most 24 GRAANK patterns per
 recording. Python's hash seed was fixed at 0; the [manifest](synthetic/results/synthetic-full/run.json)
-records the settings and source hashes. Only the synthetic benchmark was rerun.
+records the settings and source hashes. These saved runs predate the raw-value
+baseline and the change to all two-item pattern slots.
 
 BA columns are means across five seeds. Difference columns give the paired
 mean +/- sample standard deviation in percentage points, rather than confidence intervals.

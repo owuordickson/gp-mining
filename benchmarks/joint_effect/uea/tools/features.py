@@ -1,4 +1,4 @@
-"""Encode each recording with independent standard, GI, GP, and GCS features."""
+"""Encode recordings with raw values, standard summaries, and GI/GP/GCS features."""
 
 from dataclasses import dataclass
 from time import perf_counter
@@ -12,7 +12,14 @@ from so4gp.gradual_patterns import GI, GP, PairwiseMatrix
 type Pattern = tuple[tuple[int, int], tuple[int, int]]
 
 DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion", "avg_separation")
-METHODS = ("baseline", "standard", "gi", "gp", "gcs", *(f"gcs_no_{d}" for d in DESCRIPTORS))
+METHODS = (
+    "baseline",
+    "standard",
+    "gi",
+    "gp",
+    "gcs",
+    *(f"gcs_no_{d}" for d in DESCRIPTORS),
+)
 
 CONTRASTS = (
     ("gp", "gi"),
@@ -29,8 +36,9 @@ class BenchmarkConfig:
     caps the requested folds by the smallest training class.
 
     Attributes:
-        max_patterns: Maximum number of two-item GRAANK results retained
-            per recording. Unused pattern slots are filled with zeros.
+        max_patterns: Legacy positive limit accepted by the runner. The
+            encoder reserves all num_channels * (num_channels - 1)
+            two-item pattern slots; this setting does not truncate them.
         min_support: Minimum support passed to GRAANK for each recording.
         folds: Maximum number of stratified training folds.
         c_grid: Positive inverse-regularization values for logistic
@@ -53,8 +61,8 @@ class FeatureSet:
     Attributes:
         matrices: A feature matrix for each method, with one row per
             recording and columns in the order used by build_features.
-        run_time: Durations in seconds for standard features and the
-            gradual_patterns stage, which includes mining and descriptors.
+        run_time: Durations in seconds for baseline reshaping, standard
+            features, and gradual_patterns mining and descriptor extraction.
     """
 
     matrices: dict[str, np.ndarray]
@@ -167,7 +175,7 @@ def _gradual_features(
         lst_gp_basic.extend((gp.support, gp.confidence))
         lst_gp_extra.extend(
             (
-                gp.density,# * d_dir,
+                gp.density,  # * d_dir,
                 gp.graph_connectivity,
                 gp.singularity_score,
                 gp.rank_dispersion,
@@ -184,7 +192,14 @@ def _gradual_features(
 def build_features(
     sequences: np.ndarray, max_patterns: int, min_support: float
 ) -> FeatureSet:
-    """Encode recordings using independent standard, GI, GP, and GCS matrices.
+    """Encode recordings with raw values, summaries, and gradual features.
+
+    The baseline reshapes each recording into one row, with all channels
+    of the first observation followed by all channels of the next one.
+    Its shape is (num_recordings, num_observations * num_channels).
+    Raw values and their dtype are preserved; no labels enter this function.
+    Reshaping reuses the input storage when possible. The evaluator fits
+    the baseline scaler on training features, as for the other methods.
 
     For each recording, compute standard summaries and call _gradual_features
     to mine GRAANK patterns and obtain SO4GP descriptors. Each matrix has one
@@ -206,12 +221,14 @@ def build_features(
     Args:
         sequences: Finite array shaped
             (num_recordings, num_observations, num_channels).
-        max_patterns: Positive maximum number of mined patterns per recording.
+        max_patterns: Positive legacy limit accepted for compatibility.
+            All num_channels * (num_channels - 1) two-item slots are
+            reserved, irrespective of this value. Unused slots are zero.
         min_support: Support threshold in [0, 1], passed to SO4GP GRAANK.
 
     Returns:
-        FeatureSet containing the method matrices and the standard and
-        gradual_patterns extraction durations in seconds.
+        FeatureSet containing the method matrices and the baseline, standard,
+        and gradual_patterns extraction durations in seconds.
 
     Raises:
         ValueError: The dimensions, pattern limit, or threshold are invalid,
@@ -228,6 +245,11 @@ def build_features(
             "and two channels"
         )
 
+    elapsed_time_dict = dict.fromkeys(("baseline", "standard", "gradual_patterns"), 0.0)
+    start = perf_counter()
+    baseline = sequences.reshape(num_recordings, num_observations * num_channels)
+    elapsed_time_dict["baseline"] = perf_counter() - start
+
     max_patterns = num_channels * (num_channels - 1)
     standard = np.zeros(
         (num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2)
@@ -235,7 +257,6 @@ def build_features(
     gi_only = np.zeros((num_recordings, 2 * num_channels * len(DESCRIPTORS)))
     gp_basic = np.zeros((num_recordings, max_patterns * 2))
     gp_extra = np.zeros((num_recordings, max_patterns * len(DESCRIPTORS)))
-    elapsed_time_dict = dict.fromkeys(("standard", "gradual_patterns"), 0.0)
 
     for index, raw_recording in enumerate(sequences):
         recording = np.asarray(raw_recording, dtype=np.float64)
@@ -252,13 +273,13 @@ def build_features(
         gp_basic[index, : arr_gp.shape[0]] = arr_gp
         gp_extra[index, : arr_gcs.shape[0]] = arr_gcs
         elapsed_time_dict["gradual_patterns"] += perf_counter() - start
-        #print(f"GI: {arr_gi.shape}, GP: {arr_gp.shape}, GCS: {arr_gcs.shape}")
+        # print(f"GI: {arr_gi.shape}, GP: {arr_gp.shape}, GCS: {arr_gcs.shape}")
 
     gi_only = np.nan_to_num(gi_only, nan=0.0)
     gp_basic = np.nan_to_num(gp_basic, nan=0.0)
     gp_extra = np.nan_to_num(gp_extra, nan=0.0)
     matrices = {
-        "baseline": sequences,
+        "baseline": baseline,
         "standard": standard,
         "gi": gi_only,
         "gp": gp_basic,

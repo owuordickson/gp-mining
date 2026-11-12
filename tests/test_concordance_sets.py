@@ -185,13 +185,13 @@ def test_fitted_concordance_sets_keep_empty_inverse_orientations(monotonic_data)
         assert row["Support"] == 1.0
         assert row["Density"] == 0.0
         assert row["Graph Connectivity"] == 4
-        assert math.isnan(row["Avg. Deviation from Diagonal"])
+        assert math.isnan(row["Avg. Separation"])
         assert math.isnan(row["Rank Dispersion"])
         assert math.isnan(row["Singularity Score"])
     for name in ("Age+", "Expenses-"):
         row = descriptors.loc[name]
         assert row["Density"] == 1.0
-        assert row["Avg. Deviation from Diagonal"] == pytest.approx(1.667)
+        assert row["Avg. Separation"] == pytest.approx(1.667)
         assert row["Rank Dispersion"] == pytest.approx(0.556)
         assert row["Graph Connectivity"] == 1
         assert row["Singularity Score"] == 0.5

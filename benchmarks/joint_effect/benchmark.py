@@ -122,7 +122,7 @@ def _versions() -> dict[str, str]:
 def main(argv: list[str] | None = None) -> int:
     """Run explicit arguments or use the settings in RUN_EXPERIMENT and RUN_OPTIONS."""
     if argv is None:
-        argv = [RUN_EXPERIMENT, *RUN_OPTIONS.get(RUN_EXPERIMENT, ())]
+        argv = [RUN_EXPERIMENT]#, *RUN_OPTIONS.get(RUN_EXPERIMENT, ())]
     parser = _parser()
     args = parser.parse_args(argv)
     config = BenchmarkConfig(
