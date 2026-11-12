@@ -40,7 +40,7 @@ class BenchmarkConfig:
     """
 
     max_patterns: int = 24
-    min_support: float = 0.2
+    min_support: float = 0.0
     folds: int = 3
     c_grid: tuple[float, ...] = (0.1, 1.0, 10.0)
     bootstrap: int = 1000
@@ -218,6 +218,7 @@ def build_features(
             "and two channels"
         )
 
+    max_patterns = num_channels * (num_channels - 1) // 2
     standard = np.zeros(
         (num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2)
     )
@@ -241,6 +242,7 @@ def build_features(
         gp_basic[index, : arr_gp.shape[0]] = arr_gp
         gp_extra[index, : arr_gcs.shape[0]] = arr_gcs
         elapsed_time_dict["gradual_patterns"] += perf_counter() - start
+        #print(f"GI: {arr_gi.shape}, GP: {arr_gp.shape}, GCS: {arr_gcs.shape}")
 
     gi_only = np.nan_to_num(gi_only, nan=0.0)
     gp_basic = np.nan_to_num(gp_basic, nan=0.0)
