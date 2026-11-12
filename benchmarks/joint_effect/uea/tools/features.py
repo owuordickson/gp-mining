@@ -218,7 +218,7 @@ def build_features(
             "and two channels"
         )
 
-    max_patterns = num_channels * (num_channels - 1) // 2
+    max_patterns = num_channels * (num_channels - 1)
     standard = np.zeros(
         (num_recordings, 3 * num_channels + num_channels * (num_channels - 1) // 2)
     )
