@@ -12,7 +12,7 @@ from so4gp.gradual_patterns import GI, GP, PairwiseMatrix
 type Pattern = tuple[tuple[int, int], tuple[int, int]]
 
 DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion", "avg_separation")
-METHODS = ("standard", "gi", "gp", "gcs", *(f"gcs_no_{d}" for d in DESCRIPTORS))
+METHODS = ("baseline", "standard", "gi", "gp", "gcs", *(f"gcs_no_{d}" for d in DESCRIPTORS))
 
 CONTRASTS = (
     ("gp", "gi"),
@@ -154,10 +154,20 @@ def _gradual_features(
         )
 
     for gp in (miner.gradual_patterns or [])[:max_pat]:
+        # Directional Density
+        # d_dir = 1
+        # temp_gi = None
+        # for gi in gp.gradual_items:
+        #     if temp_gi is None:
+        #         temp_gi = gi
+        #         continue
+        #     if (temp_gi is not None) and (gi.symbol != temp_gi.symbol):
+        #         d_dir = -1
+        #         break
         lst_gp_basic.extend((gp.support, gp.confidence))
         lst_gp_extra.extend(
             (
-                gp.density,
+                gp.density,# * d_dir,
                 gp.graph_connectivity,
                 gp.singularity_score,
                 gp.rank_dispersion,
@@ -248,6 +258,7 @@ def build_features(
     gp_basic = np.nan_to_num(gp_basic, nan=0.0)
     gp_extra = np.nan_to_num(gp_extra, nan=0.0)
     matrices = {
+        "baseline": sequences,
         "standard": standard,
         "gi": gi_only,
         "gp": gp_basic,
