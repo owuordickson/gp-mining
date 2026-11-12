@@ -304,11 +304,7 @@ class GP:
                     {"Support": f"{self.support}"},
                     {"Confidence": f"{self.confidence}"},
                     {"Density": f"{round(self.density, 3)}"},
-                    {
-                        "Avg. Deviation from Diagonal": (
-                            f"{round(self.average_separation, 3)}"
-                        )
-                    },
+                    {"Avg. Separation": f"{round(self.average_separation, 3)}"},
                     {"Rank Dispersion": f"{round(self.rank_dispersion, 3)}"},
                     {"Graph Connectivity": f"{self.graph_connectivity}"},
                     {"Singularity Score": f"{round(self.singularity_score, 3)}"},

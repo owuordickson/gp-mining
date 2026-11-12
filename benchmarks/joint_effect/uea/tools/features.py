@@ -129,10 +129,10 @@ def _gradual_features(
             ValueError: SO4GP rejects the extracted concordance set.
         """
         pairs = GP.gen_gradual_concordance_set(bitmap.packed_bin_mat, n)
-        gp = GP()
-        if not gp.compute_descriptors(pairs, n):
+        new_gp = GP()
+        if not new_gp.compute_descriptors(pairs, n):
             raise ValueError("Invalid concordance pairs")
-        return gp
+        return new_gp
 
     gi_features = np.zeros((2 * recording.shape[1], len(DESCRIPTORS)))
     lst_gp_basic = []
