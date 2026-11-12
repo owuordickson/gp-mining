@@ -1,0 +1,1267 @@
+{
+  "experiment": "uea",
+  "arguments": {
+    "experiment": "uea",
+    "datasets": [
+      "BasicMotions",
+      "RacketSports",
+      "NATOPS",
+      "AtrialFibrillation",
+      "Epilepsy",
+      "ERing",
+      "FingerMovements",
+      "ArticularyWordRecognition",
+      "Libras",
+      "LSST",
+      "PenDigits",
+      "AppliancesEnergy_disc",
+      "EyesOpenShut",
+      "Handwriting",
+      "IRDS-EFL",
+      "JapaneseVowels_eq",
+      "SPHERE-WUS",
+      "UIPRMD-SSE-C"
+    ],
+    "data_dir": "C:\\owuor_lab\\GP-Mining\\benchmarks\\joint_effect\\uea\\data",
+    "download": false,
+    "seed": 0,
+    "output": null,
+    "max_patterns": 24,
+    "min_support": 0.2,
+    "folds": 3,
+    "c_grid": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "bootstrap": 1000
+  },
+  "config": {
+    "max_patterns": 24,
+    "min_support": 0.2,
+    "folds": 3,
+    "c_grid": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "bootstrap": 1000,
+    "pattern_miner": "SO4GP GRAANK (Apriori)"
+  },
+  "versions": {
+    "python": "3.14.0",
+    "so4gp": "1.1.4",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "torch": "2.13.0"
+  },
+  "runs": [
+    {
+      "dataset_name": "BasicMotions",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/BasicMotions.zip",
+      "training_cases": 40,
+      "test_cases": 40,
+      "observations": 100,
+      "channels": 6,
+      "classes": [
+        "Badminton",
+        "Running",
+        "Standing",
+        "Walking"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.005891999957384542,
+            "gradual_patterns": 1.7876537999836728
+          },
+          "evaluation_duration": {
+            "standard": 0.0046524000354111195,
+            "gradual_patterns": 1.0321824999700766
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.006123899976955727,
+            "gradual_patterns": 2.013403599965386
+          },
+          "evaluation_duration": {
+            "standard": 0.003014300047652796,
+            "gradual_patterns": 0.904736799915554
+          }
+        },
+        {
+          "pattern_mining_duration": 1.9997241906821728e-07,
+          "training_duration": {
+            "standard": 0.006268500001169741,
+            "gradual_patterns": 2.0027581001340877
+          },
+          "evaluation_duration": {
+            "standard": 0.002905800036387518,
+            "gradual_patterns": 0.9436117999721318
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.009686600125860423,
+          "gradual_patterns": 2.9678449000348337
+        },
+        "evaluation_duration": {
+          "standard": 0.010015899984864518,
+          "gradual_patterns": 2.91788039993844
+        }
+      },
+      "total_time": 15.634139700006926
+    },
+    {
+      "dataset_name": "RacketSports",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/RacketSports.zip",
+      "training_cases": 151,
+      "test_cases": 152,
+      "observations": 30,
+      "channels": 6,
+      "classes": [
+        "Badminton_Clear",
+        "Badminton_Smash",
+        "Squash_BackhandBoast",
+        "Squash_ForehandBoast"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.019593600038206205,
+            "gradual_patterns": 1.3004542998969555
+          },
+          "evaluation_duration": {
+            "standard": 0.00895200009108521,
+            "gradual_patterns": 0.6267195998807438
+          }
+        },
+        {
+          "pattern_mining_duration": 1.00000761449337e-07,
+          "training_duration": {
+            "standard": 0.01974480031640269,
+            "gradual_patterns": 1.3645844997954555
+          },
+          "evaluation_duration": {
+            "standard": 0.00970899997628294,
+            "gradual_patterns": 0.6621389999345411
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.02339450008003041,
+            "gradual_patterns": 1.4795648000435904
+          },
+          "evaluation_duration": {
+            "standard": 0.011116899986518547,
+            "gradual_patterns": 0.7129847000760492
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.03334810008527711,
+          "gradual_patterns": 2.138520500040613
+        },
+        "evaluation_duration": {
+          "standard": 0.03404969978146255,
+          "gradual_patterns": 2.099122500134399
+        }
+      },
+      "total_time": 11.766194399999222
+    },
+    {
+      "dataset_name": "NATOPS",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/NATOPS.zip",
+      "training_cases": 180,
+      "test_cases": 180,
+      "observations": 51,
+      "channels": 24,
+      "classes": [
+        "1.0",
+        "2.0",
+        "3.0",
+        "4.0",
+        "5.0",
+        "6.0"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 4.00003045797348e-07,
+          "training_duration": {
+            "standard": 0.07078229991020635,
+            "gradual_patterns": 39.59731719989213
+          },
+          "evaluation_duration": {
+            "standard": 0.02275910013122484,
+            "gradual_patterns": 24.430260399909457
+          }
+        },
+        {
+          "pattern_mining_duration": 1.00000761449337e-07,
+          "training_duration": {
+            "standard": 0.03784199999063276,
+            "gradual_patterns": 46.01545010012342
+          },
+          "evaluation_duration": {
+            "standard": 0.04591919993981719,
+            "gradual_patterns": 63.43388070011861
+          }
+        },
+        {
+          "pattern_mining_duration": 9.00006853044033e-07,
+          "training_duration": {
+            "standard": 0.07500100013567135,
+            "gradual_patterns": 97.58508350007469
+          },
+          "evaluation_duration": {
+            "standard": 0.041455999889876693,
+            "gradual_patterns": 55.26902689988492
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.12799670011736453,
+          "gradual_patterns": 178.23759010009235
+        },
+        "evaluation_duration": {
+          "standard": 0.10013410003739409,
+          "gradual_patterns": 141.44905590001144
+        }
+      },
+      "total_time": 649.7384354000096
+    },
+    {
+      "dataset_name": "AtrialFibrillation",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/AtrialFibrillation.zip",
+      "training_cases": 15,
+      "test_cases": 15,
+      "observations": 640,
+      "channels": 2,
+      "classes": [
+        "n",
+        "s",
+        "t"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.0034848999639507383,
+            "gradual_patterns": 5.154009799996857
+          },
+          "evaluation_duration": {
+            "standard": 0.002088400040520355,
+            "gradual_patterns": 2.473197799990885
+          }
+        },
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.0034559000050649047,
+            "gradual_patterns": 4.996496499981731
+          },
+          "evaluation_duration": {
+            "standard": 0.0018175000150222331,
+            "gradual_patterns": 2.8493601999362
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.0035243999445810914,
+            "gradual_patterns": 5.144730600033654
+          },
+          "evaluation_duration": {
+            "standard": 0.0018578000308480114,
+            "gradual_patterns": 2.3400151999958325
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.006668399932095781,
+          "gradual_patterns": 7.775377900019521
+        },
+        "evaluation_duration": {
+          "standard": 0.006389800051692873,
+          "gradual_patterns": 7.743423599982634
+        }
+      },
+      "total_time": 39.63056970000616
+    },
+    {
+      "dataset_name": "Epilepsy",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/Epilepsy.zip",
+      "training_cases": 137,
+      "test_cases": 138,
+      "observations": 206,
+      "channels": 3,
+      "classes": [
+        "EPILEPSY",
+        "RUNNING",
+        "SAWING",
+        "WALKING"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.03172669978812337,
+            "gradual_patterns": 12.25540329987416
+          },
+          "evaluation_duration": {
+            "standard": 0.03759870017529465,
+            "gradual_patterns": 17.197696699935477
+          }
+        },
+        {
+          "pattern_mining_duration": 4.00003045797348e-07,
+          "training_duration": {
+            "standard": 0.07015190023230389,
+            "gradual_patterns": 29.42704139990383
+          },
+          "evaluation_duration": {
+            "standard": 0.04027599992696196,
+            "gradual_patterns": 21.01853279999341
+          }
+        },
+        {
+          "pattern_mining_duration": 8.00006091594696e-07,
+          "training_duration": {
+            "standard": 0.07130760009749793,
+            "gradual_patterns": 32.32737199994153
+          },
+          "evaluation_duration": {
+            "standard": 0.0364774001063779,
+            "gradual_patterns": 15.0141425000038
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 4.00003045797348e-07,
+        "training_duration": {
+          "standard": 0.08789699990302324,
+          "gradual_patterns": 33.490116700093495
+        },
+        "evaluation_duration": {
+          "standard": 0.05794740002602339,
+          "gradual_patterns": 24.40183749984135
+        }
+      },
+      "total_time": 189.39389690000098
+    },
+    {
+      "dataset_name": "ERing",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/ERing.zip",
+      "training_cases": 30,
+      "test_cases": 270,
+      "observations": 65,
+      "channels": 4,
+      "classes": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.005671300023095682,
+            "gradual_patterns": 0.4284005999797955
+          },
+          "evaluation_duration": {
+            "standard": 0.002270600030897185,
+            "gradual_patterns": 0.1869775999803096
+          }
+        },
+        {
+          "pattern_mining_duration": 1.00000761449337e-07,
+          "training_duration": {
+            "standard": 0.00625089998356998,
+            "gradual_patterns": 0.4086880999675486
+          },
+          "evaluation_duration": {
+            "standard": 0.0021028000046499074,
+            "gradual_patterns": 0.1941705999779515
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.00663320001331158,
+            "gradual_patterns": 0.5498681000317447
+          },
+          "evaluation_duration": {
+            "standard": 0.0026951000036206096,
+            "gradual_patterns": 0.2392886000161525
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.010024199960753322,
+          "gradual_patterns": 0.5924152999650687
+        },
+        "evaluation_duration": {
+          "standard": 0.07605260011041537,
+          "gradual_patterns": 5.733062800107291
+        }
+      },
+      "total_time": 9.813515099987853
+    },
+    {
+      "dataset_name": "FingerMovements",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/FingerMovements.zip",
+      "training_cases": 316,
+      "test_cases": 100,
+      "observations": 50,
+      "channels": 28,
+      "classes": [
+        "left",
+        "right"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.06867390024126507,
+            "gradual_patterns": 109.88584689996787
+          },
+          "evaluation_duration": {
+            "standard": 0.07139980004285462,
+            "gradual_patterns": 124.53639389993623
+          }
+        },
+        {
+          "pattern_mining_duration": 4.00003045797348e-07,
+          "training_duration": {
+            "standard": 0.0710080997669138,
+            "gradual_patterns": 111.95619830000214
+          },
+          "evaluation_duration": {
+            "standard": 0.042461000120965764,
+            "gradual_patterns": 61.83936859987443
+          }
+        },
+        {
+          "pattern_mining_duration": 8.00006091594696e-07,
+          "training_duration": {
+            "standard": 0.06665829988196492,
+            "gradual_patterns": 86.97050949992263
+          },
+          "evaluation_duration": {
+            "standard": 0.03082009995705448,
+            "gradual_patterns": 42.7554665999196
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.10219099980895407,
+          "gradual_patterns": 160.24937879986828
+        },
+        "evaluation_duration": {
+          "standard": 0.03204600000753999,
+          "gradual_patterns": 46.75589550018776
+        }
+      },
+      "total_time": 747.4374984999886
+    },
+    {
+      "dataset_name": "ArticularyWordRecognition",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/ArticularyWordRecognition.zip",
+      "training_cases": 275,
+      "test_cases": 300,
+      "observations": 144,
+      "channels": 9,
+      "classes": [
+        "1.0",
+        "10.0",
+        "11.0",
+        "12.0",
+        "13.0",
+        "14.0",
+        "15.0",
+        "16.0",
+        "17.0",
+        "18.0",
+        "19.0",
+        "2.0",
+        "20.0",
+        "21.0",
+        "22.0",
+        "23.0",
+        "24.0",
+        "25.0",
+        "3.0",
+        "4.0",
+        "5.0",
+        "6.0",
+        "7.0",
+        "8.0",
+        "9.0"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 4.999747034162283e-07,
+          "training_duration": {
+            "standard": 0.05664589992375113,
+            "gradual_patterns": 53.85083540028427
+          },
+          "evaluation_duration": {
+            "standard": 0.02725359983742237,
+            "gradual_patterns": 26.195559400017373
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.08905459992820397,
+            "gradual_patterns": 102.62594100023853
+          },
+          "evaluation_duration": {
+            "standard": 0.09740089977276511,
+            "gradual_patterns": 77.6312189999444
+          }
+        },
+        {
+          "pattern_mining_duration": 8.999777492135763e-07,
+          "training_duration": {
+            "standard": 0.14634140010457486,
+            "gradual_patterns": 175.00184210011503
+          },
+          "evaluation_duration": {
+            "standard": 0.07261539989849553,
+            "gradual_patterns": 82.11634179987595
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.12278749997494742,
+          "gradual_patterns": 152.80645960001857
+        },
+        "evaluation_duration": {
+          "standard": 0.13025729978107847,
+          "gradual_patterns": 147.95306839983095
+        }
+      },
+      "total_time": 825.3098673000059
+    },
+    {
+      "dataset_name": "Libras",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/Libras.zip",
+      "training_cases": 180,
+      "test_cases": 180,
+      "observations": 45,
+      "channels": 2,
+      "classes": [
+        "1",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.028339499869616702,
+            "gradual_patterns": 0.767090099863708
+          },
+          "evaluation_duration": {
+            "standard": 0.01272880009491928,
+            "gradual_patterns": 0.3467442000983283
+          }
+        },
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.02220159996068105,
+            "gradual_patterns": 0.6126515999203548
+          },
+          "evaluation_duration": {
+            "standard": 0.013616400043247268,
+            "gradual_patterns": 0.3759082000469789
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.025363300199387595,
+            "gradual_patterns": 0.7114084000641014
+          },
+          "evaluation_duration": {
+            "standard": 0.011321099882479757,
+            "gradual_patterns": 0.31593669997528195
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.03805319991079159,
+          "gradual_patterns": 1.0757070999243297
+        },
+        "evaluation_duration": {
+          "standard": 0.03448150024632923,
+          "gradual_patterns": 0.9587879998434801
+        }
+      },
+      "total_time": 8.033798199990997
+    },
+    {
+      "dataset_name": "LSST",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/LSST.zip",
+      "training_cases": 2459,
+      "test_cases": 2466,
+      "observations": 36,
+      "channels": 6,
+      "classes": [
+        "15",
+        "16",
+        "42",
+        "52",
+        "53",
+        "6",
+        "62",
+        "64",
+        "65",
+        "67",
+        "88",
+        "90",
+        "92",
+        "95"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.555762899806723,
+            "gradual_patterns": 50.029807200451614
+          },
+          "evaluation_duration": {
+            "standard": 0.27393490038230084,
+            "gradual_patterns": 25.519345300184796
+          }
+        },
+        {
+          "pattern_mining_duration": 8.00006091594696e-07,
+          "training_duration": {
+            "standard": 0.582638999883784,
+            "gradual_patterns": 51.13068189920159
+          },
+          "evaluation_duration": {
+            "standard": 0.27200309993349947,
+            "gradual_patterns": 25.751348599093035
+          }
+        },
+        {
+          "pattern_mining_duration": 2.999731805175543e-07,
+          "training_duration": {
+            "standard": 0.5666495004261378,
+            "gradual_patterns": 52.31609110056888
+          },
+          "evaluation_duration": {
+            "standard": 0.2624051999882795,
+            "gradual_patterns": 21.815649799827952
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.8420793999393936,
+          "gradual_patterns": 75.00297439904534
+        },
+        "evaluation_duration": {
+          "standard": 0.6762560008792207,
+          "gradual_patterns": 53.898122200451326
+        }
+      },
+      "total_time": 406.52500160000636
+    },
+    {
+      "dataset_name": "PenDigits",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/PenDigits.zip",
+      "training_cases": 7494,
+      "test_cases": 3498,
+      "observations": 8,
+      "channels": 2,
+      "classes": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 1.2334022979193833,
+            "gradual_patterns": 21.265219900174998
+          },
+          "evaluation_duration": {
+            "standard": 0.6699915992794558,
+            "gradual_patterns": 11.507500699808588
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 1.022415901941713,
+            "gradual_patterns": 17.992449100362137
+          },
+          "evaluation_duration": {
+            "standard": 0.6247742998239119,
+            "gradual_patterns": 10.57878619999974
+          }
+        },
+        {
+          "pattern_mining_duration": 5.00003807246685e-07,
+          "training_duration": {
+            "standard": 1.0988841986982152,
+            "gradual_patterns": 18.991493499896023
+          },
+          "evaluation_duration": {
+            "standard": 0.44130130045232363,
+            "gradual_patterns": 7.9563926992123015
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 1.3036659009230789,
+          "gradual_patterns": 22.617227399459807
+        },
+        "evaluation_duration": {
+          "standard": 0.614894499827642,
+          "gradual_patterns": 10.40537670016056
+        }
+      },
+      "total_time": 157.6237439000106
+    },
+    {
+      "dataset_name": "AppliancesEnergy_disc",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/AppliancesEnergy_disc.zip",
+      "training_cases": 95,
+      "test_cases": 42,
+      "observations": 144,
+      "channels": 24,
+      "classes": [
+        "0.0",
+        "1.0"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 8.00006091594696e-07,
+          "training_duration": {
+            "standard": 0.023641600011615083,
+            "gradual_patterns": 111.56239749997621
+          },
+          "evaluation_duration": {
+            "standard": 0.011312900023767725,
+            "gradual_patterns": 58.20754590004799
+          }
+        },
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.025641599990194663,
+            "gradual_patterns": 111.64907160002622
+          },
+          "evaluation_duration": {
+            "standard": 0.00997869999264367,
+            "gradual_patterns": 49.53879619995132
+          }
+        },
+        {
+          "pattern_mining_duration": 4.00003045797348e-07,
+          "training_duration": {
+            "standard": 0.021621699997922406,
+            "gradual_patterns": 103.46479129997897
+          },
+          "evaluation_duration": {
+            "standard": 0.01034019998041913,
+            "gradual_patterns": 46.566730800055666
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.05143459988175891,
+          "gradual_patterns": 277.04497660003835
+        },
+        "evaluation_duration": {
+          "standard": 0.03055360008147545,
+          "gradual_patterns": 147.75662140001077
+        }
+      },
+      "total_time": 907.2604008000053
+    },
+    {
+      "dataset_name": "EyesOpenShut",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/EyesOpenShut.zip",
+      "training_cases": 56,
+      "test_cases": 42,
+      "observations": 128,
+      "channels": 14,
+      "classes": [
+        "0",
+        "1"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 4.00003045797348e-07,
+          "training_duration": {
+            "standard": 0.023744799953419715,
+            "gradual_patterns": 48.83734980018926
+          },
+          "evaluation_duration": {
+            "standard": 0.011323700018692762,
+            "gradual_patterns": 26.05681960005313
+          }
+        },
+        {
+          "pattern_mining_duration": 8.00006091594696e-07,
+          "training_duration": {
+            "standard": 0.019840999972075224,
+            "gradual_patterns": 46.87397249994683
+          },
+          "evaluation_duration": {
+            "standard": 0.010595599916996434,
+            "gradual_patterns": 22.266773799958173
+          }
+        },
+        {
+          "pattern_mining_duration": 6.999762263149023e-07,
+          "training_duration": {
+            "standard": 0.02290750006795861,
+            "gradual_patterns": 47.85540669996408
+          },
+          "evaluation_duration": {
+            "standard": 0.009590999979991466,
+            "gradual_patterns": 22.7402314999199
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 2.00001522898674e-07,
+        "training_duration": {
+          "standard": 0.030583900021156296,
+          "gradual_patterns": 68.66138490010053
+        },
+        "evaluation_duration": {
+          "standard": 0.02355020013055764,
+          "gradual_patterns": 45.96903709997423
+        }
+      },
+      "total_time": 331.1349259999988
+    },
+    {
+      "dataset_name": "Handwriting",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/Handwriting.zip",
+      "training_cases": 150,
+      "test_cases": 850,
+      "observations": 152,
+      "channels": 3,
+      "classes": [
+        "1.0",
+        "10.0",
+        "11.0",
+        "12.0",
+        "13.0",
+        "14.0",
+        "15.0",
+        "16.0",
+        "17.0",
+        "18.0",
+        "19.0",
+        "2.0",
+        "20.0",
+        "21.0",
+        "22.0",
+        "23.0",
+        "24.0",
+        "25.0",
+        "26.0",
+        "3.0",
+        "4.0",
+        "5.0",
+        "6.0",
+        "7.0",
+        "8.0",
+        "9.0"
+      ],
+      "cv_folds": 2,
+      "cv": [
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.020460200146771967,
+            "gradual_patterns": 3.135522300028242
+          },
+          "evaluation_duration": {
+            "standard": 0.034039200050756335,
+            "gradual_patterns": 5.448636999994051
+          }
+        },
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.03688790005980991,
+            "gradual_patterns": 6.328226000041468
+          },
+          "evaluation_duration": {
+            "standard": 0.04180980008095503,
+            "gradual_patterns": 6.771710800094297
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 3.00002284348011e-07,
+        "training_duration": {
+          "standard": 0.08895690002827905,
+          "gradual_patterns": 13.972696500160964
+        },
+        "evaluation_duration": {
+          "standard": 0.45419569936348125,
+          "gradual_patterns": 75.20043190044817
+        }
+      },
+      "total_time": 116.07666030002292
+    },
+    {
+      "dataset_name": "IRDS-EFL",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/IRDS-EFL.zip",
+      "training_cases": 223,
+      "test_cases": 26,
+      "observations": 60,
+      "channels": 75,
+      "classes": [
+        "1",
+        "2"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 4.999747034162283e-07,
+          "training_duration": {
+            "standard": 0.1189885001804214,
+            "gradual_patterns": 1222.729426700098
+          },
+          "evaluation_duration": {
+            "standard": 0.06635709997499362,
+            "gradual_patterns": 639.0025101001374
+          }
+        },
+        {
+          "pattern_mining_duration": 6.00004568696022e-07,
+          "training_duration": {
+            "standard": 0.07004469996900298,
+            "gradual_patterns": 627.0966387999651
+          },
+          "evaluation_duration": {
+            "standard": 0.03493070002878085,
+            "gradual_patterns": 320.5912931999774
+          }
+        },
+        {
+          "pattern_mining_duration": 7.00005330145359e-07,
+          "training_duration": {
+            "standard": 0.06840339992777444,
+            "gradual_patterns": 634.3872292999004
+          },
+          "evaluation_duration": {
+            "standard": 0.03718489981838502,
+            "gradual_patterns": 317.0696393001417
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.10467390023404732,
+          "gradual_patterns": 962.3463603998243
+        },
+        "evaluation_duration": {
+          "standard": 0.012312199920415878,
+          "gradual_patterns": 119.6110486999969
+        }
+      },
+      "total_time": 4845.17407020001
+    },
+    {
+      "dataset_name": "JapaneseVowels_eq",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/JapaneseVowels_eq.zip",
+      "training_cases": 270,
+      "test_cases": 370,
+      "observations": 25,
+      "channels": 12,
+      "classes": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.044843000039691105,
+            "gradual_patterns": 6.2081133000028785
+          },
+          "evaluation_duration": {
+            "standard": 0.021673799958080053,
+            "gradual_patterns": 3.1459814000700135
+          }
+        },
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.04712639999343082,
+            "gradual_patterns": 6.7170506999245845
+          },
+          "evaluation_duration": {
+            "standard": 0.02330069977324456,
+            "gradual_patterns": 3.2952949999889825
+          }
+        },
+        {
+          "pattern_mining_duration": 1.00000761449337e-07,
+          "training_duration": {
+            "standard": 0.04809959992417134,
+            "gradual_patterns": 6.909220400004415
+          },
+          "evaluation_duration": {
+            "standard": 0.02301110012922436,
+            "gradual_patterns": 3.189610600034939
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.06760879995999858,
+          "gradual_patterns": 9.56933000011486
+        },
+        "evaluation_duration": {
+          "standard": 0.09540770002058707,
+          "gradual_patterns": 13.561879299901193
+        }
+      },
+      "total_time": 55.891135399986524
+    },
+    {
+      "dataset_name": "SPHERE-WUS",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/SPHERE-WUS.zip",
+      "training_cases": 44,
+      "test_cases": 4,
+      "observations": 214,
+      "channels": 45,
+      "classes": [
+        "0",
+        "1"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 2.00001522898674e-07,
+          "training_duration": {
+            "standard": 0.01396140005090274,
+            "gradual_patterns": 312.5094983999734
+          },
+          "evaluation_duration": {
+            "standard": 0.0073755000194069,
+            "gradual_patterns": 159.07740560002276
+          }
+        },
+        {
+          "pattern_mining_duration": 1.1999800335615873e-06,
+          "training_duration": {
+            "standard": 0.01530189995537512,
+            "gradual_patterns": 301.93067570001585
+          },
+          "evaluation_duration": {
+            "standard": 0.00684499999624677,
+            "gradual_patterns": 169.6646238999674
+          }
+        },
+        {
+          "pattern_mining_duration": 7.00005330145359e-07,
+          "training_duration": {
+            "standard": 0.015644399914890528,
+            "gradual_patterns": 327.7030393999594
+          },
+          "evaluation_duration": {
+            "standard": 0.0067180999903939664,
+            "gradual_patterns": 147.36358950004796
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.025656099867774174,
+          "gradual_patterns": 549.6029329000448
+        },
+        "evaluation_duration": {
+          "standard": 0.0017498999659437686,
+          "gradual_patterns": 36.91352380005992
+        }
+      },
+      "total_time": 2006.1571339000075
+    },
+    {
+      "dataset_name": "UIPRMD-SSE-C",
+      "noise_level": null,
+      "random_seed": 0,
+      "source_url": "https://www.timeseriesclassification.com/aeon-toolkit/UIPRMD-SSE-C.zip",
+      "training_cases": 108,
+      "test_cases": 18,
+      "observations": 67,
+      "channels": 66,
+      "classes": [
+        "0",
+        "1"
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "pattern_mining_duration": 5.00003807246685e-07,
+          "training_duration": {
+            "standard": 0.032678999908966944,
+            "gradual_patterns": 302.2185648998711
+          },
+          "evaluation_duration": {
+            "standard": 0.015513999969698489,
+            "gradual_patterns": 145.84905380001874
+          }
+        },
+        {
+          "pattern_mining_duration": 3.00002284348011e-07,
+          "training_duration": {
+            "standard": 0.031864099961239845,
+            "gradual_patterns": 290.88218370007235
+          },
+          "evaluation_duration": {
+            "standard": 0.015822800021851435,
+            "gradual_patterns": 150.7749076000182
+          }
+        },
+        {
+          "pattern_mining_duration": 4.00003045797348e-07,
+          "training_duration": {
+            "standard": 0.03318940012832172,
+            "gradual_patterns": 294.0903440998809
+          },
+          "evaluation_duration": {
+            "standard": 0.01538499997695908,
+            "gradual_patterns": 146.77252129997942
+          }
+        }
+      ],
+      "final": {
+        "pattern_mining_duration": 1.00000761449337e-07,
+        "training_duration": {
+          "standard": 0.047915900009684265,
+          "gradual_patterns": 444.73806070009596
+        },
+        "evaluation_duration": {
+          "standard": 0.007336500071687624,
+          "gradual_patterns": 73.45393139999942
+        }
+      },
+      "total_time": 1850.0988695000124
+    }
+  ]
+}
