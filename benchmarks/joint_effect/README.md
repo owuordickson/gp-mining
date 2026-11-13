@@ -1,8 +1,8 @@
 # Joint-effect benchmark
 
 This benchmark tests whether gradual patterns (GPs) and descriptors of their
-gradual concordance sets (GCSs) help a classifier recognize activities in unseen
-recordings. Each recording becomes one row in a table. The **features** are
+gradual concordance sets (GCSs) help a classifier recognize predefined classes
+in unseen recordings. Each recording becomes one row in a table. The **features** are
 numbers calculated from the sensor readings. The **label** is the activity
 supplied by the dataset.
 
@@ -121,8 +121,8 @@ python benchmarks/joint_effect/benchmark.py uea --download
 python benchmarks/joint_effect/benchmark.py synthetic
 ```
 
-The UEA benchmark uses the existing published train and test splits for the 11
-datasets in the reference runs. The load_splits function preserves the
+The UEA benchmark uses the existing published train and test splits for the 18
+datasets in the saved runs. The load_splits function preserves the
 recording membership and labels supplied in the TRAIN and TEST files. To run offline, place the official
 ZIP for each dataset or its two `.ts` files under `benchmarks/joint_effect/uea/data`.
 Use `--data-dir` for another location and `--datasets` to select a subset.
@@ -241,45 +241,250 @@ Run the tests for both suites from the repository root.
 python -m pytest --import-mode=importlib benchmarks/joint_effect -q
 ```
 
-## Reference runs
+## UEA results and analysis
 
-The UEA table below uses the earlier feature construction with a shared
-pattern vocabulary, combined GI/GP/GCS feature blocks, and a mean training
-support cutoff of 0.4. The saved synthetic runs use separate feature
-matrices, per-recording mining, and a 24-pattern limit.
+**BA means balanced accuracy.** Compute the fraction of correctly classified
+recordings in each class, then average across classes. If four classes have
+recalls of 90%, 80%, 70%, and 60%, BA is 75%. Macro-F1 similarly gives every
+class equal weight when averaging F1. Higher is better for both measures.
+A change from 70% to 75% is **five percentage points (pp)**.
 
-**BA means balanced accuracy.** For each class, divide the number of correctly
-predicted recordings by the number of recordings with that true label. Average
-the resulting percentages to give every class equal weight. For example, if
-the four strokes are correctly classified 90%, 80%, 70%, and 60% of the time,
-the balanced accuracy is 75%. Higher BA is better.
+### Saved runs and statistical scope
 
-The UEA runs use the published splits and the same protocol for 11 datasets. Scores are percentages. Differences and paired 95% bootstrap intervals are in percentage points.
+All four runs use the same 18 published train/test splits, seed 0, support
+cutoff 0.0, and logistic regression. They use the same three-value C grid,
+up to three stratified training folds, and 1,000 test-case bootstrap draws.
+Handwriting uses two folds because its smallest training class has two cases.
 
-- 11 datasets. [Metrics](uea/results/uea-orig/metrics.csv) and [paired intervals](uea/results/uea-orig/paired_contrasts.csv).
+For c channels, P = c(c - 1) is the maximum number of distinct two-item
+patterns after merging globally reversed directions. K denotes allocated
+pattern slots: GP has 2K columns and GCS has 5K. Pruning can leave unused
+slots. The recorded feature widths confirm the budgets below; the shared
+manifest value max_patterns=24 does not describe the effective historical caps.
 
-| Dataset | Standard BA | GP BA | GCS BA | GCS - GP BA (95% interval) | GP macro-F1 | GCS macro-F1 | Elapsed (s) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| BasicMotions | 97.5 | 92.5 | 95.0 | +2.5 [-5.0, +10.0] | 92.3 | 95.0 | 27.7 |
-| RacketSports | 77.5 | 78.2 | 84.2 | +5.9 [+0.5, +11.3] | 78.4 | 84.0 | 16.4 |
-| NATOPS | 90.6 | 68.3 | 70.0 | +1.7 [-1.1, +4.4] | 67.6 | 69.6 | 101.9 |
-| ArticularyWordRecognition | 93.3 | 96.0 | 96.7 | +0.7 [-0.7, +2.0] | 95.9 | 96.6 | 249.0 |
-| AtrialFibrillation | 33.3 | 33.3 | 13.3 | -20.0 [-40.0, +0.0] | 31.6 | 12.1 | 49.6 |
-| ERing | 73.7 | 86.7 | 86.3 | -0.4 [-3.3, +2.6] | 86.7 | 86.4 | 7.6 |
-| Epilepsy | 92.2 | 67.6 | 45.1 | -22.5 [-32.0, -12.9] | 67.5 | 45.0 | 182.5 |
-| FingerMovements | 55.1 | 51.0 | 52.2 | +1.1 [-7.9, +10.2] | 51.0 | 51.7 | 100.1 |
-| LSST | 31.3 | 23.9 | 23.8 | -0.1 [-2.8, +2.1] | 24.4 | 24.4 | 448.5 |
-| Libras | 69.4 | 76.7 | 73.9 | -2.8 [-6.7, +1.1] | 75.9 | 73.1 | 13.8 |
-| PenDigits | 73.4 | 78.0 | 81.8 | +3.8 [+2.8, +4.8] | 77.9 | 81.7 | 132.3 |
+| Run | Pattern slots K | Purpose | Reports |
+| --- | ---: | --- | --- |
+| uea-half | P/2 | Half the two-item pattern slots | [Scores](uea/results/uea-half/metrics.csv), [paired intervals](uea/results/uea-half/paired_contrasts.csv), [settings](uea/results/uea-half/run.json) |
+| uea-full | P | All possible two-item slots | [Scores](uea/results/uea-full/metrics.csv), [paired intervals](uea/results/uea-full/paired_contrasts.csv), [settings](uea/results/uea-full/run.json) |
+| uea-extra | P + 100 | Full slots plus unused padding | [Scores](uea/results/uea-extra/metrics.csv), [paired intervals](uea/results/uea-extra/paired_contrasts.csv), [settings](uea/results/uea-extra/run.json) |
+| uea-baseline | P | Raw values and augmented raw-value models | [Scores](uea/results/uea-baseline/metrics.csv), [paired intervals](uea/results/uea-baseline/paired_contrasts.csv), [settings](uea/results/uea-baseline/run.json) |
 
-GCS scored higher than ordinary GP on 6 of 11 datasets and higher than the
-standard baseline on 5 of 11. The ordinary GP comparison measures the
-contribution of the added GCS descriptors with the selected patterns,
-support, and density held fixed. The paired 95% interval for GCS minus GP
-was entirely above zero on RacketSports and PenDigits. The paired 95%
-interval was entirely below zero on Epilepsy.
+Every aggregate below gives each dataset equal weight. Across-dataset tests
+use a two-sided exact Wilcoxon signed-rank sign-permutation calculation, with
+Holm correction across **16 BA comparisons** at 0.05. None passes that
+correction. This follows the paired comparison approach in
+[Demšar (2006)](https://jmlr.org/papers/v7/demsar06a.html).
+The [analysis summary](uea/results/analysis-summary.json) records exact and
+adjusted p-values, per-dataset effects, and hashes of the input reports.
 
-### Synthetic results: separate feature matrices
+The saved 95% paired bootstrap intervals describe held-out cases conditional
+on the fitted models. They are unadjusted per-dataset intervals and do not
+measure variation from retraining on new splits or seeds. Wins/ties/losses
+always compare the first named method with the second on BA.
+
+### Full: GI, GP, GCS, and Standard
+
+| Method | Mean BA (%) | Mean macro-F1 (%) | Median BA (%) | Mean rank |
+| --- | ---: | ---: | ---: | ---: |
+| gi | 59.67 | 58.40 | 62.54 | 2.94 |
+| gp | 60.45 | 58.12 | 63.18 | 2.86 |
+| gcs | 62.29 | 60.40 | 61.46 | 2.31 |
+| standard | 68.02 | 66.26 | 72.00 | 1.89 |
+
+Among the three gradual representations, GCS has the highest mean BA and
+macro-F1 and the best average rank. Its BA is higher than GI on 12 datasets,
+tied on two, and lower on four: **+2.63 pp on average**. Against GP, the counts
+are **10/2/6**, with **+1.84 pp BA** and **+2.28 pp macro-F1**. These gains
+are heterogeneous and are not significant across datasets after correction.
+GP has the higher median BA, so GCS does not lead on every summary.
+
+Standard has the highest overall means. GCS versus Standard gives
+**5 wins, 3 ties, and 10 losses**, averaging **-5.73 pp BA** and
+**-5.86 pp macro-F1**. GCS nevertheless improves BA on RacketSports (+5.47),
+ERing (+14.07), ArticularyWordRecognition (+2.00), Handwriting (+9.96), and
+IRDS-EFL (+19.05).
+
+**GP versus GCS is retained as a representation comparison.** Here GP uses
+support/confidence and GCS uses five descriptors. GCS is not GP with extra
+columns appended. A direct test of added value beyond GP would require a
+gp_gcs method containing both blocks, compared against GP on the same patterns.
+
+#### Eleven illustrative datasets
+
+These 11 cases have GCS BA above GP or Standard in uea-full. They were
+selected after inspecting results and are descriptive examples, not an
+unbiased 11-dataset benchmark. All means, ranks, tests, and win counts above
+and below retain all 18 datasets. BA is in percent; difference intervals
+come directly from the saved paired bootstrap results.
+
+| Dataset | GI BA | GP BA | GCS BA | Standard BA | GCS - GP (pp, 95% CI) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| RacketSports | 81.02 | 74.23 | 82.98 | 77.50 | +8.74 [+2.09, +16.00] |
+| NATOPS | 62.22 | 73.33 | 84.44 | 90.56 | +11.11 [+3.89, +17.79] |
+| AtrialFibrillation | 26.67 | 20.00 | 33.33 | 33.33 | +13.33 [-13.33, +33.33] |
+| ERing | 80.74 | 70.74 | 87.78 | 73.70 | +17.04 [+11.48, +22.59] |
+| ArticularyWordRecognition | 93.00 | 92.67 | 95.33 | 93.33 | +2.67 [-0.67, +5.33] |
+| Libras | 67.78 | 42.22 | 51.11 | 69.44 | +8.89 [+0.00, +18.33] |
+| LSST | 17.23 | 20.56 | 23.14 | 31.33 | +2.58 [+0.85, +4.43] |
+| PenDigits | 75.60 | 38.52 | 66.31 | 73.41 | +27.79 [+26.03, +29.66] |
+| Handwriting | 20.24 | 17.15 | 21.45 | 11.49 | +4.30 [+1.71, +6.60] |
+| IRDS-EFL | 67.26 | 84.52 | 73.21 | 54.17 | -11.31 [-25.60, +0.00] |
+| JapaneseVowels_eq | 75.73 | 75.79 | 79.56 | 96.72 | +3.77 [-0.21, +7.93] |
+
+<details>
+<summary>The other seven datasets, included in every aggregate and test</summary>
+
+| Dataset | GI BA | GP BA | GCS BA | Standard BA | GCS - GP (pp, 95% CI) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| BasicMotions | 52.50 | 95.00 | 87.50 | 97.50 | -7.50 [-15.00, +0.00] |
+| Epilepsy | 62.85 | 55.44 | 30.16 | 92.21 | -25.27 [-35.51, -15.50] |
+| FingerMovements | 53.08 | 60.18 | 49.12 | 55.12 | -11.06 [-22.17, -0.12] |
+| AppliancesEnergy_disc | 55.51 | 66.18 | 56.62 | 70.59 | -9.56 [-25.39, +4.41] |
+| EyesOpenShut | 54.76 | 57.14 | 54.76 | 59.52 | -2.38 [-16.67, +11.90] |
+| SPHERE-WUS | 50.00 | 50.00 | 50.00 | 50.00 | +0.00 [+0.00, +0.00] |
+| UIPRMD-SSE-C | 77.78 | 94.44 | 94.44 | 94.44 | +0.00 [-16.67, +16.67] |
+
+</details>
+
+The GCS-minus-GP 95% interval is entirely above zero on RacketSports, NATOPS,
+ERing, LSST, PenDigits, and Handwriting, and entirely below zero on Epilepsy
+and FingerMovements. These are unadjusted, split-specific intervals.
+The large loss on Epilepsy (-25.27 pp versus GP and -62.05 pp versus Standard)
+is part of the overall result.
+
+### Pattern-budget ablation: half, full, and extra
+
+| Method | Half BA (%) | Full BA (%) | Extra BA (%) | Full - half (pp) | Extra - full (pp) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| gp | 54.83 | 60.45 | 58.63 | +5.62 | -1.82 |
+| gcs | 57.64 | 62.29 | 62.30 | +4.66 | +0.00 |
+
+| Comparison | BA wins/ties/losses | Exact p | Holm p |
+| --- | ---: | ---: | ---: |
+| Full - half, GP | 11/3/4 | 0.035 | 0.565 |
+| Full - half, GCS | 11/1/6 | 0.080 | 1.000 |
+| Extra - full, GP | 5/4/9 | 0.042 | 0.628 |
+| Extra - full, GCS | 1/17/0 | 1.000 | 1.000 |
+
+Half reduces mean BA, but these results do not establish a significant
+overall drop after multiple-comparison correction. For GCS, full improves
+mean BA by 4.66 pp, with 11 wins, one tie, and six losses. The nominal GP
+p-value of 0.035 does not survive correction; its Holm-adjusted value is 0.565.
+
+For GCS, extra and full have identical BA on 17 of 18 datasets. Only LSST
+changes (+0.05291 pp), giving a mean change of just **+0.00294 pp**. Thus no
+practical gain is observed from extra slots. This is a padding check: extra
+adds 100 unused slots, not additional valid two-item or higher-order patterns.
+It does not establish that P is the best budget under every selection rule.
+
+GP changes on 14 datasets between full and extra, despite those extra slots
+carrying no new pattern information. Standard and GI remain identical.
+The baseline run also reproduces every full GCS BA score while GP differs
+on 13 datasets. These GP results therefore cannot isolate a padding effect.
+
+A small current-source check confirms that changing Python's hash seed can
+select a different default reference GI: the same pattern has support 0.6
+but confidence 0.6 or 1.0. This demonstrates a reproducibility risk; the
+archived scores alone cannot establish its contribution to each difference.
+
+Freeze the mined feature matrices, default reference choice, candidate
+ordering, folds, and hash seed before using this comparison as a clean
+capacity ablation. The saved manifests do not identify the historical
+hash seed or source snapshot.
+
+### GCS descriptor ablations in full
+
+Positive differences mean that retaining the descriptor helps. Negative
+differences mean that removing it improves the aggregate score. CI counts
+refer to saved unadjusted per-dataset 95% intervals for full minus ablated GCS.
+
+| Removed descriptor | BA without (%) | Full - without BA (pp) | Full - without F1 (pp) | Wins/ties/losses | CI above/below 0 | Holm p |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Density | 61.27 | +1.03 | +0.81 | 12/1/5 | 4/1 | 1.000 |
+| Connectivity | 60.61 | +1.68 | +0.95 | 10/2/6 | 4/1 | 1.000 |
+| Singularity | 63.07 | -0.78 | -1.01 | 6/6/6 | 1/1 | 1.000 |
+| Rank dispersion | 62.62 | -0.32 | -1.21 | 6/4/8 | 3/0 | 1.000 |
+| Average separation | 62.00 | +0.29 | +0.37 | 7/4/7 | 3/0 | 1.000 |
+
+Connectivity and density have the largest positive mean BA contributions.
+Average separation adds a smaller positive mean. Removing singularity or
+rank dispersion improves mean BA, although dispersion helps particular
+datasets, including ERing, LSST, and PenDigits. No descriptor is uniformly
+helpful, and no across-dataset ablation passes the Holm correction.
+These observations support dataset-dependent descriptor value, rather than
+a claim that all five descriptors are individually necessary.
+
+### Raw logistic regression with added features
+
+All three methods use the same classifier, folds, scaling procedure, and
+tuning grid. baseline receives flattened raw sequences; baseline_gcs and
+baseline_standard append their respective computed features.
+
+| Inputs to logistic regression | Mean BA (%) | Mean macro-F1 (%) | BA gain over raw (pp) | Wins/ties/losses | Holm p |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| baseline | 69.72 | 67.77 | 0.00 | -- | -- |
+| baseline_gcs | 70.53 | 68.44 | +0.81 | 10/2/6 | 1.000 |
+| baseline_standard | 71.47 | 70.47 | +1.74 | 9/5/4 | 1.000 |
+
+GCS helps 10 datasets, but the average improvement is only **+0.81 pp BA**.
+Its unadjusted paired interval is above zero on BasicMotions, RacketSports,
+LSST, PenDigits, Handwriting, and IRDS-EFL, and below zero on UIPRMD-SSE-C.
+The mean gain is not significant across datasets after correction.
+
+Standard features give the larger mean gain: **+1.74 pp BA** and
+**+2.70 pp macro-F1**. baseline_gcs versus baseline_standard gives 8 wins,
+two ties, and eight losses, with a mean BA difference of **-0.93 pp**.
+Neither augmentation is an overall winner supported by the adjusted tests.
+
+For example, BasicMotions rises from 77.50% raw BA to 90.00% with GCS,
+whereas adding Standard keeps it at 77.50%. In IRDS-EFL, raw BA is 54.17%,
+GCS raises it to 78.57%, and Standard raises it further to 88.10%.
+There are also losses: SPHERE-WUS falls from 75.00% raw BA to 50.00% with GCS.
+
+### Cost and analyses still needed
+
+The saved classifier times include tuning, fitting, and prediction only.
+Feature extraction is additional; the shared gradual_patterns timing mixes
+GI, GP, and GCS work and cannot identify their individual extraction costs.
+Timings are descriptive single-run measurements, not a controlled speed comparison.
+
+| Representation | Mean feature columns | Mean classifier time (s) |
+| --- | ---: | ---: |
+| standard | 449.22 | 0.32 |
+| gp | 1576.22 | 0.56 |
+| gcs | 3940.56 | 1.11 |
+| baseline | 1763.11 | 0.83 |
+| baseline_gcs | 5703.67 | 1.60 |
+| baseline_standard | 2212.33 | 0.92 |
+
+The remaining priorities for a journal evaluation are:
+
+- **An incremental GP test:** compare GP with GP + GCS on identical mined
+  patterns. Add a density-only control to distinguish the structural
+  descriptors from ordinary agreement strength.
+- **A controlled budget study:** reuse one full feature extraction and keep
+  pattern order fixed for several fractions of P. This removes the GP
+  reproducibility issue and tests real truncation rather than unused padding.
+- **Repeated training and uncertainty:** repeat fold/tuning seeds and report
+  macro-F1 and per-class errors alongside BA. Save predictions to permit
+  paired comparisons between any methods. Keep the published test labels
+  out of pattern selection, hyperparameter selection, and dataset selection.
+- **Feature count and resource controls:** compare matched feature budgets
+  or random-feature controls, and measure extraction time and peak memory.
+  Adding many more columns can change regularized logistic regression even
+  when the classifier and C grid stay the same.
+- **A defensible dataset subset:** for an 11-dataset primary benchmark,
+  select by declared domain, size, or channel criteria before observing test
+  scores. Keep the current favorable 11 as illustrative cases and retain
+  the other seven in the complete report.
+
+These experiments measure predictive usefulness for predefined labels.
+They do not estimate physical interaction strengths or reconstruct signals.
+The supported practical conclusion is that GCS offers improvements on
+specific datasets and can complement raw values, with heterogeneous effects
+and no adjusted evidence of overall superiority in these 18 datasets.
+
+## Synthetic reference results
 
 The [summaries](synthetic/results/synthetic-full/summary.csv) and [paired summaries](synthetic/results/synthetic-full/paired_summary.csv) cover 30 runs: two regimes,
 three noise levels, and five seeds. Each run uses 120 training and 80 test
