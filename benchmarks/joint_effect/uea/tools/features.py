@@ -1,4 +1,4 @@
-"""Encode recordings with raw values, standard summaries, and GI/GP/GCS features."""
+"""Encode raw, summary, gradual, and combined features for each recording."""
 
 from dataclasses import dataclass
 from time import perf_counter
@@ -14,6 +14,8 @@ type Pattern = tuple[tuple[int, int], tuple[int, int]]
 DESCRIPTORS = ("density", "connectivity", "singularity", "dispersion", "avg_separation")
 METHODS = (
     "baseline",
+    "baseline_gcs",
+    "baseline_standard",
     "standard",
     "gi",
     "gp",
@@ -24,6 +26,8 @@ METHODS = (
 CONTRASTS = (
     ("gp", "gi"),
     ("gcs", "gp"),
+    ("baseline_gcs", "baseline"),
+    ("baseline_standard", "baseline"),
     *(("gcs", f"gcs_no_{d}") for d in DESCRIPTORS),
 )
 
@@ -62,7 +66,8 @@ class FeatureSet:
         matrices: A feature matrix for each method, with one row per
             recording and columns in the order used by build_features.
         run_time: Durations in seconds for baseline reshaping, standard
-            features, and gradual_patterns mining and descriptor extraction.
+            features, gradual_patterns mining and descriptor extraction,
+            and feature_combinations column concatenation.
     """
 
     matrices: dict[str, np.ndarray]
@@ -162,20 +167,10 @@ def _gradual_features(
         )
 
     for gp in (miner.gradual_patterns or [])[:max_pat]:
-        # Directional Density
-        # d_dir = 1
-        # temp_gi = None
-        # for gi in gp.gradual_items:
-        #     if temp_gi is None:
-        #         temp_gi = gi
-        #         continue
-        #     if (temp_gi is not None) and (gi.symbol != temp_gi.symbol):
-        #         d_dir = -1
-        #         break
         lst_gp_basic.extend((gp.support, gp.confidence))
         lst_gp_extra.extend(
             (
-                gp.density,  # * d_dir,
+                gp.density,
                 gp.graph_connectivity,
                 gp.singularity_score,
                 gp.rank_dispersion,
@@ -200,6 +195,11 @@ def build_features(
     Raw values and their dtype are preserved; no labels enter this function.
     Reshaping reuses the input storage when possible. The evaluator fits
     the baseline scaler on training features, as for the other methods.
+
+    baseline_gcs appends the GCS columns to the raw baseline, whereas
+    baseline_standard appends the standard summary columns. Both reuse
+    the blocks computed below, preserving one row per recording without
+    additional mining or descriptor computation. Raw values come first.
 
     For each recording, compute standard summaries and call _gradual_features
     to mine GRAANK patterns and obtain SO4GP descriptors. Each matrix has one
@@ -228,7 +228,7 @@ def build_features(
 
     Returns:
         FeatureSet containing the method matrices and the baseline, standard,
-        and gradual_patterns extraction durations in seconds.
+        gradual_patterns, and feature_combinations durations in seconds.
 
     Raises:
         ValueError: The dimensions, pattern limit, or threshold are invalid,
@@ -278,8 +278,15 @@ def build_features(
     gi_only = np.nan_to_num(gi_only, nan=0.0)
     gp_basic = np.nan_to_num(gp_basic, nan=0.0)
     gp_extra = np.nan_to_num(gp_extra, nan=0.0)
+    start = perf_counter()
+    baseline_gcs = np.concatenate((baseline, gp_extra), axis=1)
+    baseline_standard = np.concatenate((baseline, standard), axis=1)
+    elapsed_time_dict["feature_combinations"] = perf_counter() - start
+
     matrices = {
         "baseline": baseline,
+        "baseline_gcs": baseline_gcs,
+        "baseline_standard": baseline_standard,
         "standard": standard,
         "gi": gi_only,
         "gp": gp_basic,

@@ -23,6 +23,63 @@ def test_baseline_preserves_raw_values_in_one_row_per_recording():
     np.testing.assert_array_equal(recordings, original)
 
 
+@pytest.mark.parametrize(
+    "method,expected",
+    [
+        (
+            "baseline_gcs",
+            [
+                1,
+                1,
+                2,
+                2,
+                4,
+                4,
+                3,
+                0,
+                0.5,
+                2,
+                2 / 3,
+                2 / 9,
+                4 / 3,
+                1 / 3,
+                2,
+                1,
+                0.25,
+                2.5,
+            ],
+        ),
+        (
+            "baseline_standard",
+            [
+                1,
+                1,
+                2,
+                2,
+                4,
+                4,
+                3,
+                0,
+                2.5,
+                1.75,
+                np.sqrt(1.25),
+                np.sqrt(2.1875),
+                2.4,
+                -0.3,
+                3.5 / np.sqrt(43.75),
+            ],
+        ),
+    ],
+)
+def test_baseline_combinations_append_features_to_the_raw_recording(method, expected):
+    """Keep raw values first and append the hand-calculated descriptor block."""
+    from benchmarks.joint_effect.uea.tools.features import build_features
+
+    recording = np.array([[[1, 1], [2, 2], [4, 4], [3, 0]]], dtype=float)
+    features = build_features(recording, max_patterns=2, min_support=0).matrices
+    np.testing.assert_allclose(features[method], [expected])
+
+
 def test_composed_features_are_separate_and_ablate_every_pattern():
     """Check independent feature blocks and remove a descriptor from every GP.
 
@@ -151,6 +208,16 @@ def test_feature_building_keeps_fold_and_test_recordings_separate(monkeypatch):
     assert [row["method"] for row in result["metrics"]] == list(METHODS)
     baseline = next(row for row in result["metrics"] if row["method"] == "baseline")
     assert baseline["features"] == 24
+    feature_counts = {row["method"]: row["features"] for row in result["metrics"]}
+    assert feature_counts["baseline_gcs"] == 54
+    assert feature_counts["baseline_standard"] == 36
+    scores = {row["method"]: row for row in result["metrics"]}
+    contrasts = {(row["method"], row["baseline"]): row for row in result["contrasts"]}
+    for method in ("baseline_gcs", "baseline_standard"):
+        for metric in ("balanced_accuracy", "macro_f1"):
+            assert contrasts[method, "baseline"][metric] == pytest.approx(
+                scores[method][metric] - scores["baseline"][metric]
+            )
     assert all(0 <= row["macro_f1"] <= 1 for row in result["metrics"])
 
 

@@ -169,6 +169,8 @@ The output matrices represent separate inputs to matched classifiers.
 | Method | Features |
 | --- | --- |
 | baseline | All original sequence values, flattened into one row per recording in observation/channel order. |
+| baseline_gcs | Raw baseline columns followed by the GCS descriptor columns. |
+| baseline_standard | Raw baseline columns followed by the standard summary columns. |
 | standard | Channel means, population standard deviations, linear trends, and Pearson correlations between distinct channels. |
 | gi | Density, connectivity, singularity, rank dispersion, and average separation for each signed channel in fixed channel/sign positions. |
 | gp | Support and confidence for each retained GRAANK pattern. |
@@ -179,9 +181,12 @@ The output matrices represent separate inputs to matched classifiers.
 | gcs_no_dispersion | The GCS matrix with rank dispersion removed from every pattern slot. |
 | gcs_no_avg_separation | The GCS matrix with average separation removed from every pattern slot. |
 
-For baseline, a recording with 30 readings and six channels supplies 180
-features. Its single activity label stays the same. The classifier uses
-the same training-only scaling and tuning as the other methods.
+For a recording with 30 readings and six channels, baseline supplies 180
+raw features. baseline_gcs adds 150 GCS columns, giving 330 features;
+baseline_standard adds 33 summary columns, giving 213 features. Each
+method keeps the same single activity label and uses the same classifier,
+training-only scaling, and tuning. Combined methods reuse the extracted
+features without additional mining.
 
 GI columns retain channel identities when pruning removes an item. GP and
 GCS blocks use the miner's result order independently for each recording.
@@ -212,7 +217,8 @@ are collected in [benchmarking-results.json](benchmarking-results.json).
 - metrics.csv gives held-out balanced accuracy, macro-F1, 95% stratified
   bootstrap intervals, and model tuning, fit, and prediction times.
 - paired_contrasts.csv uses the same bootstrap cases for each method pair.
-  The primary contrast is gcs minus gp.
+  The primary contrast is gcs minus gp. Each combined baseline also has
+  a paired comparison against baseline to measure the added features.
 - summary.csv and paired_summary.csv give means and sample standard deviations
   across independent runs at each dataset or noise level. A single run has no
   across-run standard deviation.
@@ -220,7 +226,8 @@ are collected in [benchmarking-results.json](benchmarking-results.json).
   dimensions, effective fold counts, software versions, and fold-level and
   final extraction timings. The baseline stage covers reshaping raw values;
   the standard stage covers summary features.
-  The gradual_patterns stage covers GRAANK mining and GI/GP/GCS extraction.
+  The gradual_patterns stage covers GRAANK mining and GI/GP/GCS extraction;
+  feature_combinations covers joining the existing columns.
   Intervals for the archive describe held-out cases conditional on the
   published training split.
 
