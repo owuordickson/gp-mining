@@ -507,12 +507,12 @@ class GRAANK:
             first.
 
         Examples:
-            >>> data = np.array([[1., 1.], [2., 2.], [3., 3.]])
-            >>> table = GRAANK.build_gradual_features(data)
+            >>> my_data = np.array([[1., 1.], [2., 2.], [3., 3.]])
+            >>> table = GRAANK.build_gradual_features(my_data)
             >>> table.index.tolist()
             ['0+ 1+', '0+ 1-']
-            >>> features = GRAANK.build_gradual_features(np.stack((data, data)))
-            >>> features.shape
+            >>> gp_features = GRAANK.build_gradual_features(np.stack((data, data)))
+            >>> gp_features.shape
             (2, 12)
         """
         data = np.asarray(sequences)
