@@ -282,34 +282,52 @@ on the fitted models. They are unadjusted per-dataset intervals and do not
 measure variation from retraining on new splits or seeds. Wins/ties/losses
 always compare the first named method with the second on BA.
 
-### Full: GI, GP, GCS, and Standard
+### 1. Joint-effect accuracy with GI, GP, and GCS
 
-| Method | Mean BA (%) | Mean macro-F1 (%) | Median BA (%) | Mean rank |
+This analysis asks whether relationships combining multiple attributes
+improve classification over individual gradual items. GI describes individual
+attributes; GP combines two gradual items, and GCS describes their joint
+concordance set. All three representations use the same logistic classifier.
+
+| Method | Mean BA (%) | Mean macro-F1 (%) | Median BA (%) | Mean rank within GI/GP/GCS |
 | --- | ---: | ---: | ---: | ---: |
-| gi | 59.67 | 58.40 | 62.54 | 2.94 |
-| gp | 60.45 | 58.12 | 63.18 | 2.86 |
-| gcs | 62.29 | 60.40 | 61.46 | 2.31 |
-| standard | 68.02 | 66.26 | 72.00 | 1.89 |
+| gi | 59.67 | 58.40 | 62.54 | 2.25 |
+| gp | 60.45 | 58.12 | 63.18 | 2.08 |
+| gcs | 62.29 | 60.40 | 61.46 | 1.67 |
 
-Among the three gradual representations, GCS has the highest mean BA and
-macro-F1 and the best average rank. Its BA is higher than GI on 12 datasets,
-tied on two, and lower on four: **+2.63 pp on average**. Against GP, the counts
-are **10/2/6**, with **+1.84 pp BA** and **+2.28 pp macro-F1**. These gains
-are heterogeneous and are not significant across datasets after correction.
-GP has the higher median BA, so GCS does not lead on every summary.
+Combining items into GP raises mean BA over GI by **0.79 pp**, with
+**9 wins, one tie, and 8 losses**. Mean macro-F1 falls by 0.28 pp, so GP
+representation gives mixed results.
 
-Standard has the highest overall means. GCS versus Standard gives
+GCS improves over GI by **2.63 pp BA** and **2.00 pp macro-F1**, with
+**12 wins, two ties, and 4 losses**. GCS has the highest mean BA and macro-F1
+and the best mean rank among the three gradual representations. GP has
+the higher median BA.
+
+Comparing the two joint representations, GCS improves over GP by
+**1.84 pp BA** and **2.28 pp macro-F1**, with **10 wins, two ties, and
+6 losses**. These composed representations show modest average gains in
+these runs, particularly with GCS descriptors, but the corrected tests do
+not establish a consistent overall improvement across the 18 datasets.
+Feature definitions and counts also differ, so the comparison does not
+isolate composition as the only source of the change.
+
+**GP versus GCS is a representation comparison.** GP uses support/confidence,
+whereas GCS uses five descriptors. To test whether adding GCS improves an
+existing GP model, a gp_gcs method must append both blocks and be compared
+with GP on the same patterns.
+
+### 2. GCS versus standard features across 11 illustrative datasets
+
+This comparison places GCS alongside ordinary time-series summaries.
+Across all 18 datasets, Standard has mean BA of **68.02%** and macro-F1
+of **66.26%**, versus **62.29%** and **60.40%** for GCS.
+
+GCS versus Standard gives
 **5 wins, 3 ties, and 10 losses**, averaging **-5.73 pp BA** and
 **-5.86 pp macro-F1**. GCS nevertheless improves BA on RacketSports (+5.47),
 ERing (+14.07), ArticularyWordRecognition (+2.00), Handwriting (+9.96), and
 IRDS-EFL (+19.05).
-
-**GP versus GCS is retained as a representation comparison.** Here GP uses
-support/confidence and GCS uses five descriptors. GCS is not GP with extra
-columns appended. A direct test of added value beyond GP would require a
-gp_gcs method containing both blocks, compared against GP on the same patterns.
-
-#### Eleven illustrative datasets
 
 These 11 cases have GCS BA above GP or Standard in uea-full. They were
 selected after inspecting results and are descriptive examples, not an
@@ -352,7 +370,7 @@ and FingerMovements. These are unadjusted, split-specific intervals.
 The large loss on Epilepsy (-25.27 pp versus GP and -62.05 pp versus Standard)
 is part of the overall result.
 
-### Pattern-budget ablation: half, full, and extra
+### 3. Accuracy with half, full, and extra pattern slots
 
 | Method | Half BA (%) | Full BA (%) | Extra BA (%) | Full - half (pp) | Extra - full (pp) |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -378,7 +396,8 @@ adds 100 unused slots, not additional valid two-item or higher-order patterns.
 It does not establish that P is the best budget under every selection rule.
 
 GP changes on 14 datasets between full and extra, despite those extra slots
-carrying no new pattern information. Standard and GI remain identical.
+carrying no new pattern information. The individual GI representation
+remains identical.
 The baseline run also reproduces every full GCS BA score while GP differs
 on 13 datasets. These GP results therefore cannot isolate a padding effect.
 
@@ -392,7 +411,7 @@ ordering, folds, and hash seed before using this comparison as a clean
 capacity ablation. The saved manifests do not identify the historical
 hash seed or source snapshot.
 
-### GCS descriptor ablations in full
+### 4. Contribution of each GCS descriptor
 
 Positive differences mean that retaining the descriptor helps. Negative
 differences mean that removing it improves the aggregate score. CI counts
@@ -414,7 +433,7 @@ helpful, and no across-dataset ablation passes the Holm correction.
 These observations support dataset-dependent descriptor value, rather than
 a claim that all five descriptors are individually necessary.
 
-### Raw logistic regression with added features
+### 5. Added value of computed features beyond raw sequences
 
 All three methods use the same classifier, folds, scaling procedure, and
 tuning grid. baseline receives flattened raw sequences; baseline_gcs and
@@ -441,7 +460,7 @@ whereas adding Standard keeps it at 77.50%. In IRDS-EFL, raw BA is 54.17%,
 GCS raises it to 78.57%, and Standard raises it further to 88.10%.
 There are also losses: SPHERE-WUS falls from 75.00% raw BA to 50.00% with GCS.
 
-### Cost and analyses still needed
+### 6. Computational cost and remaining evaluation checks
 
 The saved classifier times include tuning, fitting, and prediction only.
 Feature extraction is additional; the shared gradual_patterns timing mixes
@@ -450,33 +469,11 @@ Timings are descriptive single-run measurements, not a controlled speed comparis
 
 | Representation | Mean feature columns | Mean classifier time (s) |
 | --- | ---: | ---: |
-| standard | 449.22 | 0.32 |
 | gp | 1576.22 | 0.56 |
 | gcs | 3940.56 | 1.11 |
 | baseline | 1763.11 | 0.83 |
 | baseline_gcs | 5703.67 | 1.60 |
 | baseline_standard | 2212.33 | 0.92 |
-
-The remaining priorities for a journal evaluation are:
-
-- **An incremental GP test:** compare GP with GP + GCS on identical mined
-  patterns. Add a density-only control to distinguish the structural
-  descriptors from ordinary agreement strength.
-- **A controlled budget study:** reuse one full feature extraction and keep
-  pattern order fixed for several fractions of P. This removes the GP
-  reproducibility issue and tests real truncation rather than unused padding.
-- **Repeated training and uncertainty:** repeat fold/tuning seeds and report
-  macro-F1 and per-class errors alongside BA. Save predictions to permit
-  paired comparisons between any methods. Keep the published test labels
-  out of pattern selection, hyperparameter selection, and dataset selection.
-- **Feature count and resource controls:** compare matched feature budgets
-  or random-feature controls, and measure extraction time and peak memory.
-  Adding many more columns can change regularized logistic regression even
-  when the classifier and C grid stay the same.
-- **A defensible dataset subset:** for an 11-dataset primary benchmark,
-  select by declared domain, size, or channel criteria before observing test
-  scores. Keep the current favorable 11 as illustrative cases and retain
-  the other seven in the complete report.
 
 These experiments measure predictive usefulness for predefined labels.
 They do not estimate physical interaction strengths or reconstruct signals.

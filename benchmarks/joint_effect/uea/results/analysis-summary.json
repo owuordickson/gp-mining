@@ -46,7 +46,12 @@
     "saved_intervals": "95% paired stratified bootstrap over held-out cases, unadjusted per-dataset intervals; 1000 draws",
     "reference": "https://jmlr.org/papers/v7/demsar06a.html",
     "implementation_checked_against": "scipy.stats.wilcoxon with exhaustive PermutationMethod on four fixtures including ties and zeros",
-    "descriptive_ranks": "Average ranks over all four full-run methods, rounding BA to 12 decimals to preserve numerical ties"
+    "descriptive_ranks": "Average tied ranks after rounding BA to 12 decimals. Joint-effect analysis ranks GI, GP, and GCS only; four-method ranks including Standard are retained separately for reference.",
+    "joint_effect_rank_methods": [
+      "gi",
+      "gp",
+      "gcs"
+    ]
   },
   "aggregate": {
     "uea-half": {
@@ -129,7 +134,8 @@
         "mean_macro_f1_percent": 58.401656859277615,
         "mean_features": 183.88888888888889,
         "mean_classifier_tuning_fit_predict_seconds": 0.4859206111011897,
-        "average_rank_among_full_four": 2.9444444444444446
+        "average_rank_among_full_four": 2.9444444444444446,
+        "average_rank_among_gradual_three": 2.25
       },
       "gp": {
         "mean_ba_percent": 60.451060308307916,
@@ -137,7 +143,8 @@
         "mean_macro_f1_percent": 58.117653018948644,
         "mean_features": 1576.2222222222222,
         "mean_classifier_tuning_fit_predict_seconds": 0.5634695277727183,
-        "average_rank_among_full_four": 2.861111111111111
+        "average_rank_among_full_four": 2.861111111111111,
+        "average_rank_among_gradual_three": 2.0833333333333335
       },
       "gcs": {
         "mean_ba_percent": 62.292217421933074,
@@ -145,7 +152,8 @@
         "mean_macro_f1_percent": 60.398423581908986,
         "mean_features": 3940.5555555555557,
         "mean_classifier_tuning_fit_predict_seconds": 1.1106088166626351,
-        "average_rank_among_full_four": 2.3055555555555554
+        "average_rank_among_full_four": 2.3055555555555554,
+        "average_rank_among_gradual_three": 1.6666666666666667
       },
       "gcs_no_density": {
         "mean_ba_percent": 61.265480198743404,
