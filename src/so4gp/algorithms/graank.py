@@ -4,11 +4,14 @@
 
 
 import json
+from itertools import combinations, islice, product
+from numbers import Integral
 
 # import torch
 import numpy as np
 import pandas as pds
 
+from ..gradual_patterns import GP, PairwiseMatrix
 from .base.graank_alg import OrigGRAANK
 
 
@@ -438,12 +441,202 @@ class GRAANK:
         return out
 
     @classmethod
-    def build_gradual_features(cls, sequences: np.ndarray, max_patterns: int, pattern_level: int=2, ) -> pds.DataFrame:
-        """
+    def build_gradual_features(
+        cls,
+        sequences: np.ndarray,
+        max_patterns: int | None = None,
+        pattern_level: int = 2,
+    ) -> pds.DataFrame:
+        """Encode numerical arrays using support and GCS descriptors.
 
-        :param sequences: np.ndarray of sequences (can be 2D or 3D)
-        :param max_patterns: the number of patterns to consider for each data-item in the sequence (if 3D) or all the data (if 2D), otherwise it mines all the possible patterns combinations.
-        :param pattern_level: the number of gradual items per pattern (1 if only gradual items of attributes, 2 if 2-item gradual patterns *default*, >n for n-item gradual patterns)
+        For a two-dimensional array, return one row per pattern, indexed by
+        zero-based column identifiers such as ``"0+"`` or ``"0+ 1-"``.
+        The six columns, in order, are ``support``, ``density``,
+        ``connectivity``, ``avg_separation``, ``rank_dispersion``, and
+        ``singularity``. Values come directly from SO4GP's fitted bitmaps,
+        packed intersections, and descriptor calculations without display
+        rounding.
 
+        For a three-dimensional array, return one row per recording in input
+        order. Columns are a two-level pandas MultiIndex named ``pattern``
+        and ``descriptor``. Each pattern contributes the same six descriptors.
+        Comparisons stay within each recording, and pattern identities and
+        column order are identical for inputs with the same channel count,
+        pattern level, and cap. No labels are included.
+
+        A level of one keeps both signs of each GI. Higher levels enumerate
+        exactly that many distinct attributes, retaining one orientation
+        from each globally reversed pair: the smallest column always has
+        ``+`` direction. Columns are enumerated numerically, with ``+``
+        before ``-``. This fixes the directional GCS orientation explicitly.
+
+        All canonical combinations are encoded, including zero-support
+        patterns; no minimum-support filter is applied. Undefined separation,
+        dispersion, and singularity for an empty GCS remain NaN in the
+        two-dimensional descriptive table. In three-dimensional classifier
+        features they become zero, while connectivity still counts every
+        isolated observation.
+
+        Args:
+            sequences: Real numerical array shaped
+                ``(observations, channels)`` or
+                ``(recordings, observations, channels)``. Require at least
+                two observations, one channel, and one recording.
+            max_patterns: Positive maximum number of patterns encoded per
+                recording, or None to encode all canonical combinations.
+                The cap takes a deterministic prefix. Values larger than
+                the available pattern count do not introduce padding.
+            pattern_level: Exact number of gradual items per pattern,
+                between one and the channel count. Defaults to two.
+
+        Returns:
+            A pandas DataFrame containing the six descriptors per pattern,
+            either as pattern rows (2D input) or pattern/descriptor columns
+            (3D input).
+
+        Raises:
+            ValueError: Input dimensions, values, pattern level, or cap are
+                invalid, or a concordance set cannot be described.
+
+        Notes:
+            The method fits packed GI bitmaps once per recording and only
+            for attributes used by the selected patterns. It combines them
+            using GP.perform_and and delegates structural measures to
+            GP.compute_descriptors. Limiting patterns stops the combination
+            enumeration early rather than building all possible combinations
+            first.
+
+        Examples:
+            >>> data = np.array([[1., 1.], [2., 2.], [3., 3.]])
+            >>> table = GRAANK.build_gradual_features(data)
+            >>> table.index.tolist()
+            ['0+ 1+', '0+ 1-']
+            >>> features = GRAANK.build_gradual_features(np.stack((data, data)))
+            >>> features.shape
+            (2, 12)
         """
-        pass
+        data = np.asarray(sequences)
+        if data.ndim not in (2, 3) or data.dtype.kind not in "biuf":
+            raise ValueError("sequences must be a real numerical 2D or 3D array")
+        recordings = data[None] if data.ndim == 2 else data
+        num_recordings, num_observations, num_channels = recordings.shape
+        if num_recordings == 0 or num_observations < 2 or num_channels < 1:
+            raise ValueError(
+                "Require a recording with at least two observations and one channel"
+            )
+        if not np.isfinite(data).all():
+            raise ValueError("sequences must contain only finite values")
+        if (
+            isinstance(pattern_level, bool)
+            or not isinstance(pattern_level, Integral)
+            or not 1 <= pattern_level <= num_channels
+        ):
+            raise ValueError(
+                "pattern_level must be an integer from 1 to the channel count"
+            )
+        if max_patterns is not None and (
+            isinstance(max_patterns, bool)
+            or not isinstance(max_patterns, Integral)
+            or max_patterns < 1
+        ):
+            raise ValueError("max_patterns must be a positive integer or None")
+        level = int(pattern_level)
+        limit = None if max_patterns is None else int(max_patterns)
+
+        def pattern_items():
+            """Yield exact-size patterns with deterministic numeric identifiers."""
+            if level == 1:
+                for column in range(num_channels):
+                    for symbol in ("+", "-"):
+                        yield ((column, symbol),)
+            else:
+                for columns in combinations(range(num_channels), level):
+                    for suffix in product(("+", "-"), repeat=level - 1):
+                        yield tuple(zip(columns, ("+", *suffix), strict=True))
+
+        patterns = list(islice(pattern_items(), limit))
+        names = [" ".join(f"{column}{sign}" for column, sign in p) for p in patterns]
+        needed_columns = sorted({column for p in patterns for column, _ in p})
+        descriptors = (
+            "support",
+            "density",
+            "connectivity",
+            "avg_separation",
+            "rank_dispersion",
+            "singularity",
+        )
+
+        def encode_recording(recording: np.ndarray) -> np.ndarray:
+            """Fit used GI bitmaps once and intersect each requested pattern."""
+            values = recording[:, needed_columns]
+            source = pds.DataFrame(
+                values, columns=[f"channel_{i}" for i in needed_columns]
+            )
+            engine = cls(source, min_sup=0.0).mining_engine
+            if len(needed_columns) == 1:
+                # fit_bitmap requires two attributes for mining. GI feature
+                # extraction also supports a single attribute.
+                bitmap = engine._compute_pairwise_bitmap(
+                    np.asarray(values[:, 0], dtype=np.float64)
+                )
+                forward = sum(
+                    np.count_nonzero(row[i + 1 :]) for i, row in enumerate(bitmap)
+                )
+                reverse = sum(np.count_nonzero(row[:i]) for i, row in enumerate(bitmap))
+                support = float(max(forward, reverse) / GP.pair_count(num_observations))
+                bins = {
+                    "0+": PairwiseMatrix(np.packbits(bitmap.ravel()), support, {"0+"}),
+                    "0-": PairwiseMatrix(
+                        np.packbits(bitmap.T.ravel()), support, {"0-"}
+                    ),
+                }
+            else:
+                engine.fit_bitmap()
+                bins = engine.valid_bins or {}
+            lookup = {
+                (original, sign): bins[f"{position}{sign}"]
+                for position, original in enumerate(needed_columns)
+                for sign in ("+", "-")
+            }
+            result = np.empty((len(patterns), len(descriptors)), dtype=float)
+            for index, pattern in enumerate(patterns):
+                bitmap = lookup[pattern[0]]
+                for item in pattern[1:]:
+                    bitmap = GP.perform_and(bitmap, lookup[item], num_observations)
+                    if bitmap.support == 0:
+                        break
+                pairs = GP.gen_gradual_concordance_set(
+                    bitmap.packed_bin_mat, num_observations
+                )
+                gp = GP()
+                if not gp.compute_descriptors(pairs, num_observations):
+                    raise ValueError(f"Invalid concordance set for {names[index]}")
+                result[index] = (
+                    bitmap.support,
+                    gp.density,
+                    gp.graph_connectivity,
+                    gp.average_separation,
+                    gp.rank_dispersion,
+                    gp.singularity_score,
+                )
+            return result
+
+        if data.ndim == 2:
+            return pds.DataFrame(
+                encode_recording(data),
+                index=pds.Index(names, name="pattern"),
+                columns=pds.Index(descriptors, name="descriptor"),
+            )
+        features = np.empty(
+            (num_recordings, len(patterns) * len(descriptors)), dtype=float
+        )
+        for index, recording in enumerate(recordings):
+            values = encode_recording(recording)
+            features[index] = np.nan_to_num(values, nan=0.0, copy=False).ravel()
+        return pds.DataFrame(
+            features,
+            index=pds.RangeIndex(num_recordings, name="recording"),
+            columns=pds.MultiIndex.from_product(
+                (names, descriptors), names=("pattern", "descriptor")
+            ),
+        )

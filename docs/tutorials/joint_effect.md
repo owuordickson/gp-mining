@@ -1,75 +1,78 @@
 ---
-title: Studying Joint Effects with GP Descriptors
+title: Joint-Effect Features with GRAANK
 ---
 
-# Analyzing Joint Effects with GPs
+# Joint-effect features with GRAANK
 
-A gradual pattern (GP) retains observation pairs that satisfy every constituent gradual item (GI). The gradual concordance set contains the supporting pairs $(i,j)$ with $i<j$ in the given observation order. Compare the GP with each constituent to describe how composition changes the retained pairs.
+A gradual item (GI) describes one attribute increasing or decreasing. A gradual
+pattern (GP) combines items: `0+ 1+` means the first two columns increase
+together; `0+ 1-` means the first increases while the second decreases.
 
-| Descriptor | Calculation |
-|---|---|
-| Density | Number of concordance pairs divided by the number of possible unordered observation pairs. |
-| Mean index separation | Mean of the gaps $j-i$. |
-| Rank dispersion | Population variance of the gaps $j-i$. |
-| Connectivity | Number of connected components of the undirected graph on all observations, including isolated ones. |
-| Singularity | Largest vertex degree divided by the number of concordance pairs. |
+## 1. Compare individual and joint changes
 
-The full packed bitmap retains both orientations for pattern support. Descriptor calculations use the upper-triangular concordance set.
-
-## Compare individual items and their joint pattern
-
-The rows represent six observations in time order.
+With SO4GP installed, run these examples in order.
 
 ```python
 import numpy as np
 import pandas as pd
-from so4gp import GP
 from so4gp.algorithms import GRAANK
 
-data = pd.DataFrame({
-    "A": [0, 2, 1, 4, 3, 5],
-    "B": [4, 5, 2, 3, 0, 1],
-})
+# Six ordered observations; columns 0 and 1 are A and B.
+data = np.array([
+    [0, 4], [2, 5], [1, 2],
+    [4, 3], [3, 0], [5, 1],
+], dtype=float)
 
-miner = GRAANK(data, min_sup=0.1, eq=False, device="cpu")
-engine = miner.mining_engine
-engine.fit_bitmap()
+items = GRAANK.build_gradual_features(data, pattern_level=1)
+joint = GRAANK.build_gradual_features(data, pattern_level=2)
 
-matrices = {
-    label: engine.valid_bins[key].packed_bin_mat
-    for label, key in [("A+", "0+"), ("B+", "1+")]
-}
-matrices["Joint GP"] = np.bitwise_and.reduce(list(matrices.values()))
-
-rows = []
-for label, matrix in matrices.items():
-    pairs = GP.gen_gradual_concordance_set(matrix, engine.attr_size)
-    gp = GP()
-    gp.compute_descriptors(pairs, obj_count=engine.attr_size)
-    rows.append({
-        "Pattern": label,
-        "Pairs": len(pairs),
-        "Density": gp.density,
-        "Connectivity": gp.graph_connectivity,
-        "Singularity": gp.singularity_score,
-        "Index-gap variance": gp.rank_dispersion,
-    })
-
-print(pd.DataFrame(rows).round(3).to_string(index=False))
+comparison = pd.concat([items.loc[["0+", "1+"]], joint.loc[["0+ 1+"]]])
+print(comparison.round(3))
 ```
 
-| Pattern | Pairs | Density | Connectivity | Singularity | Index-gap variance |
-|---|---:|---:|---:|---:|---:|
-| A+ | 13 | 0.867 | 1 | 0.385 | 1.479 |
-| B+ | 3 | 0.200 | 3 | 0.333 | 0.000 |
-| Joint GP | 3 | 0.200 | 3 | 0.333 | 0.000 |
+Each row describes a pattern using numerical column identifiers. Here, `1+` and
+`0+ 1+` retain the same three forward observation pairs, so their structural
+descriptors agree. Support can differ from density.
 
-The joint concordance set contains $(0,1)$, $(2,3)$, and $(4,5)$. Each pair connects two neighboring observations, yielding three components and zero gap variance. The joint set equals the concordance set of B+, so their descriptors agree.
+| Column | Meaning |
+| --- | --- |
+| `support` | SO4GP's existing pair-support score. |
+| `density` | Fraction of possible forward pairs satisfying the pattern. |
+| `connectivity` | Number of linked groups, including isolated observations. |
+| `avg_separation` | Mean gap between paired observation indices. |
+| `rank_dispersion` | Variance of those gaps. |
+| `singularity` | Largest fraction of pairs that share one observation. |
 
-An empty concordance set has zero density and one component per observation. Its mean separation, dispersion, and singularity are undefined and appear as `NaN`.
+## 2. Encode several recordings
 
-## Use your own data
+```python
+recordings = np.stack([data, data[::-1]])
+features = GRAANK.build_gradual_features(recordings, max_patterns=2)
 
-Sort observations by time and select the numerical attributes. The keys `0+` and `1-` refer to the first attribute increasing and the second decreasing. Index gaps count observation steps and represent equal elapsed times when sampling is regular.
+print(features.shape)  # (2, 12)
+print(features["0+ 1+"].round(3))
+```
 
-For plots and a rainfall and EVI case study, see [the composition notebook](https://github.com/owuordickson/gp-mining/blob/main/examples/joint_effect.ipynb).
+A 3D input has shape `(recordings, observations, channels)`. The result has
+**one row per recording** and `(pattern, descriptor)` columns: two patterns
+give 12 features. Comparisons stay within each recording. Keep the dataset's
+classification labels separately, aligned with row order.
+
+## Options and your own data
+
+- `pattern_level=1` describes individual GIs; `2` describes pairs; `3`
+  describes triples when at least three channels are available.
+- `max_patterns=None` includes all combinations. A positive cap takes the
+  first patterns in deterministic order; it does not select by support.
+  Zero-support patterns are included.
+- GIs keep both signs. Multi-item patterns keep the lowest-numbered
+  participating column positive, representing each globally reversed pair once.
+
+Sort observations by time and select finite numerical columns, excluding dates
+and labels. Index gaps measure observation steps, not necessarily elapsed time.
+For empty sets, `avg_separation`, `rank_dispersion`, and `singularity` are
+`NaN` in 2D tables and zero in 3D features. Connectivity still counts isolated
+observations.
+
+See the [worked notebook](https://github.com/owuordickson/gp-mining/blob/main/examples/joint_effect.ipynb)
+for classification, plots, and the rainfall/EVI example.
