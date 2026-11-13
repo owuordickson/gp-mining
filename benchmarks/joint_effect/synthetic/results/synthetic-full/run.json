@@ -1,0 +1,1833 @@
+{
+  "experiment": "synthetic",
+  "arguments": {
+    "experiment": "synthetic",
+    "regimes": [
+      "shared",
+      "timing"
+    ],
+    "noise": [
+      0.0,
+      0.5,
+      1.0
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "train_size": 120,
+    "test_size": 80,
+    "output": "C:\\owuor_lab\\GP-Mining\\benchmarks\\joint_effect\\synthetic\\results\\synthetic-avg-separation-20261111T195705Z",
+    "max_patterns": 24,
+    "min_support": 0.2,
+    "folds": 3,
+    "c_grid": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "bootstrap": 1000
+  },
+  "config": {
+    "max_patterns": 24,
+    "min_support": 0.2,
+    "folds": 3,
+    "c_grid": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "bootstrap": 1000,
+    "pattern_miner": "SO4GP GRAANK (Apriori)"
+  },
+  "versions": {
+    "python": "3.14.0",
+    "so4gp": "1.1.4",
+    "numpy": "2.5.3",
+    "scikit-learn": "1.9.1",
+    "torch": "2.13.0"
+  },
+  "execution": {
+    "mode": "parallel regime/noise batches",
+    "workers": 3,
+    "python_hash_seed": 0,
+    "blas_threads_per_worker": 1,
+    "source_commit": "36f072e6ac5fd4d9915413a9c19457a97bf74f93",
+    "source_files_sha256": {
+      "benchmarks/joint_effect/benchmark.py": "6edd3b1ed7ee4546ca03f42b2ac9756b548432f10b8ee95a3797a3c8dd3753fd",
+      "benchmarks/joint_effect/synthetic/tools/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "benchmarks/joint_effect/synthetic/tools/data_tools.py": "d7c2d4e3b18002994f0704d2d922e36a0a4782964ba9bd34dc18eb1a453234c0",
+      "benchmarks/joint_effect/synthetic/tools/generator.py": "7dadd2cc098477d32ebac099e171b90068f86cd8c32cf1fcb825682e9582962c",
+      "benchmarks/joint_effect/synthetic/tools/test_synthetic_benchmark.py": "13ffb042777fb18f5c0df66c5433836be91b1be1348c3a99bdc1a03bcca65544",
+      "benchmarks/joint_effect/uea/tools/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "benchmarks/joint_effect/uea/tools/data_tools.py": "792950dbf3f45685eae7e5e6a3114337c88f71cf9e93183bc130d6828224cc87",
+      "benchmarks/joint_effect/uea/tools/download.py": "35478a12cfa4783941a83bf1ef4922b5892e39a6e9a941a55f9f3b55a143d690",
+      "benchmarks/joint_effect/uea/tools/evaluation.py": "b99dc3581359114130628be0fec91aa9d003d4c22c58d32149a7f20a0978f501",
+      "benchmarks/joint_effect/uea/tools/features.py": "c05ddb765c79efa162f38640f8ac6596d456cbaf5a4eb72a2b75630a2e019885",
+      "benchmarks/joint_effect/uea/tools/test_uea_archive.py": "aef1fbaca6dd1b06b156ad332c546371256fd0625f3781bf65dc809908bdeb45",
+      "src/so4gp/__configs__.py": "5ed2afed9b3498c38bcc2f63703440ddbbffa49ae9d5c645af1d5a9638e1101c",
+      "src/so4gp/__init__.py": "e8b2c9e7dd4a2e3d49fd3220429e4eba22b480aabbf552cc9b415cb4ddbcab24",
+      "src/so4gp/algorithms/__init__.py": "a2c439aeffdacc0417a25d941d084bcaec7ad9c8067a1091acf19f08588051e3",
+      "src/so4gp/algorithms/base/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/so4gp/algorithms/base/graank_aco.py": "99032053631475e7b72d6345c9e6e9dceb3e711421e06f840fe1c9fd3448a2cd",
+      "src/so4gp/algorithms/base/graank_alg.py": "4b1681afcab812ee78dfc1b6bd15b315d92c748a732c2169120aa90f105592e0",
+      "src/so4gp/algorithms/base/graank_base.py": "283ffb584359d9288c7b612cb8dec099e44c0f787916a1dc67e7b0fa8f34eed6",
+      "src/so4gp/algorithms/base/graank_ga.py": "e733fb56ab2284374d361029848fd7513ac811e78101691d389901e8e7977ab6",
+      "src/so4gp/algorithms/base/graank_hc.py": "3b597d14edf54e976f199e993aaa665773417668d43f7b2637ffdc1bcc7c77f1",
+      "src/so4gp/algorithms/base/graank_pso.py": "700a151bf1ee19a5042eeafeae4b9dece3531474587e543009aa4c5d22084099",
+      "src/so4gp/algorithms/base/graank_rand.py": "dca980aac2edaf2aeb6d03926a5e48d5b6ffe53bd780a5f90843e25d35610c10",
+      "src/so4gp/algorithms/base/tgrad.py": "687d8519129bb6e1de7a6c1de76e320bccd4ef17374cd0550003dfc765992bac",
+      "src/so4gp/algorithms/base/tgrad_ami.py": "4bf5e1ad5f0f5a7967f4d785865384ddf9fbb64982c37c94c4d1111124061e2e",
+      "src/so4gp/algorithms/cluster_gp.py": "cdef90977ebac3c9470af926c425d3653b3a35538ac83293463d3aefea445b0c",
+      "src/so4gp/algorithms/graank.py": "e72777dba896762091878e787c5e8be1e34411093a24ae4cda38eae032c7540a",
+      "src/so4gp/algorithms/grad_pfs.py": "6ec2cc1ea32322532e367c7863a00bf50b227edc9f50c8786746c0af736a2dbc",
+      "src/so4gp/algorithms/tgraank.py": "ee0727cdfb9c6e6376bddaeed619bca23da4e4b91fdba60e4fdd7afff6e98c25",
+      "src/so4gp/data_gp.py": "bbcdeb4e4873e52c9785d6cfe5d924ffb19039b82014765c4cd6ac7be481c909",
+      "src/so4gp/gradual_patterns.py": "7fd6a1d7c9472a01bac7c81bbcb2dbebed30b6a322b79edf4b65ddf7da398460",
+      "src/so4gp/tools/__init__.py": "4339bb75b2b46b908461130f2ff7f89a31cc466f90bd13adb9dfdb623cc2b798",
+      "src/so4gp/tools/mine_patterns.py": "c4ab8b1edd85ae205780b1c721544a88deca625a5e54db99acbefca021f6cda5",
+      "src/so4gp/utils.py": "b37ca3f0fbe6d991abcd4145d4b826f8f129c2297e97ebfe8aec02be0521e23e"
+    },
+    "batches": [
+      {
+        "regime": "shared",
+        "noise_level": 0.0
+      },
+      {
+        "regime": "shared",
+        "noise_level": 0.5
+      },
+      {
+        "regime": "shared",
+        "noise_level": 1.0
+      },
+      {
+        "regime": "timing",
+        "noise_level": 0.0
+      },
+      {
+        "regime": "timing",
+        "noise_level": 0.5
+      },
+      {
+        "regime": "timing",
+        "noise_level": 1.0
+      }
+    ]
+  },
+  "runs": [
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.0,
+      "random_seed": 0,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03208620016812347,
+            "gradual_patterns": 6.933695800165879
+          },
+          "evaluation_duration": {
+            "standard": 0.014928199903806672,
+            "gradual_patterns": 3.33378389995778
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03266060005989857,
+            "gradual_patterns": 6.8825765998335555
+          },
+          "evaluation_duration": {
+            "standard": 0.016916200023842975,
+            "gradual_patterns": 3.4111178999592084
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.032098399999085814,
+            "gradual_patterns": 6.7563584999297746
+          },
+          "evaluation_duration": {
+            "standard": 0.016840499883983284,
+            "gradual_patterns": 3.5244113000517245
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05005089991027489,
+          "gradual_patterns": 10.300994399935007
+        },
+        "evaluation_duration": {
+          "standard": 0.032514099759282544,
+          "gradual_patterns": 6.673132399911992
+        }
+      },
+      "total_time": 49.903707399993436
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.0,
+      "random_seed": 1,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.037867599981836975,
+            "gradual_patterns": 7.710729000216816
+          },
+          "evaluation_duration": {
+            "standard": 0.06404109997674823,
+            "gradual_patterns": 8.217672300088452
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04434129997389391,
+            "gradual_patterns": 9.752268799988087
+          },
+          "evaluation_duration": {
+            "standard": 0.02015709999250248,
+            "gradual_patterns": 4.356292999931611
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04198120007640682,
+            "gradual_patterns": 8.59584769999492
+          },
+          "evaluation_duration": {
+            "standard": 0.0243307999917306,
+            "gradual_patterns": 4.310026600054698
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05847429987625219,
+          "gradual_patterns": 11.711611600156175
+        },
+        "evaluation_duration": {
+          "standard": 0.03856800010544248,
+          "gradual_patterns": 7.768487700173864
+        }
+      },
+      "total_time": 65.23514800000703
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.0,
+      "random_seed": 2,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.04330599997774698,
+            "gradual_patterns": 8.034895299962955
+          },
+          "evaluation_duration": {
+            "standard": 0.019962099875556305,
+            "gradual_patterns": 4.324937500146916
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.050184300023829564,
+            "gradual_patterns": 8.370574999978999
+          },
+          "evaluation_duration": {
+            "standard": 0.028659100004006177,
+            "gradual_patterns": 4.192821999895386
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04053830003249459,
+            "gradual_patterns": 7.998131999949692
+          },
+          "evaluation_duration": {
+            "standard": 0.03132900019409135,
+            "gradual_patterns": 4.072474099986721
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.0613525997614488,
+          "gradual_patterns": 12.086842900083866
+        },
+        "evaluation_duration": {
+          "standard": 0.03891100001055747,
+          "gradual_patterns": 7.833897300122771
+        }
+      },
+      "total_time": 59.43136419999064
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.0,
+      "random_seed": 3,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.04772149978089146,
+            "gradual_patterns": 8.14795740012778
+          },
+          "evaluation_duration": {
+            "standard": 0.018652099941391498,
+            "gradual_patterns": 3.876494499971159
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04430989999673329,
+            "gradual_patterns": 8.541496400051983
+          },
+          "evaluation_duration": {
+            "standard": 0.02766279995557852,
+            "gradual_patterns": 5.395703599933768
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03701490015373565,
+            "gradual_patterns": 8.131189599953359
+          },
+          "evaluation_duration": {
+            "standard": 0.019478300120681524,
+            "gradual_patterns": 4.2213679998822045
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05223100015427917,
+          "gradual_patterns": 10.542188700172119
+        },
+        "evaluation_duration": {
+          "standard": 0.03384710007230751,
+          "gradual_patterns": 6.966125499922782
+        }
+      },
+      "total_time": 58.11544029999641
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.0,
+      "random_seed": 4,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03394599998136982,
+            "gradual_patterns": 6.977265099994838
+          },
+          "evaluation_duration": {
+            "standard": 0.01700569991953671,
+            "gradual_patterns": 3.4557384999934584
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.034252500074217096,
+            "gradual_patterns": 6.9987684998777695
+          },
+          "evaluation_duration": {
+            "standard": 0.017505999858258292,
+            "gradual_patterns": 3.5424113999470137
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.033431800053222105,
+            "gradual_patterns": 7.055167900107335
+          },
+          "evaluation_duration": {
+            "standard": 0.015420999989146367,
+            "gradual_patterns": 3.5472738999524154
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.051234199840109795,
+          "gradual_patterns": 10.899351000058232
+        },
+        "evaluation_duration": {
+          "standard": 0.035529700020560995,
+          "gradual_patterns": 7.836347900214605
+        }
+      },
+      "total_time": 52.44374240000616
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.5,
+      "random_seed": 0,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03375610019429587,
+            "gradual_patterns": 6.879000499873655
+          },
+          "evaluation_duration": {
+            "standard": 0.016068399912910536,
+            "gradual_patterns": 3.381283299968345
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.0332473001035396,
+            "gradual_patterns": 6.884394599997904
+          },
+          "evaluation_duration": {
+            "standard": 0.015923600032692775,
+            "gradual_patterns": 3.3901683000149205
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03266899986192584,
+            "gradual_patterns": 6.80458429994178
+          },
+          "evaluation_duration": {
+            "standard": 0.01807140005985275,
+            "gradual_patterns": 3.6037414000893477
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.04948970003169961,
+          "gradual_patterns": 10.373848700051894
+        },
+        "evaluation_duration": {
+          "standard": 0.03343660008977167,
+          "gradual_patterns": 6.790624799992656
+        }
+      },
+      "total_time": 50.27375750002102
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.5,
+      "random_seed": 1,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.04405689999111928,
+            "gradual_patterns": 8.27871889990638
+          },
+          "evaluation_duration": {
+            "standard": 0.03698279999662191,
+            "gradual_patterns": 8.607122099987464
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04867599994759075,
+            "gradual_patterns": 9.301155200082576
+          },
+          "evaluation_duration": {
+            "standard": 0.021143900085007772,
+            "gradual_patterns": 4.402277200104436
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04002630023751408,
+            "gradual_patterns": 8.549965299927862
+          },
+          "evaluation_duration": {
+            "standard": 0.020891699969070032,
+            "gradual_patterns": 4.189373799948953
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.06003520014928654,
+          "gradual_patterns": 11.906733900075778
+        },
+        "evaluation_duration": {
+          "standard": 0.03896409994922578,
+          "gradual_patterns": 7.93093829989084
+        }
+      },
+      "total_time": 65.88118159997975
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.5,
+      "random_seed": 2,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.0457051997364033,
+            "gradual_patterns": 8.29892889977782
+          },
+          "evaluation_duration": {
+            "standard": 0.02286979998461902,
+            "gradual_patterns": 4.575936699897284
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.043237200065050274,
+            "gradual_patterns": 8.501966300274944
+          },
+          "evaluation_duration": {
+            "standard": 0.01944279990857467,
+            "gradual_patterns": 4.090524400031427
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03704169995035045,
+            "gradual_patterns": 8.139719900151249
+          },
+          "evaluation_duration": {
+            "standard": 0.019680599943967536,
+            "gradual_patterns": 4.2598485999624245
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05662890002713539,
+          "gradual_patterns": 12.101932000252418
+        },
+        "evaluation_duration": {
+          "standard": 0.0384384999924805,
+          "gradual_patterns": 8.070382400037488
+        }
+      },
+      "total_time": 60.649350299994694
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.5,
+      "random_seed": 3,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.04037009991589002,
+            "gradual_patterns": 8.06949380011065
+          },
+          "evaluation_duration": {
+            "standard": 0.02078100008657202,
+            "gradual_patterns": 4.1839850000687875
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04992450005374849,
+            "gradual_patterns": 10.17406430002302
+          },
+          "evaluation_duration": {
+            "standard": 0.020710099983261898,
+            "gradual_patterns": 4.39255150014651
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.055837599909864366,
+            "gradual_patterns": 8.41166269997484
+          },
+          "evaluation_duration": {
+            "standard": 0.01710309987538494,
+            "gradual_patterns": 3.7205967999179848
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05170019989600405,
+          "gradual_patterns": 10.608856699924218
+        },
+        "evaluation_duration": {
+          "standard": 0.03229570004623383,
+          "gradual_patterns": 6.98575659992639
+        }
+      },
+      "total_time": 58.957278599991696
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 0.5,
+      "random_seed": 4,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03360819997033104,
+            "gradual_patterns": 7.166398200060939
+          },
+          "evaluation_duration": {
+            "standard": 0.01709419986582361,
+            "gradual_patterns": 3.4530178000277374
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03252669994253665,
+            "gradual_patterns": 7.038685300009092
+          },
+          "evaluation_duration": {
+            "standard": 0.017456399946240708,
+            "gradual_patterns": 3.501978800020879
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03498639992903918,
+            "gradual_patterns": 7.0583608998858836
+          },
+          "evaluation_duration": {
+            "standard": 0.016112800018163398,
+            "gradual_patterns": 3.625799699948402
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05159520005690865,
+          "gradual_patterns": 11.313814100052696
+        },
+        "evaluation_duration": {
+          "standard": 0.03463879995979369,
+          "gradual_patterns": 7.860311900061788
+        }
+      },
+      "total_time": 53.447715999995125
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 1.0,
+      "random_seed": 0,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03663610006333329,
+            "gradual_patterns": 6.943160399823682
+          },
+          "evaluation_duration": {
+            "standard": 0.01534629991510883,
+            "gradual_patterns": 3.45751259996905
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.033686199923977256,
+            "gradual_patterns": 6.907657599949744
+          },
+          "evaluation_duration": {
+            "standard": 0.0162634999724105,
+            "gradual_patterns": 3.3664207000401802
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03359240005374886,
+            "gradual_patterns": 6.7683826998691075
+          },
+          "evaluation_duration": {
+            "standard": 0.018403900001430884,
+            "gradual_patterns": 3.666374000022188
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05094689998077229,
+          "gradual_patterns": 10.395472600095673
+        },
+        "evaluation_duration": {
+          "standard": 0.03230970009462908,
+          "gradual_patterns": 6.797202999849105
+        }
+      },
+      "total_time": 50.55400600002031
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 1.0,
+      "random_seed": 1,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.07408349995967001,
+            "gradual_patterns": 8.825116699939827
+          },
+          "evaluation_duration": {
+            "standard": 0.06216169992694631,
+            "gradual_patterns": 8.928253600024618
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.043002700025681406,
+            "gradual_patterns": 9.227028300025268
+          },
+          "evaluation_duration": {
+            "standard": 0.02164660007110797,
+            "gradual_patterns": 4.450951400009217
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04325310012791306,
+            "gradual_patterns": 8.80971660008072
+          },
+          "evaluation_duration": {
+            "standard": 0.019608300091931596,
+            "gradual_patterns": 4.0578616001293994
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.061438400036422536,
+          "gradual_patterns": 11.896087399974931
+        },
+        "evaluation_duration": {
+          "standard": 0.037870299973292276,
+          "gradual_patterns": 8.120767699932912
+        }
+      },
+      "total_time": 67.1269802999741
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 1.0,
+      "random_seed": 2,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03885329986223951,
+            "gradual_patterns": 8.148666700202739
+          },
+          "evaluation_duration": {
+            "standard": 0.02393839994329028,
+            "gradual_patterns": 4.694716400030302
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04100000023026951,
+            "gradual_patterns": 8.459349400101928
+          },
+          "evaluation_duration": {
+            "standard": 0.020648300007451326,
+            "gradual_patterns": 4.09679620017414
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03909609993570484,
+            "gradual_patterns": 8.357720699976198
+          },
+          "evaluation_duration": {
+            "standard": 0.0216951000620611,
+            "gradual_patterns": 4.340737800026545
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05710189993260428,
+          "gradual_patterns": 11.971074899920495
+        },
+        "evaluation_duration": {
+          "standard": 0.03978679995634593,
+          "gradual_patterns": 8.346469600102864
+        }
+      },
+      "total_time": 61.188673800003016
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 1.0,
+      "random_seed": 3,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03719429994816892,
+            "gradual_patterns": 7.987599599931855
+          },
+          "evaluation_duration": {
+            "standard": 0.022580500022741035,
+            "gradual_patterns": 4.568743999989238
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.049689200037391856,
+            "gradual_patterns": 9.638633199996548
+          },
+          "evaluation_duration": {
+            "standard": 0.023882499983301386,
+            "gradual_patterns": 4.499407800030895
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.04005430015968159,
+            "gradual_patterns": 8.119530600059079
+          },
+          "evaluation_duration": {
+            "standard": 0.01717950007878244,
+            "gradual_patterns": 3.6004971000365913
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05199430001084693,
+          "gradual_patterns": 10.725633700058097
+        },
+        "evaluation_duration": {
+          "standard": 0.03306729966425337,
+          "gradual_patterns": 7.049709199927747
+        }
+      },
+      "total_time": 58.42679559998214
+    },
+    {
+      "dataset_name": "shared",
+      "noise_level": 1.0,
+      "random_seed": 4,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.033830099855549634,
+            "gradual_patterns": 7.3401885999774095
+          },
+          "evaluation_duration": {
+            "standard": 0.016530700027942657,
+            "gradual_patterns": 3.4308353000087664
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03515499999048188,
+            "gradual_patterns": 7.1226953002333175
+          },
+          "evaluation_duration": {
+            "standard": 0.017193599953316152,
+            "gradual_patterns": 3.447426699945936
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.030560599931050092,
+            "gradual_patterns": 6.801850199874025
+          },
+          "evaluation_duration": {
+            "standard": 0.01593900003354065,
+            "gradual_patterns": 3.658697200095048
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.053252500016242266,
+          "gradual_patterns": 11.753426499810303
+        },
+        "evaluation_duration": {
+          "standard": 0.03734970008372329,
+          "gradual_patterns": 8.003575900074793
+        }
+      },
+      "total_time": 53.651106300007086
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.0,
+      "random_seed": 0,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03556249989196658,
+            "gradual_patterns": 7.025393599877134
+          },
+          "evaluation_duration": {
+            "standard": 0.018584199919132516,
+            "gradual_patterns": 3.9652340999164153
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03901359991868958,
+            "gradual_patterns": 7.52073630009545
+          },
+          "evaluation_duration": {
+            "standard": 0.018804899969836697,
+            "gradual_patterns": 3.5939713999978267
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03205419998266734,
+            "gradual_patterns": 6.796843100019032
+          },
+          "evaluation_duration": {
+            "standard": 0.01612549991114065,
+            "gradual_patterns": 3.548830600018846
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05975909996777773,
+          "gradual_patterns": 11.058712300320622
+        },
+        "evaluation_duration": {
+          "standard": 0.036210999998729676,
+          "gradual_patterns": 7.570638399920426
+        }
+      },
+      "total_time": 53.615806999994675
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.0,
+      "random_seed": 1,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.035071799909928814,
+            "gradual_patterns": 7.179774199961685
+          },
+          "evaluation_duration": {
+            "standard": 0.01773479997063987,
+            "gradual_patterns": 3.7866403999505565
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03473899973323569,
+            "gradual_patterns": 7.344741499924567
+          },
+          "evaluation_duration": {
+            "standard": 0.017710199928842485,
+            "gradual_patterns": 3.519684699946083
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03557190016726963,
+            "gradual_patterns": 7.319185999862384
+          },
+          "evaluation_duration": {
+            "standard": 0.017179600021336228,
+            "gradual_patterns": 3.699265600036597
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05116839992115274,
+          "gradual_patterns": 10.788461300020572
+        },
+        "evaluation_duration": {
+          "standard": 0.035579399787820876,
+          "gradual_patterns": 7.407112299959408
+        }
+      },
+      "total_time": 53.206355600006646
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.0,
+      "random_seed": 2,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.034338400029810145,
+            "gradual_patterns": 6.8977966000384185
+          },
+          "evaluation_duration": {
+            "standard": 0.01700500020524487,
+            "gradual_patterns": 3.6915121000492945
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.035977100109448656,
+            "gradual_patterns": 7.390788600110682
+          },
+          "evaluation_duration": {
+            "standard": 0.027742199948988855,
+            "gradual_patterns": 3.6450002998753916
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03459550021216273,
+            "gradual_patterns": 7.388875800097594
+          },
+          "evaluation_duration": {
+            "standard": 0.017122099961852655,
+            "gradual_patterns": 3.6517710999469273
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.08633819996612146,
+          "gradual_patterns": 11.188491900073132
+        },
+        "evaluation_duration": {
+          "standard": 0.03526060003787279,
+          "gradual_patterns": 7.20900420009275
+        }
+      },
+      "total_time": 53.35027280001668
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.0,
+      "random_seed": 3,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03342800005339086,
+            "gradual_patterns": 7.41009459993802
+          },
+          "evaluation_duration": {
+            "standard": 0.0176372000714764,
+            "gradual_patterns": 3.78928819988505
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.036782900016987696,
+            "gradual_patterns": 7.161614200245822
+          },
+          "evaluation_duration": {
+            "standard": 0.017641500133322552,
+            "gradual_patterns": 3.69304359992384
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03561750007793307,
+            "gradual_patterns": 7.4181592999375425
+          },
+          "evaluation_duration": {
+            "standard": 0.017554599966388196,
+            "gradual_patterns": 3.78362040000502
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.05272599996533245,
+          "gradual_patterns": 10.424388499755878
+        },
+        "evaluation_duration": {
+          "standard": 0.04301379990647547,
+          "gradual_patterns": 8.151879399869358
+        }
+      },
+      "total_time": 54.07740589999594
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.0,
+      "random_seed": 4,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.04234610011917539,
+            "gradual_patterns": 7.6524490001029335
+          },
+          "evaluation_duration": {
+            "standard": 0.01813909993506968,
+            "gradual_patterns": 3.791472199955024
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03661729992018081,
+            "gradual_patterns": 7.417405400017742
+          },
+          "evaluation_duration": {
+            "standard": 0.01785189998918213,
+            "gradual_patterns": 3.7090555999893695
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03688529969076626,
+            "gradual_patterns": 7.350984499877086
+          },
+          "evaluation_duration": {
+            "standard": 0.016885899880435318,
+            "gradual_patterns": 3.7253530000452884
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.050561799929710105,
+          "gradual_patterns": 11.021322999789845
+        },
+        "evaluation_duration": {
+          "standard": 0.035218199947848916,
+          "gradual_patterns": 7.110221899871249
+        }
+      },
+      "total_time": 54.342155299993465
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.5,
+      "random_seed": 0,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03366059996187687,
+            "gradual_patterns": 7.440288699930534
+          },
+          "evaluation_duration": {
+            "standard": 0.018587699974887073,
+            "gradual_patterns": 3.775307399831945
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03513240008032881,
+            "gradual_patterns": 7.478700600069715
+          },
+          "evaluation_duration": {
+            "standard": 0.01622809996479191,
+            "gradual_patterns": 3.5859967000433244
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.06357090000528842,
+            "gradual_patterns": 7.0480719001207035
+          },
+          "evaluation_duration": {
+            "standard": 0.0179880999494344,
+            "gradual_patterns": 3.6294610999466386
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.09072550004930235,
+          "gradual_patterns": 11.38448259991128
+        },
+        "evaluation_duration": {
+          "standard": 0.03324110008543357,
+          "gradual_patterns": 7.142442199925426
+        }
+      },
+      "total_time": 54.05075309998938
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.5,
+      "random_seed": 1,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03401900015887804,
+            "gradual_patterns": 7.523037599778036
+          },
+          "evaluation_duration": {
+            "standard": 0.018772400042507797,
+            "gradual_patterns": 3.897083100047894
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03915749993757345,
+            "gradual_patterns": 7.039676700020209
+          },
+          "evaluation_duration": {
+            "standard": 0.017645599989918992,
+            "gradual_patterns": 3.660576499940362
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03475329969660379,
+            "gradual_patterns": 7.181989500182681
+          },
+          "evaluation_duration": {
+            "standard": 0.01654080001753755,
+            "gradual_patterns": 3.4251644999312703
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.0528469999844674,
+          "gradual_patterns": 11.09678559997701
+        },
+        "evaluation_duration": {
+          "standard": 0.0334372999786865,
+          "gradual_patterns": 7.355839399970137
+        }
+      },
+      "total_time": 53.259599999990314
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.5,
+      "random_seed": 2,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.04639490001136437,
+            "gradual_patterns": 7.549609800247708
+          },
+          "evaluation_duration": {
+            "standard": 0.01847529993392527,
+            "gradual_patterns": 3.6870266999467276
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.07361219997983426,
+            "gradual_patterns": 7.660862299904693
+          },
+          "evaluation_duration": {
+            "standard": 0.017799000022932887,
+            "gradual_patterns": 3.772774700104492
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03595240009599365,
+            "gradual_patterns": 7.534391599998344
+          },
+          "evaluation_duration": {
+            "standard": 0.018121799977961928,
+            "gradual_patterns": 3.9098479000094812
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.054175600060261786,
+          "gradual_patterns": 11.507071499945596
+        },
+        "evaluation_duration": {
+          "standard": 0.03543390013510361,
+          "gradual_patterns": 7.211066500167362
+        }
+      },
+      "total_time": 55.07454119998147
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.5,
+      "random_seed": 3,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03816090017789975,
+            "gradual_patterns": 7.5407869999762625
+          },
+          "evaluation_duration": {
+            "standard": 0.016471500042825937,
+            "gradual_patterns": 3.437864199921023
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03515289997449145,
+            "gradual_patterns": 7.244187399948714
+          },
+          "evaluation_duration": {
+            "standard": 0.017003500048303977,
+            "gradual_patterns": 3.769319299957715
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03554319980321452,
+            "gradual_patterns": 7.657152699975995
+          },
+          "evaluation_duration": {
+            "standard": 0.01817319987458177,
+            "gradual_patterns": 3.3806635000219103
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.051988799998071045,
+          "gradual_patterns": 11.479810899909353
+        },
+        "evaluation_duration": {
+          "standard": 0.04295569995883852,
+          "gradual_patterns": 8.076796999986982
+        }
+      },
+      "total_time": 54.783568399987416
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 0.5,
+      "random_seed": 4,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03923109985771589,
+            "gradual_patterns": 8.034180700225988
+          },
+          "evaluation_duration": {
+            "standard": 0.018486399872926995,
+            "gradual_patterns": 3.668832700001076
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03820439986884594,
+            "gradual_patterns": 7.466291400312912
+          },
+          "evaluation_duration": {
+            "standard": 0.018730100156972185,
+            "gradual_patterns": 3.926274000084959
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03629070005263202,
+            "gradual_patterns": 7.47042120018159
+          },
+          "evaluation_duration": {
+            "standard": 0.018049700069241226,
+            "gradual_patterns": 3.7173133000615053
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.050678399798925966,
+          "gradual_patterns": 11.09745509995264
+        },
+        "evaluation_duration": {
+          "standard": 0.036643900122726336,
+          "gradual_patterns": 7.36536290004733
+        }
+      },
+      "total_time": 55.077439099986805
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 1.0,
+      "random_seed": 0,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.039483899978222325,
+            "gradual_patterns": 7.781933099933667
+          },
+          "evaluation_duration": {
+            "standard": 0.018855800008168444,
+            "gradual_patterns": 3.8990778000152204
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03401000006124377,
+            "gradual_patterns": 7.63837329990929
+          },
+          "evaluation_duration": {
+            "standard": 0.017531099903862923,
+            "gradual_patterns": 3.4370155000360683
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03312020006706007,
+            "gradual_patterns": 7.361369299789658
+          },
+          "evaluation_duration": {
+            "standard": 0.01723099991795607,
+            "gradual_patterns": 3.8374603000702336
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.053586200083373114,
+          "gradual_patterns": 11.656983900116757
+        },
+        "evaluation_duration": {
+          "standard": 0.03353590003098361,
+          "gradual_patterns": 7.468742299941368
+        }
+      },
+      "total_time": 55.4769066000008
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 1.0,
+      "random_seed": 1,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03529729996807873,
+            "gradual_patterns": 7.813749000168173
+          },
+          "evaluation_duration": {
+            "standard": 0.017341599974315614,
+            "gradual_patterns": 3.8019946001295466
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.032548900198889896,
+            "gradual_patterns": 7.306684599840082
+          },
+          "evaluation_duration": {
+            "standard": 0.017677399970125407,
+            "gradual_patterns": 3.726071299985051
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03281859995331615,
+            "gradual_patterns": 7.317128700058674
+          },
+          "evaluation_duration": {
+            "standard": 0.0175972000870388,
+            "gradual_patterns": 3.6774061000323854
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.052468499867245555,
+          "gradual_patterns": 11.435283299797447
+        },
+        "evaluation_duration": {
+          "standard": 0.03434640011982992,
+          "gradual_patterns": 7.311488300154451
+        }
+      },
+      "total_time": 54.56087399998796
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 1.0,
+      "random_seed": 2,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03496729998732917,
+            "gradual_patterns": 7.589391399931628
+          },
+          "evaluation_duration": {
+            "standard": 0.017459299910115078,
+            "gradual_patterns": 3.727921499958029
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.037535599956754595,
+            "gradual_patterns": 7.671663599932799
+          },
+          "evaluation_duration": {
+            "standard": 0.017040299979271367,
+            "gradual_patterns": 3.773041100066621
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03466359991580248,
+            "gradual_patterns": 7.398208600003272
+          },
+          "evaluation_duration": {
+            "standard": 0.01925349995144643,
+            "gradual_patterns": 3.7951809999649413
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.0680372999922838,
+          "gradual_patterns": 11.554119800013723
+        },
+        "evaluation_duration": {
+          "standard": 0.035603800090029836,
+          "gradual_patterns": 7.72151210004813
+        }
+      },
+      "total_time": 55.65556780001498
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 1.0,
+      "random_seed": 3,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.034449600032530725,
+            "gradual_patterns": 7.549506500014104
+          },
+          "evaluation_duration": {
+            "standard": 0.01898390005226247,
+            "gradual_patterns": 3.812193599966122
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.0690119999635499,
+            "gradual_patterns": 7.503988299926277
+          },
+          "evaluation_duration": {
+            "standard": 0.018175799952587113,
+            "gradual_patterns": 4.033167399989907
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03580759986652993,
+            "gradual_patterns": 7.116516099893488
+          },
+          "evaluation_duration": {
+            "standard": 0.01644890001625754,
+            "gradual_patterns": 3.6834127000474837
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.060776099911890924,
+          "gradual_patterns": 12.276978800073266
+        },
+        "evaluation_duration": {
+          "standard": 0.036171300132991746,
+          "gradual_patterns": 7.685520499944687
+        }
+      },
+      "total_time": 56.321661900001345
+    },
+    {
+      "dataset_name": "timing",
+      "noise_level": 1.0,
+      "random_seed": 4,
+      "training_cases": 120,
+      "test_cases": 80,
+      "observations": 64,
+      "channels": 6,
+      "classes": [
+        0,
+        1
+      ],
+      "cv_folds": 3,
+      "cv": [
+        {
+          "training_duration": {
+            "standard": 0.03969480007071979,
+            "gradual_patterns": 7.551968900021166
+          },
+          "evaluation_duration": {
+            "standard": 0.01805179993971251,
+            "gradual_patterns": 3.773424499842804
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03793619995121844,
+            "gradual_patterns": 7.620287999976426
+          },
+          "evaluation_duration": {
+            "standard": 0.01744470006087795,
+            "gradual_patterns": 3.9442358001251705
+          }
+        },
+        {
+          "training_duration": {
+            "standard": 0.03441160012152977,
+            "gradual_patterns": 7.241418699879432
+          },
+          "evaluation_duration": {
+            "standard": 0.017286299931583926,
+            "gradual_patterns": 3.744845700217411
+          }
+        }
+      ],
+      "final": {
+        "training_duration": {
+          "standard": 0.0541599998541642,
+          "gradual_patterns": 11.254466900078114
+        },
+        "evaluation_duration": {
+          "standard": 0.03512770016095601,
+          "gradual_patterns": 7.266658400010783
+        }
+      },
+      "total_time": 54.59674280000036
+    }
+  ]
+}

@@ -1,0 +1,2089 @@
+{
+  "description": "Saved UEA joint-effect benchmark analysis; no training rerun.",
+  "datasets": [
+    "BasicMotions",
+    "RacketSports",
+    "NATOPS",
+    "AtrialFibrillation",
+    "Epilepsy",
+    "ERing",
+    "FingerMovements",
+    "ArticularyWordRecognition",
+    "Libras",
+    "LSST",
+    "PenDigits",
+    "AppliancesEnergy_disc",
+    "EyesOpenShut",
+    "Handwriting",
+    "IRDS-EFL",
+    "JapaneseVowels_eq",
+    "SPHERE-WUS",
+    "UIPRMD-SSE-C"
+  ],
+  "dataset_count": 18,
+  "highlight_datasets": [
+    "RacketSports",
+    "NATOPS",
+    "AtrialFibrillation",
+    "ERing",
+    "ArticularyWordRecognition",
+    "Libras",
+    "LSST",
+    "PenDigits",
+    "Handwriting",
+    "IRDS-EFL",
+    "JapaneseVowels_eq"
+  ],
+  "highlight_selection": "Post hoc: GCS BA exceeds GP or Standard BA in uea-full. Descriptive only; all statistics use all 18.",
+  "statistical_method": {
+    "primary_metric": "Balanced accuracy",
+    "weighting": "Equal weight per dataset",
+    "test": "Two-sided Wilcoxon signed-rank with exact sign-permutation distribution; average tied ranks, discard zero differences",
+    "rounding": "Differences rounded to 12 decimal places before ranking",
+    "multiplicity": "Holm adjustment across the 16 BA comparisons",
+    "alpha": 0.05,
+    "replication": "One seed and one published split per dataset",
+    "saved_intervals": "95% paired stratified bootstrap over held-out cases, unadjusted per-dataset intervals; 1000 draws",
+    "reference": "https://jmlr.org/papers/v7/demsar06a.html",
+    "implementation_checked_against": "scipy.stats.wilcoxon with exhaustive PermutationMethod on four fixtures including ties and zeros",
+    "descriptive_ranks": "Average tied ranks after rounding BA to 12 decimals. Joint-effect analysis ranks GI, GP, and GCS only; four-method ranks including Standard are retained separately for reference.",
+    "joint_effect_rank_methods": [
+      "gi",
+      "gp",
+      "gcs"
+    ]
+  },
+  "aggregate": {
+    "uea-half": {
+      "standard": {
+        "mean_ba_percent": 68.02079451727833,
+        "median_ba_percent": 71.99739480861278,
+        "mean_macro_f1_percent": 66.25883417096796,
+        "mean_features": 449.22222222222223,
+        "mean_classifier_tuning_fit_predict_seconds": 0.30157622222840375
+      },
+      "gi": {
+        "mean_ba_percent": 59.665419113683605,
+        "median_ba_percent": 62.53731672849319,
+        "mean_macro_f1_percent": 58.401656859277615,
+        "mean_features": 183.88888888888889,
+        "mean_classifier_tuning_fit_predict_seconds": 0.4976958666747022
+      },
+      "gp": {
+        "mean_ba_percent": 54.830233303738254,
+        "median_ba_percent": 56.5779014308426,
+        "mean_macro_f1_percent": 51.48909712783283,
+        "mean_features": 788.1111111111111,
+        "mean_classifier_tuning_fit_predict_seconds": 0.3302949222221893
+      },
+      "gcs": {
+        "mean_ba_percent": 57.63633444445241,
+        "median_ba_percent": 60.46043417366946,
+        "mean_macro_f1_percent": 56.15286965873595,
+        "mean_features": 1970.2777777777778,
+        "mean_classifier_tuning_fit_predict_seconds": 0.6721849166836668
+      },
+      "gcs_no_density": {
+        "mean_ba_percent": 54.8451892000299,
+        "median_ba_percent": 58.53466386554622,
+        "mean_macro_f1_percent": 53.16833889909749,
+        "mean_features": 1576.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 0.5323588111108014
+      },
+      "gcs_no_connectivity": {
+        "mean_ba_percent": 58.263512870386776,
+        "median_ba_percent": 56.503851540616246,
+        "mean_macro_f1_percent": 57.008700360257514,
+        "mean_features": 1576.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 0.5727310111186752
+      },
+      "gcs_no_singularity": {
+        "mean_ba_percent": 56.24706088408414,
+        "median_ba_percent": 53.76400560224091,
+        "mean_macro_f1_percent": 54.1508072325684,
+        "mean_features": 1576.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 0.6300852388942277
+      },
+      "gcs_no_dispersion": {
+        "mean_ba_percent": 56.2837035660973,
+        "median_ba_percent": 57.344187675070025,
+        "mean_macro_f1_percent": 54.61897401519246,
+        "mean_features": 1576.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 0.5577280055602185
+      },
+      "gcs_no_avg_separation": {
+        "mean_ba_percent": 55.81341036617832,
+        "median_ba_percent": 63.58543417366946,
+        "mean_macro_f1_percent": 54.23404214476264,
+        "mean_features": 1576.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 0.5498155555526156
+      }
+    },
+    "uea-full": {
+      "standard": {
+        "mean_ba_percent": 68.02079451727833,
+        "median_ba_percent": 71.99739480861278,
+        "mean_macro_f1_percent": 66.25883417096796,
+        "mean_features": 449.22222222222223,
+        "mean_classifier_tuning_fit_predict_seconds": 0.3185746444424795,
+        "average_rank_among_full_four": 1.8888888888888888
+      },
+      "gi": {
+        "mean_ba_percent": 59.665419113683605,
+        "median_ba_percent": 62.53731672849319,
+        "mean_macro_f1_percent": 58.401656859277615,
+        "mean_features": 183.88888888888889,
+        "mean_classifier_tuning_fit_predict_seconds": 0.4859206111011897,
+        "average_rank_among_full_four": 2.9444444444444446,
+        "average_rank_among_gradual_three": 2.25
+      },
+      "gp": {
+        "mean_ba_percent": 60.451060308307916,
+        "median_ba_percent": 63.18027210884354,
+        "mean_macro_f1_percent": 58.117653018948644,
+        "mean_features": 1576.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 0.5634695277727183,
+        "average_rank_among_full_four": 2.861111111111111,
+        "average_rank_among_gradual_three": 2.0833333333333335
+      },
+      "gcs": {
+        "mean_ba_percent": 62.292217421933074,
+        "median_ba_percent": 61.463263560208645,
+        "mean_macro_f1_percent": 60.398423581908986,
+        "mean_features": 3940.5555555555557,
+        "mean_classifier_tuning_fit_predict_seconds": 1.1106088166626351,
+        "average_rank_among_full_four": 2.3055555555555554,
+        "average_rank_among_gradual_three": 1.6666666666666667
+      },
+      "gcs_no_density": {
+        "mean_ba_percent": 61.265480198743404,
+        "median_ba_percent": 68.65083511581138,
+        "mean_macro_f1_percent": 59.58434541189548,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 0.9439429111031737
+      },
+      "gcs_no_connectivity": {
+        "mean_ba_percent": 60.60867292612573,
+        "median_ba_percent": 61.44179829065537,
+        "mean_macro_f1_percent": 59.4458026485743,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 0.9356605388893513
+      },
+      "gcs_no_singularity": {
+        "mean_ba_percent": 63.0691171078004,
+        "median_ba_percent": 60.70162991091437,
+        "mean_macro_f1_percent": 61.40701455425411,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 1.008894811112744
+      },
+      "gcs_no_dispersion": {
+        "mean_ba_percent": 62.61571923802526,
+        "median_ba_percent": 61.93620582964805,
+        "mean_macro_f1_percent": 61.61191193132248,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 1.2089504666558544
+      },
+      "gcs_no_avg_separation": {
+        "mean_ba_percent": 62.00136222642979,
+        "median_ba_percent": 62.41728436779918,
+        "mean_macro_f1_percent": 60.03329144460048,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 1.0136356444418197
+      }
+    },
+    "uea-extra": {
+      "standard": {
+        "mean_ba_percent": 68.02079451727833,
+        "median_ba_percent": 71.99739480861278,
+        "mean_macro_f1_percent": 66.25883417096796,
+        "mean_features": 449.22222222222223,
+        "mean_classifier_tuning_fit_predict_seconds": 0.28048408333011643
+      },
+      "gi": {
+        "mean_ba_percent": 59.665419113683605,
+        "median_ba_percent": 62.53731672849319,
+        "mean_macro_f1_percent": 58.401656859277615,
+        "mean_features": 183.88888888888889,
+        "mean_classifier_tuning_fit_predict_seconds": 0.4683478055586521
+      },
+      "gp": {
+        "mean_ba_percent": 58.63373189044682,
+        "median_ba_percent": 60.00525210084034,
+        "mean_macro_f1_percent": 56.59904873009553,
+        "mean_features": 1776.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 1.066469172219513
+      },
+      "gcs": {
+        "mean_ba_percent": 62.29515686931696,
+        "median_ba_percent": 61.463263560208645,
+        "mean_macro_f1_percent": 60.40095981885292,
+        "mean_features": 4440.555555555556,
+        "mean_classifier_tuning_fit_predict_seconds": 2.7536085555523946
+      },
+      "gcs_no_density": {
+        "mean_ba_percent": 61.267721394661,
+        "median_ba_percent": 68.65083511581138,
+        "mean_macro_f1_percent": 59.58577783069895,
+        "mean_features": 3552.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 2.188303944439718
+      },
+      "gcs_no_connectivity": {
+        "mean_ba_percent": 60.602682907649616,
+        "median_ba_percent": 61.44179829065537,
+        "mean_macro_f1_percent": 59.44047276747173,
+        "mean_features": 3552.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 2.1186373499998203
+      },
+      "gcs_no_singularity": {
+        "mean_ba_percent": 63.068078297861064,
+        "median_ba_percent": 60.70162991091437,
+        "mean_macro_f1_percent": 61.405112126403836,
+        "mean_features": 3552.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 2.307199666663008
+      },
+      "gcs_no_dispersion": {
+        "mean_ba_percent": 62.619430157634795,
+        "median_ba_percent": 61.93620582964805,
+        "mean_macro_f1_percent": 61.61666825991682,
+        "mean_features": 3552.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 2.159727450001002
+      },
+      "gcs_no_avg_separation": {
+        "mean_ba_percent": 62.0000417045241,
+        "median_ba_percent": 62.41728436779918,
+        "mean_macro_f1_percent": 60.03196845280287,
+        "mean_features": 3552.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 2.1969067388983805
+      }
+    },
+    "uea-baseline": {
+      "baseline": {
+        "mean_ba_percent": 69.7234608343755,
+        "median_ba_percent": 75.73937908496733,
+        "mean_macro_f1_percent": 67.77045550378989,
+        "mean_features": 1763.111111111111,
+        "mean_classifier_tuning_fit_predict_seconds": 0.8339687555643549
+      },
+      "baseline_gcs": {
+        "mean_ba_percent": 70.53483548546691,
+        "median_ba_percent": 79.00793650793652,
+        "mean_macro_f1_percent": 68.44000624239945,
+        "mean_features": 5703.666666666667,
+        "mean_classifier_tuning_fit_predict_seconds": 1.5953479444481975
+      },
+      "baseline_standard": {
+        "mean_ba_percent": 71.46663212122029,
+        "median_ba_percent": 78.21520177838576,
+        "mean_macro_f1_percent": 70.47112264518779,
+        "mean_features": 2212.3333333333335,
+        "mean_classifier_tuning_fit_predict_seconds": 0.9234872389044742
+      },
+      "standard": {
+        "mean_ba_percent": 68.02079451727833,
+        "median_ba_percent": 71.99739480861278,
+        "mean_macro_f1_percent": 66.25883417096796,
+        "mean_features": 449.22222222222223,
+        "mean_classifier_tuning_fit_predict_seconds": 0.275740633335469
+      },
+      "gi": {
+        "mean_ba_percent": 59.665419113683605,
+        "median_ba_percent": 62.53731672849319,
+        "mean_macro_f1_percent": 58.401656859277615,
+        "mean_features": 183.88888888888889,
+        "mean_classifier_tuning_fit_predict_seconds": 0.4767872777770713
+      },
+      "gp": {
+        "mean_ba_percent": 58.75898991734573,
+        "median_ba_percent": 59.03486394557822,
+        "mean_macro_f1_percent": 56.71159853219243,
+        "mean_features": 1576.2222222222222,
+        "mean_classifier_tuning_fit_predict_seconds": 0.5549243833229411
+      },
+      "gcs": {
+        "mean_ba_percent": 62.292217421933074,
+        "median_ba_percent": 61.463263560208645,
+        "mean_macro_f1_percent": 60.398423581908986,
+        "mean_features": 3940.5555555555557,
+        "mean_classifier_tuning_fit_predict_seconds": 1.0297539388896741
+      },
+      "gcs_no_density": {
+        "mean_ba_percent": 61.265480198743404,
+        "median_ba_percent": 68.65083511581138,
+        "mean_macro_f1_percent": 59.58434541189548,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 0.8494295999941338
+      },
+      "gcs_no_connectivity": {
+        "mean_ba_percent": 60.60867292612573,
+        "median_ba_percent": 61.44179829065537,
+        "mean_macro_f1_percent": 59.4458026485743,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 0.8946355166602492
+      },
+      "gcs_no_singularity": {
+        "mean_ba_percent": 63.0691171078004,
+        "median_ba_percent": 60.70162991091437,
+        "mean_macro_f1_percent": 61.40701455425411,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 0.9539257611177163
+      },
+      "gcs_no_dispersion": {
+        "mean_ba_percent": 62.61571923802526,
+        "median_ba_percent": 61.93620582964805,
+        "mean_macro_f1_percent": 61.61191193132248,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 0.8907136666756641
+      },
+      "gcs_no_avg_separation": {
+        "mean_ba_percent": 62.00136222642979,
+        "median_ba_percent": 62.41728436779918,
+        "mean_macro_f1_percent": 60.03329144460048,
+        "mean_features": 3152.4444444444443,
+        "mean_classifier_tuning_fit_predict_seconds": 0.8946466222114395
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "id": "full_gp_minus_gi",
+      "run": "uea-full",
+      "method": "gp",
+      "reference_run": "uea-full",
+      "reference_method": "gi",
+      "datasets": 18,
+      "mean_delta_ba_pp": 0.7856411946243066,
+      "median_delta_ba_pp": 0.028672230007042998,
+      "mean_delta_macro_f1_pp": -0.2840038403289685,
+      "wins": 9,
+      "ties": 1,
+      "losses": 8,
+      "p_exact_two_sided": 0.7466583251953125,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 42.49999999999999,
+        "RacketSports": -6.786691420754343,
+        "NATOPS": 11.111111111111127,
+        "AtrialFibrillation": -6.666666666666668,
+        "Epilepsy": -7.416534181240064,
+        "ERing": -10.000000000000009,
+        "FingerMovements": 7.102841136454574,
+        "ArticularyWordRecognition": -0.33333333333332993,
+        "Libras": -25.555555555555536,
+        "LSST": 3.3271936142784675,
+        "PenDigits": -37.08007776935865,
+        "AppliancesEnergy_disc": 10.661764705882348,
+        "EyesOpenShut": 2.3809523809523836,
+        "Handwriting": -3.0893784071182817,
+        "IRDS-EFL": 17.261904761904756,
+        "JapaneseVowels_eq": 0.057344460014085996,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 16.666666666666664
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_gp",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gp",
+      "datasets": 18,
+      "mean_delta_ba_pp": 1.8411571136251526,
+      "median_delta_ba_pp": 2.6257228004027464,
+      "mean_delta_macro_f1_pp": 2.2807705629603414,
+      "wins": 10,
+      "ties": 2,
+      "losses": 6,
+      "p_exact_two_sided": 0.4637451171875,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": -7.499999999999996,
+        "RacketSports": 8.744747899159655,
+        "NATOPS": 11.111111111111105,
+        "AtrialFibrillation": 13.333333333333334,
+        "Epilepsy": -25.27424483306836,
+        "ERing": 17.037037037037052,
+        "FingerMovements": -11.064425770308118,
+        "ArticularyWordRecognition": 2.6666666666666505,
+        "Libras": 8.888888888888896,
+        "LSST": 2.5847789341388427,
+        "PenDigits": 27.791089507507422,
+        "AppliancesEnergy_disc": -9.558823529411764,
+        "EyesOpenShut": -2.3809523809523725,
+        "Handwriting": 4.300203679688383,
+        "IRDS-EFL": -11.309523809523803,
+        "JapaneseVowels_eq": 3.7709413109858203,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 0.0
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_gi",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gi",
+      "datasets": 18,
+      "mean_delta_ba_pp": 2.626798308249459,
+      "median_delta_ba_pp": 2.145694905869316,
+      "mean_delta_macro_f1_pp": 1.9967667226313726,
+      "wins": 12,
+      "ties": 2,
+      "losses": 4,
+      "p_exact_two_sided": 0.23602294921875,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 35.0,
+        "RacketSports": 1.9580564784053123,
+        "NATOPS": 22.222222222222232,
+        "AtrialFibrillation": 6.666666666666665,
+        "Epilepsy": -32.690779014308426,
+        "ERing": 7.037037037037042,
+        "FingerMovements": -3.961584633853543,
+        "ArticularyWordRecognition": 2.3333333333333206,
+        "Libras": -16.66666666666664,
+        "LSST": 5.91197254841731,
+        "PenDigits": -9.288988261851227,
+        "AppliancesEnergy_disc": 1.1029411764705843,
+        "EyesOpenShut": 1.1102230246251565e-14,
+        "Handwriting": 1.2108252725701014,
+        "IRDS-EFL": 5.952380952380953,
+        "JapaneseVowels_eq": 3.8282857709999063,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 16.666666666666664
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_standard",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "standard",
+      "datasets": 18,
+      "mean_delta_ba_pp": -5.728577095345255,
+      "median_delta_ba_pp": -5.382152861144457,
+      "mean_delta_macro_f1_pp": -5.860410589058974,
+      "wins": 5,
+      "ties": 3,
+      "losses": 10,
+      "p_exact_two_sided": 0.207763671875,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": -9.999999999999998,
+        "RacketSports": 5.473177643150285,
+        "NATOPS": -6.111111111111112,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": -62.048224695283515,
+        "ERing": 14.074074074074073,
+        "FingerMovements": -6.002400960384158,
+        "ArticularyWordRecognition": 2.0000000000000018,
+        "Libras": -18.333333333333325,
+        "LSST": -8.18963585818622,
+        "PenDigits": -7.097674261514153,
+        "AppliancesEnergy_disc": -13.970588235294112,
+        "EyesOpenShut": -4.761904761904756,
+        "Handwriting": 9.96094926670501,
+        "IRDS-EFL": 19.047619047619058,
+        "JapaneseVowels_eq": -17.155334530751652,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 0.0
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_minus_half_gp",
+      "run": "uea-full",
+      "method": "gp",
+      "reference_run": "uea-half",
+      "reference_method": "gp",
+      "datasets": 18,
+      "mean_delta_ba_pp": 5.620827004569662,
+      "median_delta_ba_pp": 4.0338396095866536,
+      "mean_delta_macro_f1_pp": 6.628555891115812,
+      "wins": 11,
+      "ties": 3,
+      "losses": 4,
+      "p_exact_two_sided": 0.03533935546875,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 17.499999999999982,
+        "RacketSports": 20.760943912448717,
+        "NATOPS": -1.6666666666666607,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": -1.0532591414944448,
+        "ERing": 14.074074074074073,
+        "FingerMovements": 4.941976790716285,
+        "ArticularyWordRecognition": 6.000000000000005,
+        "Libras": 24.444444444444446,
+        "LSST": 3.551130983492712,
+        "PenDigits": 17.73544964759347,
+        "AppliancesEnergy_disc": -21.691176470588236,
+        "EyesOpenShut": -4.761904761904767,
+        "Handwriting": 3.1328488439815616,
+        "IRDS-EFL": 13.690476190476186,
+        "JapaneseVowels_eq": 4.516548235680595,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 0.0
+      },
+      "p_holm": 0.5654296875,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "extra_minus_full_gp",
+      "run": "uea-extra",
+      "method": "gp",
+      "reference_run": "uea-full",
+      "reference_method": "gp",
+      "datasets": 18,
+      "mean_delta_ba_pp": -1.8173284178611038,
+      "median_delta_ba_pp": -0.5555555555555536,
+      "mean_delta_macro_f1_pp": -1.5186042888531048,
+      "wins": 5,
+      "ties": 4,
+      "losses": 9,
+      "p_exact_two_sided": 0.0418701171875,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 0.0,
+        "RacketSports": -3.491669923783469,
+        "NATOPS": -1.1111111111111072,
+        "AtrialFibrillation": -13.33333333333333,
+        "Epilepsy": 1.3513513513513598,
+        "ERing": 2.9629629629629783,
+        "FingerMovements": -5.06202480992396,
+        "ArticularyWordRecognition": 0.6666666666666488,
+        "Libras": -3.888888888888886,
+        "LSST": 0.9243143809163218,
+        "PenDigits": -1.4222659407530536,
+        "AppliancesEnergy_disc": -3.308823529411764,
+        "EyesOpenShut": 0.0,
+        "Handwriting": -2.6177584248161883,
+        "IRDS-EFL": 0.0,
+        "JapaneseVowels_eq": 1.1742246341801432,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": -5.555555555555558
+      },
+      "p_holm": 0.6280517578125,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_minus_half_gcs",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-half",
+      "reference_method": "gcs",
+      "datasets": 18,
+      "mean_delta_ba_pp": 4.655882977480664,
+      "median_delta_ba_pp": 4.201831435101831,
+      "mean_delta_macro_f1_pp": 4.245553923173037,
+      "wins": 11,
+      "ties": 1,
+      "losses": 6,
+      "p_exact_two_sided": 0.079681396484375,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 12.49999999999999,
+        "RacketSports": 10.513606605432868,
+        "NATOPS": 0.0,
+        "AtrialFibrillation": -13.33333333333333,
+        "Epilepsy": -2.755696873343938,
+        "ERing": 9.259259259259256,
+        "FingerMovements": -4.981992797118851,
+        "ArticularyWordRecognition": 0.666666666666671,
+        "Libras": 22.222222222222225,
+        "LSST": 5.298631493438649,
+        "PenDigits": 13.885636694829373,
+        "AppliancesEnergy_disc": -4.779411764705888,
+        "EyesOpenShut": -4.761904761904756,
+        "Handwriting": 3.1050313767650133,
+        "IRDS-EFL": -5.952380952380953,
+        "JapaneseVowels_eq": 6.8084486477145045,
+        "SPHERE-WUS": 25.0,
+        "UIPRMD-SSE-C": 11.111111111111116
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "extra_minus_full_gcs",
+      "run": "uea-extra",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gcs",
+      "datasets": 18,
+      "mean_delta_ba_pp": 0.0029394473838917664,
+      "median_delta_ba_pp": 0.0,
+      "mean_delta_macro_f1_pp": 0.002536236943936436,
+      "wins": 1,
+      "ties": 17,
+      "losses": 0,
+      "p_exact_two_sided": 1.0,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 0.0,
+        "RacketSports": 0.0,
+        "NATOPS": 0.0,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": 0.0,
+        "ERing": 0.0,
+        "FingerMovements": 0.0,
+        "ArticularyWordRecognition": 0.0,
+        "Libras": 0.0,
+        "LSST": 0.0529100529100518,
+        "PenDigits": 0.0,
+        "AppliancesEnergy_disc": 0.0,
+        "EyesOpenShut": 0.0,
+        "Handwriting": 0.0,
+        "IRDS-EFL": 0.0,
+        "JapaneseVowels_eq": 0.0,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 0.0
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_no_density",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gcs_no_density",
+      "datasets": 18,
+      "mean_delta_ba_pp": 1.0267372231896599,
+      "median_delta_ba_pp": 0.7892279004625025,
+      "mean_delta_macro_f1_pp": 0.8140781700135071,
+      "wins": 12,
+      "ties": 1,
+      "losses": 5,
+      "p_exact_two_sided": 0.3462982177734375,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 7.499999999999996,
+        "RacketSports": 0.9117891342583562,
+        "NATOPS": 0.5555555555555536,
+        "AtrialFibrillation": -6.666666666666665,
+        "Epilepsy": -1.7474827768945433,
+        "ERing": 6.666666666666654,
+        "FingerMovements": -3.0612244897959218,
+        "ArticularyWordRecognition": 0.6666666666666488,
+        "Libras": 7.777777777777784,
+        "LSST": 1.830669155587192,
+        "PenDigits": 1.626257449018642,
+        "AppliancesEnergy_disc": -25.0,
+        "EyesOpenShut": 2.3809523809523836,
+        "Handwriting": -2.0426000165079365,
+        "IRDS-EFL": 0.5952380952381042,
+        "JapaneseVowels_eq": 1.4876710855576292,
+        "SPHERE-WUS": 25.0,
+        "UIPRMD-SSE-C": 0.0
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_no_connectivity",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gcs_no_connectivity",
+      "datasets": 18,
+      "mean_delta_ba_pp": 1.683544495807337,
+      "median_delta_ba_pp": 0.6474156497053352,
+      "mean_delta_macro_f1_pp": 0.9526209333346846,
+      "wins": 10,
+      "ties": 2,
+      "losses": 6,
+      "p_exact_two_sided": 0.341705322265625,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": -2.499999999999991,
+        "RacketSports": -1.5466826265389866,
+        "NATOPS": 5.000000000000004,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": -0.7352941176470618,
+        "ERing": 2.592592592592602,
+        "FingerMovements": -8.083233293317328,
+        "ArticularyWordRecognition": 0.6666666666666488,
+        "Libras": 5.555555555555563,
+        "LSST": 2.0531022676535784,
+        "PenDigits": 0.6281646327440216,
+        "AppliancesEnergy_disc": 0.0,
+        "EyesOpenShut": 2.3809523809523836,
+        "Handwriting": -0.20767241575864737,
+        "IRDS-EFL": -7.14285714285714,
+        "JapaneseVowels_eq": 1.0869508689308582,
+        "SPHERE-WUS": 25.0,
+        "UIPRMD-SSE-C": 5.555555555555558
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_no_singularity",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gcs_no_singularity",
+      "datasets": 18,
+      "mean_delta_ba_pp": -0.7768996858673317,
+      "median_delta_ba_pp": 0.0,
+      "mean_delta_macro_f1_pp": -1.0085909723451294,
+      "wins": 6,
+      "ties": 6,
+      "losses": 6,
+      "p_exact_two_sided": 0.5185546875,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 0.0,
+        "RacketSports": 2.0078903654484948,
+        "NATOPS": 0.0,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": -3.0988341282458975,
+        "ERing": 0.37037037037036535,
+        "FingerMovements": -3.961584633853543,
+        "ArticularyWordRecognition": 0.33333333333332993,
+        "Libras": 1.1102230246251565e-14,
+        "LSST": -1.1161938592783556,
+        "PenDigits": 2.9938555338826833,
+        "AppliancesEnergy_disc": -1.4705882352941124,
+        "EyesOpenShut": 2.3809523809523836,
+        "Handwriting": 0.022724715128322193,
+        "IRDS-EFL": -10.71428571428571,
+        "JapaneseVowels_eq": -1.7318344737699443,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 0.0
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_no_dispersion",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gcs_no_dispersion",
+      "datasets": 18,
+      "mean_delta_ba_pp": -0.3235018160921873,
+      "median_delta_ba_pp": 0.0,
+      "mean_delta_macro_f1_pp": -1.2134883494134927,
+      "wins": 6,
+      "ties": 4,
+      "losses": 8,
+      "p_exact_two_sided": 0.7265625,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 0.0,
+        "RacketSports": -2.8402872777017807,
+        "NATOPS": -1.1111111111111072,
+        "AtrialFibrillation": 6.666666666666665,
+        "Epilepsy": -1.6666666666666663,
+        "ERing": 3.3333333333333326,
+        "FingerMovements": -3.0612244897959218,
+        "ArticularyWordRecognition": -0.666666666666671,
+        "Libras": 1.6666666666666774,
+        "LSST": 1.7941474902436971,
+        "PenDigits": 3.8335272258270936,
+        "AppliancesEnergy_disc": -4.779411764705888,
+        "EyesOpenShut": 0.0,
+        "Handwriting": 1.1072849234532138,
+        "IRDS-EFL": -7.738095238095233,
+        "JapaneseVowels_eq": -2.361195781106784,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": 0.0
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "full_gcs_minus_no_avg_separation",
+      "run": "uea-full",
+      "method": "gcs",
+      "reference_run": "uea-full",
+      "reference_method": "gcs_no_avg_separation",
+      "datasets": 18,
+      "mean_delta_ba_pp": 0.29085519550328043,
+      "median_delta_ba_pp": 0.0,
+      "mean_delta_macro_f1_pp": 0.36513213730851285,
+      "wins": 7,
+      "ties": 4,
+      "losses": 7,
+      "p_exact_two_sided": 1.0,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": -5.000000000000004,
+        "RacketSports": -0.1827242524916839,
+        "NATOPS": -2.777777777777779,
+        "AtrialFibrillation": 13.333333333333327,
+        "Epilepsy": 1.9886062533121307,
+        "ERing": 5.5555555555555465,
+        "FingerMovements": -1.0604241696678618,
+        "ArticularyWordRecognition": 0.0,
+        "Libras": 0.0,
+        "LSST": 2.977526440803677,
+        "PenDigits": 2.871370149524821,
+        "AppliancesEnergy_disc": -4.779411764705888,
+        "EyesOpenShut": 0.0,
+        "Handwriting": 1.0725245950027356,
+        "IRDS-EFL": -3.5714285714285587,
+        "JapaneseVowels_eq": 0.36379928315414256,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": -5.555555555555558
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "baseline_gcs_minus_baseline",
+      "run": "uea-baseline",
+      "method": "baseline_gcs",
+      "reference_run": "uea-baseline",
+      "reference_method": "baseline",
+      "datasets": 18,
+      "mean_delta_ba_pp": 0.8113746510914155,
+      "median_delta_ba_pp": 1.312783371606907,
+      "mean_delta_macro_f1_pp": 0.6695507386095552,
+      "wins": 10,
+      "ties": 2,
+      "losses": 6,
+      "p_exact_two_sided": 0.433197021484375,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 12.50000000000001,
+        "RacketSports": 6.10074262263044,
+        "NATOPS": -0.5555555555555536,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": 0.773714891361954,
+        "ERing": 1.85185185185186,
+        "FingerMovements": -3.961584633853543,
+        "ArticularyWordRecognition": 0.0,
+        "Libras": 3.3333333333333326,
+        "LSST": 9.947963371972406,
+        "PenDigits": 1.9356754733281245,
+        "AppliancesEnergy_disc": -6.25,
+        "EyesOpenShut": 2.3809523809523836,
+        "Handwriting": 4.424856820786424,
+        "IRDS-EFL": 24.404761904761905,
+        "JapaneseVowels_eq": -0.6153020752575955,
+        "SPHERE-WUS": -25.0,
+        "UIPRMD-SSE-C": -16.666666666666675
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "baseline_standard_minus_baseline",
+      "run": "uea-baseline",
+      "method": "baseline_standard",
+      "reference_run": "uea-baseline",
+      "reference_method": "baseline",
+      "datasets": 18,
+      "mean_delta_ba_pp": 1.7431712868447924,
+      "median_delta_ba_pp": 0.02284053156145771,
+      "mean_delta_macro_f1_pp": 2.7006671413979073,
+      "wins": 9,
+      "ties": 5,
+      "losses": 4,
+      "p_exact_two_sided": 0.414306640625,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 0.0,
+        "RacketSports": 0.04568106312291542,
+        "NATOPS": 3.3333333333333215,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": 2.8007419183889826,
+        "ERing": -0.37037037037036535,
+        "FingerMovements": -4.121648659463784,
+        "ArticularyWordRecognition": 0.0,
+        "Libras": 4.999999999999993,
+        "LSST": 9.980677039105078,
+        "PenDigits": 1.1819998183634661,
+        "AppliancesEnergy_disc": -15.808823529411764,
+        "EyesOpenShut": 0.0,
+        "Handwriting": 0.8362140508599375,
+        "IRDS-EFL": 33.92857142857143,
+        "JapaneseVowels_eq": 0.12626262626260765,
+        "SPHERE-WUS": 0.0,
+        "UIPRMD-SSE-C": -5.555555555555558
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    },
+    {
+      "id": "baseline_gcs_minus_baseline_standard",
+      "run": "uea-baseline",
+      "method": "baseline_gcs",
+      "reference_run": "uea-baseline",
+      "reference_method": "baseline_standard",
+      "datasets": 18,
+      "mean_delta_ba_pp": -0.931796635753377,
+      "median_delta_ba_pp": 0.0,
+      "mean_delta_macro_f1_pp": -2.031116402788352,
+      "wins": 8,
+      "ties": 2,
+      "losses": 8,
+      "p_exact_two_sided": 0.979949951171875,
+      "per_dataset_delta_ba_pp": {
+        "BasicMotions": 12.50000000000001,
+        "RacketSports": 6.055061559507524,
+        "NATOPS": -3.888888888888875,
+        "AtrialFibrillation": 0.0,
+        "Epilepsy": -2.0270270270270285,
+        "ERing": 2.2222222222222254,
+        "FingerMovements": 0.16006402561024036,
+        "ArticularyWordRecognition": 0.0,
+        "Libras": -1.6666666666666607,
+        "LSST": -0.03271366713267221,
+        "PenDigits": 0.7536756549646584,
+        "AppliancesEnergy_disc": 9.558823529411764,
+        "EyesOpenShut": 2.3809523809523836,
+        "Handwriting": 3.5886427699264867,
+        "IRDS-EFL": -9.523809523809524,
+        "JapaneseVowels_eq": -0.7415647015202032,
+        "SPHERE-WUS": -25.0,
+        "UIPRMD-SSE-C": -11.111111111111116
+      },
+      "p_holm": 1.0,
+      "significant_holm_0_05": false
+    }
+  ],
+  "interval_counts": {
+    "uea-full": {
+      "gp minus gi": {
+        "above_zero": [
+          "BasicMotions",
+          "NATOPS",
+          "LSST",
+          "IRDS-EFL"
+        ],
+        "below_zero": [
+          "ERing",
+          "Libras",
+          "PenDigits"
+        ]
+      },
+      "gcs minus gp": {
+        "above_zero": [
+          "RacketSports",
+          "NATOPS",
+          "ERing",
+          "LSST",
+          "PenDigits",
+          "Handwriting"
+        ],
+        "below_zero": [
+          "Epilepsy",
+          "FingerMovements"
+        ]
+      },
+      "gcs minus gcs_no_density": {
+        "above_zero": [
+          "ERing",
+          "Libras",
+          "LSST",
+          "PenDigits"
+        ],
+        "below_zero": [
+          "AppliancesEnergy_disc"
+        ]
+      },
+      "gcs minus gcs_no_connectivity": {
+        "above_zero": [
+          "NATOPS",
+          "ERing",
+          "Libras",
+          "LSST"
+        ],
+        "below_zero": [
+          "FingerMovements"
+        ]
+      },
+      "gcs minus gcs_no_singularity": {
+        "above_zero": [
+          "PenDigits"
+        ],
+        "below_zero": [
+          "IRDS-EFL"
+        ]
+      },
+      "gcs minus gcs_no_dispersion": {
+        "above_zero": [
+          "ERing",
+          "LSST",
+          "PenDigits"
+        ],
+        "below_zero": []
+      },
+      "gcs minus gcs_no_avg_separation": {
+        "above_zero": [
+          "ERing",
+          "LSST",
+          "PenDigits"
+        ],
+        "below_zero": []
+      }
+    },
+    "uea-baseline": {
+      "gp minus gi": {
+        "above_zero": [
+          "BasicMotions",
+          "NATOPS",
+          "LSST",
+          "IRDS-EFL"
+        ],
+        "below_zero": [
+          "RacketSports",
+          "AtrialFibrillation",
+          "ERing",
+          "Libras",
+          "PenDigits",
+          "Handwriting"
+        ]
+      },
+      "gcs minus gp": {
+        "above_zero": [
+          "RacketSports",
+          "NATOPS",
+          "AtrialFibrillation",
+          "ERing",
+          "Libras",
+          "LSST",
+          "PenDigits",
+          "Handwriting"
+        ],
+        "below_zero": [
+          "Epilepsy"
+        ]
+      },
+      "baseline_gcs minus baseline": {
+        "above_zero": [
+          "BasicMotions",
+          "RacketSports",
+          "LSST",
+          "PenDigits",
+          "Handwriting",
+          "IRDS-EFL"
+        ],
+        "below_zero": [
+          "UIPRMD-SSE-C"
+        ]
+      },
+      "baseline_standard minus baseline": {
+        "above_zero": [
+          "Libras",
+          "LSST",
+          "PenDigits",
+          "IRDS-EFL"
+        ],
+        "below_zero": []
+      },
+      "gcs minus gcs_no_density": {
+        "above_zero": [
+          "ERing",
+          "Libras",
+          "LSST",
+          "PenDigits"
+        ],
+        "below_zero": [
+          "AppliancesEnergy_disc"
+        ]
+      },
+      "gcs minus gcs_no_connectivity": {
+        "above_zero": [
+          "NATOPS",
+          "ERing",
+          "Libras",
+          "LSST"
+        ],
+        "below_zero": [
+          "FingerMovements"
+        ]
+      },
+      "gcs minus gcs_no_singularity": {
+        "above_zero": [
+          "PenDigits"
+        ],
+        "below_zero": [
+          "IRDS-EFL"
+        ]
+      },
+      "gcs minus gcs_no_dispersion": {
+        "above_zero": [
+          "ERing",
+          "LSST",
+          "PenDigits"
+        ],
+        "below_zero": []
+      },
+      "gcs minus gcs_no_avg_separation": {
+        "above_zero": [
+          "ERing",
+          "LSST",
+          "PenDigits"
+        ],
+        "below_zero": []
+      }
+    }
+  },
+  "cross_run_differences_from_full_pp": {
+    "uea-half": {
+      "standard": {
+        "balanced_accuracy": {},
+        "macro_f1": {}
+      },
+      "gi": {
+        "balanced_accuracy": {},
+        "macro_f1": {}
+      },
+      "gp": {
+        "balanced_accuracy": {
+          "BasicMotions": -17.499999999999982,
+          "RacketSports": -20.760943912448717,
+          "NATOPS": 1.6666666666666607,
+          "Epilepsy": 1.0532591414944448,
+          "ERing": -14.074074074074073,
+          "FingerMovements": -4.941976790716285,
+          "ArticularyWordRecognition": -6.000000000000005,
+          "Libras": -24.444444444444446,
+          "LSST": -3.551130983492712,
+          "PenDigits": -17.73544964759347,
+          "AppliancesEnergy_disc": 21.691176470588236,
+          "EyesOpenShut": 4.761904761904767,
+          "Handwriting": -3.1328488439815616,
+          "IRDS-EFL": -13.690476190476186,
+          "JapaneseVowels_eq": -4.516548235680595
+        },
+        "macro_f1": {
+          "BasicMotions": -16.77109440267336,
+          "RacketSports": -21.657348116898177,
+          "NATOPS": 1.0284317203992366,
+          "Epilepsy": -0.17880481861685116,
+          "ERing": -14.62201374886629,
+          "FingerMovements": -5.293520193373635,
+          "ArticularyWordRecognition": -6.173105629856213,
+          "Libras": -30.379129574644736,
+          "LSST": -3.7655149116310516,
+          "PenDigits": -21.08154989589081,
+          "AppliancesEnergy_disc": 18.349486770539404,
+          "EyesOpenShut": 5.357142857142849,
+          "Handwriting": -4.319008626161976,
+          "IRDS-EFL": -15.112044817927172,
+          "JapaneseVowels_eq": -4.695932651625812
+        }
+      },
+      "gcs": {
+        "balanced_accuracy": {
+          "BasicMotions": -12.49999999999999,
+          "RacketSports": -10.513606605432868,
+          "AtrialFibrillation": 13.33333333333333,
+          "Epilepsy": 2.755696873343938,
+          "ERing": -9.259259259259256,
+          "FingerMovements": 4.981992797118851,
+          "ArticularyWordRecognition": -0.666666666666671,
+          "Libras": -22.222222222222225,
+          "LSST": -5.298631493438649,
+          "PenDigits": -13.885636694829373,
+          "AppliancesEnergy_disc": 4.779411764705888,
+          "EyesOpenShut": 4.761904761904756,
+          "Handwriting": -3.1050313767650133,
+          "IRDS-EFL": 5.952380952380953,
+          "JapaneseVowels_eq": -6.8084486477145045,
+          "SPHERE-WUS": -25.0,
+          "UIPRMD-SSE-C": -11.111111111111116
+        },
+        "macro_f1": {
+          "BasicMotions": -12.15053006848672,
+          "RacketSports": -10.510625557342257,
+          "NATOPS": -0.1974313207818712,
+          "AtrialFibrillation": 6.936026936026929,
+          "Epilepsy": 3.0918082605021047,
+          "ERing": -9.588613249267686,
+          "FingerMovements": 5.054101600154231,
+          "ArticularyWordRecognition": -0.6046969862072871,
+          "Libras": -24.409036648896137,
+          "LSST": -5.393824891853133,
+          "PenDigits": -15.196571754711785,
+          "AppliancesEnergy_disc": 4.254201680672276,
+          "EyesOpenShut": 7.086961569720191,
+          "Handwriting": 0.48404639814156325,
+          "IRDS-EFL": 6.229310650363285,
+          "JapaneseVowels_eq": -7.026253065901722,
+          "SPHERE-WUS": -13.33333333333333,
+          "UIPRMD-SSE-C": -11.145510835913319
+        }
+      }
+    },
+    "uea-extra": {
+      "standard": {
+        "balanced_accuracy": {},
+        "macro_f1": {}
+      },
+      "gi": {
+        "balanced_accuracy": {},
+        "macro_f1": {}
+      },
+      "gp": {
+        "balanced_accuracy": {
+          "RacketSports": -3.491669923783469,
+          "NATOPS": -1.1111111111111072,
+          "AtrialFibrillation": -13.33333333333333,
+          "Epilepsy": 1.3513513513513598,
+          "ERing": 2.9629629629629783,
+          "FingerMovements": -5.06202480992396,
+          "ArticularyWordRecognition": 0.6666666666666488,
+          "Libras": -3.888888888888886,
+          "LSST": 0.9243143809163218,
+          "PenDigits": -1.4222659407530536,
+          "AppliancesEnergy_disc": -3.308823529411764,
+          "Handwriting": -2.6177584248161883,
+          "JapaneseVowels_eq": 1.1742246341801432,
+          "UIPRMD-SSE-C": -5.555555555555558
+        },
+        "macro_f1": {
+          "RacketSports": -3.0755917472906957,
+          "NATOPS": -1.2461099905598072,
+          "AtrialFibrillation": -7.2727272727272725,
+          "Epilepsy": 1.2980809693428963,
+          "ERing": 3.1748709380288287,
+          "FingerMovements": -4.855133001586087,
+          "ArticularyWordRecognition": 0.6618465592378553,
+          "Libras": -5.7555759210984325,
+          "LSST": 0.8426430937114898,
+          "PenDigits": -1.7820892248198605,
+          "AppliancesEnergy_disc": -1.1682037768994236,
+          "EyesOpenShut": 1.5476190476190421,
+          "Handwriting": -5.254567789662934,
+          "JapaneseVowels_eq": 1.0884166105029736,
+          "UIPRMD-SSE-C": -5.538355693154462
+        }
+      },
+      "gcs": {
+        "balanced_accuracy": {
+          "LSST": 0.0529100529100518
+        },
+        "macro_f1": {
+          "LSST": 0.04565226499085584
+        }
+      }
+    },
+    "uea-baseline": {
+      "standard": {
+        "balanced_accuracy": {},
+        "macro_f1": {}
+      },
+      "gi": {
+        "balanced_accuracy": {},
+        "macro_f1": {}
+      },
+      "gp": {
+        "balanced_accuracy": {
+          "RacketSports": -3.9495798319327813,
+          "NATOPS": 1.6666666666666607,
+          "AtrialFibrillation": -13.33333333333333,
+          "ERing": -0.37037037037035425,
+          "FingerMovements": -2.0408163265306145,
+          "ArticularyWordRecognition": 0.33333333333332993,
+          "Libras": -3.888888888888886,
+          "LSST": -0.15092433598182797,
+          "PenDigits": -1.4222659407530536,
+          "AppliancesEnergy_disc": -6.25,
+          "EyesOpenShut": -2.3809523809523836,
+          "Handwriting": 0.134741095655444,
+          "JapaneseVowels_eq": 1.1951232757684394
+        },
+        "macro_f1": {
+          "RacketSports": -3.590790150420131,
+          "NATOPS": 1.2652504932339381,
+          "AtrialFibrillation": -7.2727272727272725,
+          "Epilepsy": -0.0002162926873383597,
+          "ERing": -0.09546105641736746,
+          "FingerMovements": -1.8940973333307465,
+          "ArticularyWordRecognition": 0.3431409814018349,
+          "Libras": -5.7555759210984325,
+          "LSST": -0.49484225740322463,
+          "PenDigits": -1.7820892248198605,
+          "AppliancesEnergy_disc": -5.208361046815824,
+          "EyesOpenShut": -1.8170622480967347,
+          "Handwriting": -0.14333046356105328,
+          "JapaneseVowels_eq": 1.1371810311304298
+        }
+      },
+      "gcs": {
+        "balanced_accuracy": {},
+        "macro_f1": {}
+      }
+    }
+  },
+  "per_dataset": {
+    "BasicMotions": {
+      "full": {
+        "standard": {
+          "ba_percent": 97.5,
+          "macro_f1_percent": 97.49373433583959
+        },
+        "gi": {
+          "ba_percent": 52.5,
+          "macro_f1_percent": 53.42749748120592
+        },
+        "gp": {
+          "ba_percent": 95.0,
+          "macro_f1_percent": 94.84126984126983
+        },
+        "gcs": {
+          "ba_percent": 87.5,
+          "macro_f1_percent": 87.16460268317854
+        }
+      },
+      "gcs_minus_gp_ba_pp": -7.499999999999996,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -15.000000000000014,
+        0.0
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 77.49999999999999,
+          "macro_f1_percent": 74.57875457875458
+        },
+        "baseline_gcs": {
+          "ba_percent": 90.0,
+          "macro_f1_percent": 89.2986542443064
+        },
+        "baseline_standard": {
+          "ba_percent": 77.49999999999999,
+          "macro_f1_percent": 75.83333333333333
+        }
+      }
+    },
+    "RacketSports": {
+      "full": {
+        "standard": {
+          "ba_percent": 77.50390854016025,
+          "macro_f1_percent": 77.83597540249065
+        },
+        "gi": {
+          "ba_percent": 81.01902970490522,
+          "macro_f1_percent": 80.81902581540746
+        },
+        "gp": {
+          "ba_percent": 74.23233828415088,
+          "macro_f1_percent": 74.74475591645486
+        },
+        "gcs": {
+          "ba_percent": 82.97708618331053,
+          "macro_f1_percent": 82.32359516426163
+        }
+      },
+      "gcs_minus_gp_ba_pp": 8.744747899159655,
+      "gcs_minus_gp_ba_ci95_pp": [
+        2.085487101817471,
+        16.001221418800082
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 78.88472249364862,
+          "macro_f1_percent": 77.90434552199258
+        },
+        "baseline_gcs": {
+          "ba_percent": 84.98546511627907,
+          "macro_f1_percent": 84.65156794425087
+        },
+        "baseline_standard": {
+          "ba_percent": 78.93040355677155,
+          "macro_f1_percent": 78.37321710293314
+        }
+      }
+    },
+    "NATOPS": {
+      "full": {
+        "standard": {
+          "ba_percent": 90.55555555555556,
+          "macro_f1_percent": 90.49234368021787
+        },
+        "gi": {
+          "ba_percent": 62.222222222222214,
+          "macro_f1_percent": 61.110918862376394
+        },
+        "gp": {
+          "ba_percent": 73.33333333333334,
+          "macro_f1_percent": 73.22698720330186
+        },
+        "gcs": {
+          "ba_percent": 84.44444444444444,
+          "macro_f1_percent": 84.08769257004666
+        }
+      },
+      "gcs_minus_gp_ba_pp": 11.111111111111105,
+      "gcs_minus_gp_ba_ci95_pp": [
+        3.8888888888888973,
+        17.791666666666668
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 89.44444444444444,
+          "macro_f1_percent": 89.59716277692536
+        },
+        "baseline_gcs": {
+          "ba_percent": 88.8888888888889,
+          "macro_f1_percent": 88.85029538338297
+        },
+        "baseline_standard": {
+          "ba_percent": 92.77777777777777,
+          "macro_f1_percent": 92.71537240131458
+        }
+      }
+    },
+    "AtrialFibrillation": {
+      "full": {
+        "standard": {
+          "ba_percent": 33.33333333333333,
+          "macro_f1_percent": 31.216931216931215
+        },
+        "gi": {
+          "ba_percent": 26.666666666666668,
+          "macro_f1_percent": 17.77777777777778
+        },
+        "gp": {
+          "ba_percent": 20.0,
+          "macro_f1_percent": 13.333333333333334
+        },
+        "gcs": {
+          "ba_percent": 33.33333333333333,
+          "macro_f1_percent": 33.46801346801347
+        }
+      },
+      "gcs_minus_gp_ba_pp": 13.333333333333334,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -13.333333333333327,
+        33.333333333333336
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 40.00000000000001,
+          "macro_f1_percent": 34.444444444444436
+        },
+        "baseline_gcs": {
+          "ba_percent": 40.00000000000001,
+          "macro_f1_percent": 34.444444444444436
+        },
+        "baseline_standard": {
+          "ba_percent": 40.00000000000001,
+          "macro_f1_percent": 34.444444444444436
+        }
+      }
+    },
+    "Epilepsy": {
+      "full": {
+        "standard": {
+          "ba_percent": 92.20985691573927,
+          "macro_f1_percent": 91.91231283336546
+        },
+        "gi": {
+          "ba_percent": 62.85241123476417,
+          "macro_f1_percent": 62.80501147304426
+        },
+        "gp": {
+          "ba_percent": 55.43587705352411,
+          "macro_f1_percent": 53.8689318958407
+        },
+        "gcs": {
+          "ba_percent": 30.161632220455747,
+          "macro_f1_percent": 29.430374525655832
+        }
+      },
+      "gcs_minus_gp_ba_pp": -25.27424483306836,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -35.505895601483836,
+        -15.496687864334927
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 65.91944886062532,
+          "macro_f1_percent": 62.52541371158393
+        },
+        "baseline_gcs": {
+          "ba_percent": 66.69316375198729,
+          "macro_f1_percent": 62.708333333333336
+        },
+        "baseline_standard": {
+          "ba_percent": 68.72019077901432,
+          "macro_f1_percent": 65.23974659220562
+        }
+      }
+    },
+    "ERing": {
+      "full": {
+        "standard": {
+          "ba_percent": 73.70370370370371,
+          "macro_f1_percent": 73.72867103357828
+        },
+        "gi": {
+          "ba_percent": 80.74074074074073,
+          "macro_f1_percent": 80.83694540092964
+        },
+        "gp": {
+          "ba_percent": 70.74074074074073,
+          "macro_f1_percent": 70.05736638089579
+        },
+        "gcs": {
+          "ba_percent": 87.77777777777777,
+          "macro_f1_percent": 87.87754275499373
+        }
+      },
+      "gcs_minus_gp_ba_pp": 17.037037037037052,
+      "gcs_minus_gp_ba_ci95_pp": [
+        11.481481481481481,
+        22.592592592592588
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 95.18518518518519,
+          "macro_f1_percent": 95.18982057677368
+        },
+        "baseline_gcs": {
+          "ba_percent": 97.03703703703704,
+          "macro_f1_percent": 97.03269265067017
+        },
+        "baseline_standard": {
+          "ba_percent": 94.81481481481482,
+          "macro_f1_percent": 94.81437460564595
+        }
+      }
+    },
+    "FingerMovements": {
+      "full": {
+        "standard": {
+          "ba_percent": 55.12204881952781,
+          "macro_f1_percent": 54.88721804511278
+        },
+        "gi": {
+          "ba_percent": 53.0812324929972,
+          "macro_f1_percent": 52.95766189570613
+        },
+        "gp": {
+          "ba_percent": 60.184073629451774,
+          "macro_f1_percent": 59.74235104669887
+        },
+        "gcs": {
+          "ba_percent": 49.119647859143655,
+          "macro_f1_percent": 48.87218045112782
+        }
+      },
+      "gcs_minus_gp_ba_pp": -11.064425770308118,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -22.1688675470188,
+        -0.12004801920768582
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 60.14405762304922,
+          "macro_f1_percent": 59.855479727017254
+        },
+        "baseline_gcs": {
+          "ba_percent": 56.182472989195674,
+          "macro_f1_percent": 55.716586151368766
+        },
+        "baseline_standard": {
+          "ba_percent": 56.022408963585434,
+          "macro_f1_percent": 56.00000000000001
+        }
+      }
+    },
+    "ArticularyWordRecognition": {
+      "full": {
+        "standard": {
+          "ba_percent": 93.33333333333333,
+          "macro_f1_percent": 93.1876042797782
+        },
+        "gi": {
+          "ba_percent": 93.0,
+          "macro_f1_percent": 92.8334938897868
+        },
+        "gp": {
+          "ba_percent": 92.66666666666667,
+          "macro_f1_percent": 92.6848322691801
+        },
+        "gcs": {
+          "ba_percent": 95.33333333333333,
+          "macro_f1_percent": 95.15539730038586
+        }
+      },
+      "gcs_minus_gp_ba_pp": 2.6666666666666505,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -0.6666666666666599,
+        5.3333333333333455
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 97.33333333333333,
+          "macro_f1_percent": 97.31594202898552
+        },
+        "baseline_gcs": {
+          "ba_percent": 97.33333333333333,
+          "macro_f1_percent": 97.29189361363275
+        },
+        "baseline_standard": {
+          "ba_percent": 97.33333333333333,
+          "macro_f1_percent": 97.31594202898552
+        }
+      }
+    },
+    "Libras": {
+      "full": {
+        "standard": {
+          "ba_percent": 69.44444444444444,
+          "macro_f1_percent": 68.50453475056607
+        },
+        "gi": {
+          "ba_percent": 67.77777777777776,
+          "macro_f1_percent": 66.85126148127016
+        },
+        "gp": {
+          "ba_percent": 42.22222222222222,
+          "macro_f1_percent": 40.77237960502645
+        },
+        "gcs": {
+          "ba_percent": 51.11111111111112,
+          "macro_f1_percent": 50.02375234587952
+        }
+      },
+      "gcs_minus_gp_ba_pp": 8.888888888888896,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -5.689893001203919e-15,
+        18.333333333333336
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 76.11111111111111,
+          "macro_f1_percent": 75.95062908106385
+        },
+        "baseline_gcs": {
+          "ba_percent": 79.44444444444446,
+          "macro_f1_percent": 79.1271374740798
+        },
+        "baseline_standard": {
+          "ba_percent": 81.11111111111111,
+          "macro_f1_percent": 80.397384331633
+        }
+      }
+    },
+    "LSST": {
+      "full": {
+        "standard": {
+          "ba_percent": 31.333649809224102,
+          "macro_f1_percent": 33.51119945076136
+        },
+        "gi": {
+          "ba_percent": 17.23204140262057,
+          "macro_f1_percent": 17.15192105145517
+        },
+        "gp": {
+          "ba_percent": 20.559235016899038,
+          "macro_f1_percent": 20.073878130384486
+        },
+        "gcs": {
+          "ba_percent": 23.14401395103788,
+          "macro_f1_percent": 23.27093800815344
+        }
+      },
+      "gcs_minus_gp_ba_pp": 2.5847789341388427,
+      "gcs_minus_gp_ba_ci95_pp": [
+        0.8546620512027514,
+        4.4347736547238314
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 13.561392006289964,
+          "macro_f1_percent": 13.157683220336569
+        },
+        "baseline_gcs": {
+          "ba_percent": 23.50935537826237,
+          "macro_f1_percent": 24.549862938252133
+        },
+        "baseline_standard": {
+          "ba_percent": 23.542069045395042,
+          "macro_f1_percent": 24.008774505075102
+        }
+      }
+    },
+    "PenDigits": {
+      "full": {
+        "standard": {
+          "ba_percent": 73.40655432310793,
+          "macro_f1_percent": 72.79961840594801
+        },
+        "gi": {
+          "ba_percent": 75.597868323445,
+          "macro_f1_percent": 75.1888790736084
+        },
+        "gp": {
+          "ba_percent": 38.517790554086346,
+          "macro_f1_percent": 37.03886893255739
+        },
+        "gcs": {
+          "ba_percent": 66.30888006159377,
+          "macro_f1_percent": 65.49656410661542
+        }
+      },
+      "gcs_minus_gp_ba_pp": 27.791089507507422,
+      "gcs_minus_gp_ba_ci95_pp": [
+        26.030676637643225,
+        29.659109444095034
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 92.8801534851399,
+          "macro_f1_percent": 92.84514658127371
+        },
+        "baseline_gcs": {
+          "ba_percent": 94.81582895846803,
+          "macro_f1_percent": 94.77985224702813
+        },
+        "baseline_standard": {
+          "ba_percent": 94.06215330350337,
+          "macro_f1_percent": 94.03971740801973
+        }
+      }
+    },
+    "AppliancesEnergy_disc": {
+      "full": {
+        "standard": {
+          "ba_percent": 70.58823529411764,
+          "macro_f1_percent": 71.59420289855072
+        },
+        "gi": {
+          "ba_percent": 55.51470588235294,
+          "macro_f1_percent": 54.0625
+        },
+        "gp": {
+          "ba_percent": 66.17647058823529,
+          "macro_f1_percent": 64.64646464646464
+        },
+        "gcs": {
+          "ba_percent": 56.61764705882353,
+          "macro_f1_percent": 57.14285714285714
+        }
+      },
+      "gcs_minus_gp_ba_pp": -9.558823529411764,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -25.38602941176471,
+        4.4117647058823595
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 75.36764705882352,
+          "macro_f1_percent": 74.18788410886744
+        },
+        "baseline_gcs": {
+          "ba_percent": 69.11764705882352,
+          "macro_f1_percent": 69.11764705882352
+        },
+        "baseline_standard": {
+          "ba_percent": 59.55882352941176,
+          "macro_f1_percent": 61.11111111111111
+        }
+      }
+    },
+    "EyesOpenShut": {
+      "full": {
+        "standard": {
+          "ba_percent": 59.523809523809526,
+          "macro_f1_percent": 58.94192064404831
+        },
+        "gi": {
+          "ba_percent": 54.76190476190476,
+          "macro_f1_percent": 49.96865203761756
+        },
+        "gp": {
+          "ba_percent": 57.14285714285714,
+          "macro_f1_percent": 51.78571428571429
+        },
+        "gcs": {
+          "ba_percent": 54.761904761904766,
+          "macro_f1_percent": 48.148148148148145
+        }
+      },
+      "gcs_minus_gp_ba_pp": -2.3809523809523725,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -16.666666666666664,
+        11.904761904761907
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 40.476190476190474,
+          "macro_f1_percent": 34.1692789968652
+        },
+        "baseline_gcs": {
+          "ba_percent": 42.85714285714286,
+          "macro_f1_percent": 37.77777777777778
+        },
+        "baseline_standard": {
+          "ba_percent": 40.476190476190474,
+          "macro_f1_percent": 36.092513694461346
+        }
+      }
+    },
+    "Handwriting": {
+      "full": {
+        "standard": {
+          "ba_percent": 11.486236587212815,
+          "macro_f1_percent": 8.908463402963672
+        },
+        "gi": {
+          "ba_percent": 20.236360581347725,
+          "macro_f1_percent": 18.979819457594278
+        },
+        "gp": {
+          "ba_percent": 17.146982174229443,
+          "macro_f1_percent": 13.00423985246481
+        },
+        "gcs": {
+          "ba_percent": 21.447185853917823,
+          "macro_f1_percent": 16.311697892730255
+        }
+      },
+      "gcs_minus_gp_ba_pp": 4.300203679688383,
+      "gcs_minus_gp_ba_ci95_pp": [
+        1.7120644708957848,
+        6.598918210267084
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 23.552992779301643,
+          "macro_f1_percent": 22.00542952495372
+        },
+        "baseline_gcs": {
+          "ba_percent": 27.977849600088067,
+          "macro_f1_percent": 25.283079774311183
+        },
+        "baseline_standard": {
+          "ba_percent": 24.38920683016158,
+          "macro_f1_percent": 22.563875486517578
+        }
+      }
+    },
+    "IRDS-EFL": {
+      "full": {
+        "standard": {
+          "ba_percent": 54.166666666666664,
+          "macro_f1_percent": 43.58974358974359
+        },
+        "gi": {
+          "ba_percent": 67.26190476190477,
+          "macro_f1_percent": 66.01307189542483
+        },
+        "gp": {
+          "ba_percent": 84.52380952380952,
+          "macro_f1_percent": 84.52380952380952
+        },
+        "gcs": {
+          "ba_percent": 73.21428571428572,
+          "macro_f1_percent": 73.03703703703704
+        }
+      },
+      "gcs_minus_gp_ba_pp": -11.309523809523803,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -25.595238095238095,
+        0.0
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 54.166666666666664,
+          "macro_f1_percent": 43.58974358974359
+        },
+        "baseline_gcs": {
+          "ba_percent": 78.57142857142857,
+          "macro_f1_percent": 76.36363636363637
+        },
+        "baseline_standard": {
+          "ba_percent": 88.09523809523809,
+          "macro_f1_percent": 88.30584707646176
+        }
+      }
+    },
+    "JapaneseVowels_eq": {
+      "full": {
+        "standard": {
+          "ba_percent": 96.71852001662903,
+          "macro_f1_percent": 96.29396319215081
+        },
+        "gi": {
+          "ba_percent": 75.73489971487747,
+          "macro_f1_percent": 73.82200925041563
+        },
+        "gp": {
+          "ba_percent": 75.79224417489155,
+          "macro_f1_percent": 74.01199356230195
+        },
+        "gcs": {
+          "ba_percent": 79.56318548587737,
+          "macro_f1_percent": 77.60065295990057
+        }
+      },
+      "gcs_minus_gp_ba_pp": 3.7709413109858203,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -0.2090846090011794,
+        7.928606420152579
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 99.49494949494951,
+          "macro_f1_percent": 99.21770726530319
+        },
+        "baseline_gcs": {
+          "ba_percent": 98.8796474196919,
+          "macro_f1_percent": 98.73617477341514
+        },
+        "baseline_standard": {
+          "ba_percent": 99.62121212121211,
+          "macro_f1_percent": 99.4639755758614
+        }
+      }
+    },
+    "SPHERE-WUS": {
+      "full": {
+        "standard": {
+          "ba_percent": 50.0,
+          "macro_f1_percent": 33.33333333333333
+        },
+        "gi": {
+          "ba_percent": 50.0,
+          "macro_f1_percent": 50.0
+        },
+        "gp": {
+          "ba_percent": 50.0,
+          "macro_f1_percent": 33.33333333333333
+        },
+        "gcs": {
+          "ba_percent": 50.0,
+          "macro_f1_percent": 33.33333333333333
+        }
+      },
+      "gcs_minus_gp_ba_pp": 0.0,
+      "gcs_minus_gp_ba_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 75.0,
+          "macro_f1_percent": 73.33333333333334
+        },
+        "baseline_gcs": {
+          "ba_percent": 50.0,
+          "macro_f1_percent": 33.33333333333333
+        },
+        "baseline_standard": {
+          "ba_percent": 75.0,
+          "macro_f1_percent": 73.33333333333334
+        }
+      }
+    },
+    "UIPRMD-SSE-C": {
+      "full": {
+        "standard": {
+          "ba_percent": 94.44444444444444,
+          "macro_f1_percent": 94.42724458204334
+        },
+        "gi": {
+          "ba_percent": 77.77777777777779,
+          "macro_f1_percent": 76.62337662337663
+        },
+        "gp": {
+          "ba_percent": 94.44444444444444,
+          "macro_f1_percent": 94.42724458204334
+        },
+        "gcs": {
+          "ba_percent": 94.44444444444444,
+          "macro_f1_percent": 94.42724458204334
+        }
+      },
+      "gcs_minus_gp_ba_pp": 0.0,
+      "gcs_minus_gp_ba_ci95_pp": [
+        -16.666666666666675,
+        16.666666666666664
+      ],
+      "raw_baseline": {
+        "baseline": {
+          "ba_percent": 100.0,
+          "macro_f1_percent": 100.0
+        },
+        "baseline_gcs": {
+          "ba_percent": 83.33333333333333,
+          "macro_f1_percent": 82.85714285714285
+        },
+        "baseline_standard": {
+          "ba_percent": 94.44444444444444,
+          "macro_f1_percent": 94.42724458204334
+        }
+      }
+    }
+  },
+  "source_files_sha256": {
+    "uea/results/uea-half/metrics.csv": "e3471220cac7bb3c8fb5a3454276910b782ebaadb4bbccf247de8c7a1f37d660",
+    "uea/results/uea-half/paired_contrasts.csv": "941bd1421f241416466b6c56a0da815419883f37ff34758456844c2e4bb53bbe",
+    "uea/results/uea-half/paired_summary.csv": "99b38b70a1a52d93d22c7bbe3f6742f74bc66766b69614aa9702466735e90b73",
+    "uea/results/uea-half/run.json": "4fff5385bb0de157ec85da4ffb43eceb13fd65d6d4d8f2011726add0f9030a31",
+    "uea/results/uea-half/summary.csv": "b384743455e69bd4d200ba409267b1c1aac5a6e8d97ef804df5ae1aa40abe834",
+    "uea/results/uea-full/metrics.csv": "068e9e83b8cb36faa45c0764b3f4902c0746bdd6c6c431d4b479106292e48f24",
+    "uea/results/uea-full/paired_contrasts.csv": "4e7d25e910cce64981218bfb735ccca7859b1baf00317e78b9248583bde71841",
+    "uea/results/uea-full/paired_summary.csv": "c8f87651c8981b5f855354928c40dce2acc4ccf29e7749dc6c8c0ee3699cce6b",
+    "uea/results/uea-full/run.json": "82412c2964633df8c10b23c6add0dc34df5e677c43c7d6a0af60634767ee5c6f",
+    "uea/results/uea-full/summary.csv": "4d8e501302e0025499095d0e070d3161f59a5d31b90dd5d2676d7d5d0f1e1660",
+    "uea/results/uea-extra/metrics.csv": "d0d0fac9a344c7e34bbacfe79a46a9098ec670963138cbab773d1bc29d5fb87b",
+    "uea/results/uea-extra/paired_contrasts.csv": "6f83099f3c3613475fe03b5e34fc9d0e426c8f62c65a64e1193d930c57d0df98",
+    "uea/results/uea-extra/paired_summary.csv": "a4fcf5f34f5658e9633f92c25673d84f59e4768b8f03381b902345c4f261e022",
+    "uea/results/uea-extra/run.json": "3c321544f24c0ff87ebaef999dc1ce186de8af52709e5dd153ddef0939da568a",
+    "uea/results/uea-extra/summary.csv": "096d455e659ae06859c62cb1dfc8a98d2e4a4ea221ec0cbeab42b5a38d8b5099",
+    "uea/results/uea-baseline/metrics.csv": "c624a117526fcb364316ea85c6cc417855e9a3d00d8b0b9636e888ff7a72ee44",
+    "uea/results/uea-baseline/paired_contrasts.csv": "0ac972e643984d0af37f5d2328e2ae169de8b9d5e0e1296758177c6db7d7e184",
+    "uea/results/uea-baseline/paired_summary.csv": "bdf2fc8ee8fe5c38ce659bdc20c60f0d789e5b0c019c30d95a260a06e781fe9b",
+    "uea/results/uea-baseline/run.json": "102d367a80f1fcbebfd782a63c39d7be485cbc3470730afef5752159815b2e01",
+    "uea/results/uea-baseline/summary.csv": "104ee61d4d2fc4e4ad1d437f117419aed5b09f2a1d359329ad58ec8f360a541c"
+  },
+  "confidence_reference_probe": {
+    "scope": "Current source on one five-reading/two-channel fixture; does not prove the cause in archived runs",
+    "observations": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        4,
+        1
+      ]
+    ],
+    "results": [
+      {
+        "python_hash_seed": 0,
+        "patterns": [
+          {
+            "pattern": [
+              "0+",
+              "1+"
+            ],
+            "support": 0.6,
+            "confidence": 0.6,
+            "reference": "0+"
+          }
+        ]
+      },
+      {
+        "python_hash_seed": 1,
+        "patterns": [
+          {
+            "pattern": [
+              "0+",
+              "1+"
+            ],
+            "support": 0.6,
+            "confidence": 1.0,
+            "reference": "1+"
+          }
+        ]
+      }
+    ],
+    "finding": "Hash-dependent default confidence reference"
+  }
+}

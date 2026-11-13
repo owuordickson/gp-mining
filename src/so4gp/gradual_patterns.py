@@ -188,10 +188,10 @@ class GP:
         self._support: float = 0
         self._confidence: float = 0
         self._density: float = 0
-        self._avg_dev_from_diag: float = 0
+        self._avg_separation: float = 0
         self._rank_dispersion: float = 0
         self._graph_connectivity: int = 0
-        self._singularity_score: float = 0
+        self._singularity: float = 0
 
     @property
     def gradual_items(self) -> list[GI]:
@@ -219,8 +219,8 @@ class GP:
         return self._density
 
     @property
-    def avg_deviation_from_diagonal(self) -> float:
-        return self._avg_dev_from_diag
+    def average_separation(self) -> float:
+        return self._avg_separation
 
     @property
     def rank_dispersion(self) -> float:
@@ -232,7 +232,7 @@ class GP:
 
     @property
     def singularity_score(self) -> float:
-        return self._singularity_score
+        return self._singularity
 
     def add_gradual_item(self, item: GI) -> None | bool:
         """
@@ -294,7 +294,7 @@ class GP:
                     f"sup={self.support}",
                     f"conf={self.confidence}",
                     f"density={round(self.density, 3)}",
-                    f"avg_dev={round(self.avg_deviation_from_diagonal, 3)}",
+                    f"avg_dev={round(self.average_separation, 3)}",
                     f"dispersion={round(self.rank_dispersion, 3)}",
                     f"connect={self.graph_connectivity}",
                     f"singularity_scr={round(self.singularity_score, 3)}",
@@ -304,11 +304,7 @@ class GP:
                     {"Support": f"{self.support}"},
                     {"Confidence": f"{self.confidence}"},
                     {"Density": f"{round(self.density, 3)}"},
-                    {
-                        "Avg. Deviation from Diagonal": (
-                            f"{round(self.avg_deviation_from_diagonal, 3)}"
-                        )
-                    },
+                    {"Avg. Separation": f"{round(self.average_separation, 3)}"},
                     {"Rank Dispersion": f"{round(self.rank_dispersion, 3)}"},
                     {"Graph Connectivity": f"{self.graph_connectivity}"},
                     {"Singularity Score": f"{round(self.singularity_score, 3)}"},
@@ -589,10 +585,10 @@ class GP:
         pair_count = len(pairs)
         if pair_count == 0:
             self._density = 0.0
-            self._avg_dev_from_diag = float("nan")
+            self._avg_separation = float("nan")
             self._rank_dispersion = float("nan")
             self._graph_connectivity = obj_count
-            self._singularity_score = float("nan")
+            self._singularity = float("nan")
             return True
 
         if isinstance(pairs, torch.Tensor):
@@ -656,10 +652,10 @@ class GP:
                         break
 
         self._density = pair_count / GP.pair_count(obj_count)
-        self._avg_dev_from_diag = mean_gap
+        self._avg_separation = mean_gap
         self._rank_dispersion = dispersion
         self._graph_connectivity = components
-        self._singularity_score = max_degree / pair_count
+        self._singularity = max_degree / pair_count
         return True
 
     @staticmethod

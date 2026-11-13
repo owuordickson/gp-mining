@@ -61,7 +61,7 @@ Datasets should primarily contain numerical attributes. Temporal algorithms addi
 If you are new to SO4GP, follow the documentation in the following order:
 
 1. [Introduction and Quick Start](introduction/basic_usage.md) – Learn the terminology, install the package, and run your first mining example.
-2. **Tutorials** – Try [feature selection](tutorials/feature_selection.md), [joint GP descriptors](tutorials/timeseries_analysis.md), and [causal discovery](tutorials/causal_discovery.md).
+2. **Tutorials** – Try [feature selection](tutorials/feature_selection.md), [gradual descriptors](tutorials/joint_effect.md), and [causal discovery](tutorials/causal_discovery.md).
 3. **API Reference** – Explore [algorithms](api/algorithms.rst), [classes](api/classes.rst), and [functions](api/functions.rst) as needed.
 
 ---
@@ -99,7 +99,7 @@ introduction/basic_usage
 :caption: Tutorials
 
 tutorials/feature_selection
-tutorials/timeseries_analysis
+tutorials/joint_effect
 tutorials/causal_discovery
 ```
 

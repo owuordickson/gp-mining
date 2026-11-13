@@ -68,7 +68,7 @@ class OrigGRAANK(BaseGrad):
         search_space = self.search_space
         min_sup = self.thd_supp
         dim = self.attr_size
-        all_candidates = []
+        seen_candidates: set[frozenset[str]] = set()
 
         for key1, key2 in combinations(valid_dict, 2):
             pw_mat1 = valid_dict[key1]
@@ -87,14 +87,16 @@ class OrigGRAANK(BaseGrad):
             target_col_ok = self.check_target_feature(
                 gp_cand, exclude_target=exclude_target
             )
-            # 2c. Check if the GP candidate is already present in the list of candidates
-            not_exists = not gp_cand.is_duplicate(all_candidates)
+            # 2c. Check if either orientation has already been evaluated.
+            gp_key = frozenset(gp_cand.as_set)
+            not_exists = gp_key not in seen_candidates
             is_valid = length_ok and target_col_ok and not_exists
             if not is_valid:
                 continue
 
             # 3. Compute the support of the GP candidate
-            all_candidates.append(gp_cand)
+            seen_candidates.add(gp_key)
+            seen_candidates.add(frozenset(gp_cand.as_swapped_set))
             pw_mat = GP.perform_and(pw_mat1, pw_mat2, dim, time_data)
             if pw_mat.support > min_sup:
                 res_dict[tuple(pw_mat.pattern)] = pw_mat
@@ -144,7 +146,9 @@ class OrigGRAANK(BaseGrad):
             )
 
             for gp_set, gi_data in (valid_bins_dict or {}).items():
-                self.remove_subsets(set(gp_set))
+                # The first level only contains distinct two-item patterns.
+                if candidate_level > 1:
+                    self.remove_subsets(set(gp_set))
 
                 # create GP
                 gp: GP | TGP = TGP() if time_data is not None else GP()
@@ -158,7 +162,10 @@ class OrigGRAANK(BaseGrad):
                 # Compute confidence
                 target_gi = gp.get_target_gi(target_col)
                 target_pw_mat: PairwiseMatrix = target_gi_dict[target_gi.to_string()]
-                conf = gp.support / round(target_pw_mat.support, 3)
+                target_support = (
+                    round(target_pw_mat.support, 3) or target_pw_mat.support
+                )
+                conf = gp.support / target_support
                 gp.confidence = conf
 
                 # Compute descriptors

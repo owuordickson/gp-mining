@@ -485,7 +485,7 @@ class DataGP:
                 "Support",
                 "Confidence",
                 "Density",
-                "Avg. Deviation from Diagonal",
+                "Avg. Separation",
                 "Rank Dispersion",
                 "Graph Connectivity",
                 "Singularity Score",
