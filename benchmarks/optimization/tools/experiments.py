@@ -29,7 +29,7 @@ def canonical_pattern(items):
 
 
 def representativity_for_lag(n, lag):
-    """Choose a representativity yielding range(1, max_step) == 1..lag."""
+    """Choose a representativity-yielding range(1, max_step) == 1..lag."""
     if n < 3 or lag < 1 or lag >= n - 1:
         raise ValueError("lag must be between 1 and n - 2")
     return (n - lag - 0.5) / n
@@ -163,18 +163,20 @@ def run_experiment(config: dict) -> dict:
         result = _kernel(data, int(config.get("repeats", 10)), method)
         result["elapsed_seconds"] = result[f"{method}_intersection_seconds"]
         return result
+
     source = _select_source(config.get("source_path"))
     seed = int(config.get("seed", 0))
     random.seed(seed)
     np.random.seed(seed)
+
     try:
         import torch
-
         torch.manual_seed(seed)
     except ImportError:
         pass
-    support = float(config.get("support", 0.7))
+    support = float(config.get("support", 0.5))
     method = config.get("method", "apriori")
+
     if experiment == "graank":
         from so4gp.algorithms.graank import GRAANK
 

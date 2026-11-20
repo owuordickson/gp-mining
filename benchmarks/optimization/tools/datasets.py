@@ -11,21 +11,12 @@ import pandas as pd
 
 # Files can be explicitly overridden via the variants, never silently substituted.
 DATASETS = {
-    "BCR": ("breast_cancer.csv", "Glucose", "synthetic"),
-    "C2K": ("c2k.csv", "o_dlv_e", "synthetic"),
-    "AQY": ("air_quality.csv", "CO(GT)", "air"),
-    "DIR": ("directio15k.csv", "Hm0", "directio"),
+    "BCR": ("breast_cancer.csv", "Glucose", "medical"),
+    "C2K": ("c2k.csv", "o_dlv_e", "transport"),
+    "AQY": ("air_quality.csv", "CO(GT)", "ecology"),
+    "DIR": ("directio15k.csv", "Hm0", "coastline"),
     "PWC": ("power_consumption50k.csv", "Global_active_power", "power"),
-    "APS": ("aps_16k.csv", "aa_000", "synthetic"),
-    "C2K1K": ("c2k_1k.csv", "o_dlv_e", "synthetic"),
-    "AQY1K": ("air_quality1k.csv", "CO(GT)", "air"),
-    "DIR1K": ("directio1k.csv", "Hm0", "directio"),
-    "DIR8K": ("directio8k.csv", "Hm0", "directio"),
-    "PWC1K": ("power_consumption1k.csv", "Global_active_power", "power"),
-    "PWC10K": ("power_consumption10k.csv", "Global_active_power", "power"),
-    "PWC19K": ("power_consumption19k.csv", "Global_active_power", "power"),
-    "APS2K": ("aps_2k.csv", "aa_000", "synthetic"),
-    "APS5K": ("aps_5k.csv", "aa_000", "synthetic"),
+    "APS": ("aps_16k.csv", "aa_000", "vehicle"),
 }
 
 
@@ -57,8 +48,8 @@ def prepare(
     measurement time. DIR requires a site when the file contains multiple sites.
     The returned frame is ordered with time first and has a fresh RangeIndex.
     """
-    code = dataset_code.upper()
-    if code not in DATASETS:
+    d_set = dataset_code.upper()
+    if d_set not in DATASETS:
         raise ValueError(
             f"Unknown dataset {dataset_code!r}; choose from {sorted(DATASETS)}"
         )
@@ -66,16 +57,17 @@ def prepare(
         raise ValueError("rows must be at least 2")
     if features is not None and features < 2:
         raise ValueError("features must be at least 2")
-    name, default_target, kind = DATASETS[code]
+
+    name, default_target, kind = DATASETS[d_set]
     chosen_target = target or default_target
     raw = _load(Path(data_dir) / name, name)
-    separator = ";" if kind == "power" else ","
+    separator = ";" if d_set == "PWC" else ","
     frame = pd.read_csv(io.BytesIO(raw), sep=separator, na_values=["?", "na", "NA"])
     raw_rows = len(frame)
     frame.columns = frame.columns.astype(str).str.strip()
     available_sites = []
     selected_site = None
-    if kind == "directio" and "id_site" in frame.columns:
+    if d_set == "DIR" and "id_site" in frame.columns:
         available_sites = sorted(
             frame["id_site"].dropna().astype(str).unique().tolist()
         )
@@ -97,19 +89,19 @@ def prepare(
 
     source_row = pd.Series(frame.index.to_numpy(), index=frame.index)
     try:
-        if kind == "air":
+        if d_set == "AQY":
             time = pd.to_datetime(
                 frame["Date"].astype(str) + " " + frame["Time"].astype(str),
                 format="%m/%d/%Y %H:%M:%S",
                 errors="raise",
             )
-        elif kind == "power":
+        elif d_set == "PWC":
             time = pd.to_datetime(
                 frame["Date"].astype(str) + " " + frame["Time"].astype(str),
                 format="%d/%m/%Y %H:%M:%S",
                 errors="raise",
             )
-        elif kind == "directio":
+        elif d_set == "DIR":
             time = pd.to_datetime(
                 frame["date_time"], format="%Y-%m-%d %H:%M:%S", errors="raise"
             )
@@ -117,8 +109,10 @@ def prepare(
             time = pd.Timestamp("2000-01-01") + pd.to_timedelta(source_row, unit="s")
     except (KeyError, ValueError, TypeError) as exc:
         raise ValueError(f"Invalid timestamp in {name}: {exc}") from exc
+
     if time.isna().any():
         raise ValueError(f"Missing timestamp in {name}")
+
     frame.insert(0, "__benchmark_time", time)
     frame = frame.sort_values("__benchmark_time", kind="stable")
     if rows is not None:
@@ -134,7 +128,7 @@ def prepare(
         "timestamp",
         "id_site",
     }
-    if code.startswith("C2K"):
+    if d_set.startswith("C2K"):
         excluded.add("nr")
         excluded.update(
             c for c in frame if c.endswith("_legid") or c.endswith("_place")
@@ -146,16 +140,14 @@ def prepare(
     numeric = frame.drop(columns="__benchmark_time").apply(
         pd.to_numeric, errors="coerce"
     )
-    if code.startswith("AQY"):
-        numeric = numeric.replace(-200, float("nan"))
-    if code.startswith("APS"):
-        numeric = numeric.replace(-1, float("nan"))
+
     unusable = [c for c in numeric if numeric[c].nunique(dropna=True) < 2]
     if chosen_target in unusable:
         raise ValueError(f"Target {chosen_target!r} is missing or constant")
     removed.extend(unusable)
     numeric = numeric.drop(columns=unusable)
     columns = list(numeric.columns)
+
     if features is not None:
         columns = columns[:features]
         if chosen_target not in columns:
@@ -176,7 +168,7 @@ def prepare(
         index=False, lineterminator="\n", float_format="%.17g"
     ).encode("utf-8")
     metadata = {
-        "dataset": code,
+        "dataset": d_set,
         "filename": name,
         "raw_sha256": _hash(raw),
         "prepared_sha256": _hash(prepared_bytes),
@@ -187,9 +179,6 @@ def prepare(
         "columns": list(prepared.columns),
         "target_name": chosen_target,
         "target_index": int(prepared.columns.get_loc(chosen_target)),
-        "time_source": "synthetic_row_order" if kind == "synthetic" else "real",
-        "site": selected_site,
-        "available_sites": available_sites,
         "missing_policy": "complete_case",
     }
     return prepared, metadata

@@ -18,17 +18,6 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 LEGACY = "affc7860397002fba26af96dcb2f0461f2cdda9d"
 DATASETS = ("BCR", "C2K", "AQY", "DIR", "PWC", "APS")
-VARIANTS = (
-    "C2K1K",
-    "AQY1K",
-    "DIR1K",
-    "DIR8K",
-    "PWC1K",
-    "PWC10K",
-    "PWC19K",
-    "APS2K",
-    "APS5K",
-)
 
 
 def run_child(config, timeout, command=None, memory_limit_bytes=None):
@@ -160,7 +149,7 @@ def _total_ram_bytes():
 def _parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--datasets", nargs="+", choices=DATASETS + VARIANTS, default=list(DATASETS)
+        "--datasets", nargs="+", choices=DATASETS, default=list(DATASETS)
     )
     parser.add_argument(
         "--experiment",
@@ -229,8 +218,8 @@ def main(argv=None):
         raise ValueError("Invalid support, timeout, or iteration count")
     if args.profile == "full" and args.memory_mib is None:
         raise ValueError("The full profile requires a positive --memory-mib limit")
-    from .tools.datasets import prepare
-    from .tools.report import write_reports
+    from tools.datasets import prepare
+    from tools.report import write_reports
 
     defaults = {"quick": (64, 6, 2), "study": (1000, 12, 10), "full": (None, None, 10)}
     rows, features, lag = defaults[args.profile]
@@ -316,7 +305,6 @@ def main(argv=None):
             frame, metadata = prepare(
                 dataset,
                 args.data_dir,
-                download=args.download,
                 rows=rows,
                 features=features,
                 target=args.target,
