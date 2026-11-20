@@ -7,7 +7,7 @@ import json
 
 # import torch
 import numpy as np
-import pandas
+import pandas as pds
 
 from .base.tgrad import TGrad
 
@@ -61,7 +61,7 @@ class TGRAANK:
 
                 Supported inputs include:
 
-                * ``pandas.DataFrame``
+                * ``pd.DataFrame``
                 * Path to a CSV file
 
                 The first column typically contains timestamps, while the remaining
@@ -389,7 +389,7 @@ class TGRAANK:
         )
         return out
 
-    def discover_causal_relationships(self, max_lag: int = 0) -> pandas.DataFrame:
+    def discover_causal_relationships(self, max_lag: int = 0) -> pds.DataFrame:
         """
         Score candidate temporal causal relationships between numerical attributes.
 
@@ -406,7 +406,7 @@ class TGRAANK:
                 one-row shift. Zero retains the current representativity.
 
         Returns:
-            pandas.DataFrame:
+            pd.DataFrame:
                 A square score matrix indexed by feature names. Rows are effects,
                 columns are causes, and cell ``(i, j)`` sums support for candidate
                 relationships from feature ``j`` to feature ``i``.
@@ -474,8 +474,8 @@ class TGRAANK:
 
         feature_titles = [self._mine_obj.titles[i] for i in feature_cols]
 
-        return pandas.DataFrame(
+        return pds.DataFrame(
             dependency_matrix,
-            index=pandas.Index(feature_titles, name="Effect"),
-            columns=pandas.Index(feature_titles, name="Cause"),
+            index=pds.Index(feature_titles, name="Effect"),
+            columns=pds.Index(feature_titles, name="Cause"),
         )

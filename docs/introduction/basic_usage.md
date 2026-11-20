@@ -194,7 +194,7 @@ These scores require causal assumptions and validation. See the [causal discover
 Continue with a practical tutorial:
 
 - [Feature selection using GPs](../tutorials/feature_selection.md)
-- [Studying joint effects with GP descriptors](../tutorials/timeseries_analysis.md)
+- [Studying joint effects with GP descriptors](../tutorials/joint_effect.md)
 - [Causal discovery using FTGPs](../tutorials/causal_discovery.md)
 
 Use the [Algorithm Reference](../api/algorithms.rst), [Class Reference](../api/classes.rst), and [Function Reference](../api/functions.rst) for parameter and return-value documentation. More detailed workflows are available in the [example notebooks](https://github.com/owuordickson/gp-mining/tree/main/examples).

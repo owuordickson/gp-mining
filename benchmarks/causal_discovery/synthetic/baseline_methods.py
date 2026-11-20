@@ -33,7 +33,7 @@ def run_granger_causality(df, max_lag=3, alpha=0.05):
     # Test if Column 0 Granger-causes Column 1
     try:
         res = grangercausalitytests(
-            df[[df.columns[1], df.columns[0]]], maxlag=max_lag, verbose=False
+            df[[df.columns[1], df.columns[0]]], maxlag=max_lag,
         )
         p_values = [res[lag][0]["ssr_ftest"][1] for lag in range(1, max_lag + 1)]
         if min(p_values) < alpha:

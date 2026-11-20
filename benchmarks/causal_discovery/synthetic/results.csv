@@ -1,0 +1,8 @@
+,Precision,Precision,Recall,Recall,F1-Score,F1-Score
+Dataset,CausalRivers (Real-World),TimeGraph (Synthetic),CausalRivers (Real-World),TimeGraph (Synthetic),CausalRivers (Real-World),TimeGraph (Synthetic)
+Algorithm,,,,,,
+Classical Statistics,0.5,0.0,1.0,0.0,0.67,0.0
+Granger Causality,1.0,1.0,1.0,1.0,1.0,1.0
+PC Algorithm,1.0,0.0,1.0,0.0,1.0,0.0
+T-GRAANK (Our Proposed),1.0,1.0,1.0,1.0,1.0,1.0
+Tigramite / PCMCI,1.0,1.0,1.0,1.0,1.0,1.0

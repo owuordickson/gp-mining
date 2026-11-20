@@ -70,7 +70,7 @@ For sign/lag inspection, a real Deposium GeoAI case study with its saved tests a
 
 ## Archived benchmark results
 
-The following CausalRivers results reproduce the [saved benchmark report](https://github.com/owuordickson/gp-mining/blob/main/benchmarks/benchmarking-results.md), updated 26 October 2026. The metric is **mean per graph AUROC**, excluding autoregressive diagonal entries; higher values indicate better graph-edge ranking on that setting.
+The following CausalRivers results reproduce the [saved benchmark report](https://github.com/owuordickson/gp-mining/blob/main/benchmarks/causal_discovery/benchmarking-results.md), updated 26 October 2026. The metric is **mean per graph AUROC**, excluding autoregressive diagonal entries; higher values indicate better graph-edge ranking on that setting.
 
 | Graph set | TGRAANK | PCMCI | PC | VARLiNGAM | DYNOTEARS |
 |---|---:|---:|---:|---:|---:|
