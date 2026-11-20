@@ -218,7 +218,7 @@ def main(argv=None):
     seeds = (
         args.seeds
         if args.seeds is not None
-        else (list(range(5)) if args.profile == "study" else [0])
+        else (list(range(3)) if args.profile == "study" else [0])
     )
     if (
         any(not 0 <= value <= 1 for value in supports)

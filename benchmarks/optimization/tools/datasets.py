@@ -11,11 +11,11 @@ import pandas as pd
 # Files can be explicitly overridden via the variants, never silently substituted.
 DATASETS = {
     "BCR": ("breast_cancer.csv", "Glucose", "medical"),
-    #"C2K": ("c2k.csv", "o_dlv_e", "transport"),
-    #"AQY": ("air_quality.csv", "CO(GT)", "ecology"),
-    #"DIR": ("directio15k.csv", "Hm0", "coastline"),
-    #"PWC": ("power_consumption50k.csv", "Global_active_power", "power"),
-    #"APS": ("aps_16k.csv", "aa_000", "vehicle"),
+    "C2K": ("c2k.csv", "o_dlv_e", "transport"),
+    "AQY": ("air_quality.csv", "CO(GT)", "ecology"),
+    "DIR": ("directio15k.csv", "Hm0", "coastline"),
+    "PWC": ("power_consumption50k.csv", "Global_active_power", "power"),
+    "APS": ("aps_16k.csv", "aa_000", "vehicle"),
 }
 
 
