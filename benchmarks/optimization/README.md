@@ -21,7 +21,7 @@ Place the six CSV files from the [source data directory](https://github.com/owuo
 | PWC | `power_consumption50k.csv` | `Global_active_power` | Recorded date and time |
 | APS | `aps_16k.csv` | `aa_000` | Synthetic row order |
 
-Synthetic timestamps encode original row positions; they do not establish temporal relationships among independent observations. The loader selects numeric attributes, excludes labels and IDs, handles dataset-specific missing markers, and uses complete cases. Every trial records the source and prepared-data hashes, selected columns, and retained rows. Directio sites are kept separate; use `--site` if the selected file contains multiple sites.
+Synthetic timestamps encode original row positions; they do not establish temporal relationships among independent observations. The loader selects numeric attributes, excludes labels and IDs, handles dataset-specific missing markers, and uses complete cases. It prepares any selected subset in memory directly from the files in `data/`; no separate prepared dataset files are created. Every trial records the source and prepared-data hashes, selected columns, and retained rows. Directio sites are kept separate; use `--site` if the selected file contains multiple sites.
 
 ## Run
 
@@ -34,11 +34,11 @@ python benchmarks/optimization/benchmark.py --datasets BCR --experiment graank -
 python benchmarks/optimization/benchmark.py --datasets DIR --profile study --supports 0.5 0.7 0.9 --timeout 600
 ```
 
-Without options, the smoke profile uses at most 64 rows, six features, support 0.7, one seed, five heuristic iterations and two temporal lags. `--profile study` defaults to up to 1,000 rows, 12 features, supports 0.5/0.7/0.9, five seeds, and ten lags; `--profile full` uses the selected file's full prepared size and requires `--memory-mib`. Use `--rows`, `--features`, `--support`, `--supports`, `--seeds`, `--target`, `--lag`, `--iterations`, and `--timeout` to change these settings. `--apriori-level` optionally limits APRIORI depth; by default its search is not depth-limited. `--memory-mib` applies a best-effort sampled process-tree memory limit. Each trial has a discarded warm-up by default; use `--warmups` to change the count.
+Without options, the study profile uses up to 1,000 rows, 12 features, supports 0.5/0.7/0.9, five seeds, and ten lags. `--profile quick` uses at most 64 rows, six features, support 0.7, one seed and two lags. The term "smoke test" previously used here meant a small check that the pipeline ran; it did not represent a complete experiment. `--profile full` uses the selected file's full prepared size and requires `--memory-mib`. Use `--rows`, `--features`, `--support`, `--supports`, `--seeds`, `--target`, `--lag`, `--iterations`, and `--timeout` to change these settings. `--apriori-level` optionally limits APRIORI depth; by default its search is not depth-limited. `--memory-mib` applies a best-effort sampled process-tree memory limit. Each trial has a discarded warm-up by default; use `--warmups` to change the count.
 
 Smaller source files can be selected explicitly using `C2K1K`, `AQY1K`, `DIR1K`, `DIR8K`, `PWC1K`, `PWC10K`, `PWC19K`, `APS2K`, and `APS5K`; no file is substituted silently. Use `--data-dir` for an alternative cache. The pinned dense revision is extracted from local Git objects; a checkout without that object needs the revision fetched first.
 
-## Saved smoke results
+## Earlier small-sample results
 
 The [saved records](benchmarking-results.json) contain two bounded smoke runs,
 not a full performance study. Each method has **one measured trial with seed 0
@@ -130,7 +130,7 @@ libraries, so they do not show bitmap storage savings on their own.
 
 ## Result files and interpretation
 
-Each run creates a new folder under `results/`, with `manifest.json`, `trials.jsonl`, prepared CSVs, `summary.csv`, `paired_summary.csv`, `summary.json`, and `report.md`. A figure is created when sufficient pattern-recovery data is available. Use `--output` to choose a directory and `--resume` only with the same settings, source and prepared inputs. A timeout, memory limit, input failure, or algorithm exception is recorded as a failure rather than as a zero-duration result.
+Each run creates a new folder under `results/`, with `manifest.json`, `trials.jsonl`, `summary.csv`, and `paired_summary.csv`. A figure is created when sufficient pattern-recovery data is available. The source data stays in `data/`; selected data is passed in memory to each isolated worker. Use `--output` to choose a directory and `--resume` only with the same settings, source and prepared inputs. A timeout, memory limit, input failure, or algorithm exception is recorded as a failure rather than as a zero-duration result.
 
 The algorithm timer includes miner construction and mining; input preparation and process startup are excluded, and process elapsed time is recorded separately. Sampled process-tree resident memory includes imports and post-mining validation, and is not a representation-only memory measure. Kernel records include separate dense and packed array sizes and intersection timings; both representations exist in each kernel process. Results from small smoke inputs check the pipeline and are not general performance claims.
 

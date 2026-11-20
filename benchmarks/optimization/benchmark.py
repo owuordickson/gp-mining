@@ -33,8 +33,7 @@ VARIANTS = (
 
 def run_child(config, timeout, command=None, memory_limit_bytes=None):
     """Execute a JSON worker and distinguish timeout, memory limit, and errors."""
-    sys.path.insert(0, str(HERE / "tools"))
-    from process_control import kill_tree, sample_tree
+    from .tools.process_control import kill_tree, sample_tree
 
     command = command or [sys.executable, str(HERE / "tools" / "experiments.py")]
     env = os.environ.copy()
@@ -169,7 +168,7 @@ def _parser():
         default="all",
     )
     parser.add_argument(
-        "--profile", choices=("smoke", "study", "full"), default="smoke"
+        "--profile", choices=("quick", "study", "full"), default="study"
     )
     parser.add_argument("--data-dir", type=Path, default=HERE / "data")
     parser.add_argument(
@@ -230,11 +229,10 @@ def main(argv=None):
         raise ValueError("Invalid support, timeout, or iteration count")
     if args.profile == "full" and args.memory_mib is None:
         raise ValueError("The full profile requires a positive --memory-mib limit")
-    sys.path.insert(0, str(HERE / "tools"))
-    from datasets import prepare
-    from report import write_reports
+    from .tools.datasets import prepare
+    from .tools.report import write_reports
 
-    defaults = {"smoke": (64, 6, 2), "study": (1000, 12, 10), "full": (None, None, 10)}
+    defaults = {"quick": (64, 6, 2), "study": (1000, 12, 10), "full": (None, None, 10)}
     rows, features, lag = defaults[args.profile]
     rows, features, lag = args.rows or rows, args.features or features, args.lag or lag
     args.output.mkdir(parents=True, exist_ok=True)
@@ -333,16 +331,15 @@ def main(argv=None):
                 raise RuntimeError(
                     f"Prepared data changed for {dataset}; use a new output directory"
                 )
-            prepared = args.output / f"{dataset}-prepared.csv"
-            frame.to_csv(
-                prepared, index=False, lineterminator="\n", float_format="%.17g"
+            data_csv = frame.to_csv(
+                index=False, lineterminator="\n", float_format="%.17g"
             )
             if (
-                hashlib.sha256(prepared.read_bytes()).hexdigest()
+                hashlib.sha256(data_csv.encode("utf-8")).hexdigest()
                 != metadata["prepared_sha256"]
             ):
                 raise ValueError(
-                    "Prepared CSV hash differs from preprocessing metadata"
+                    "In-memory data hash differs from preprocessing metadata"
                 )
         except RuntimeError:
             raise
@@ -374,7 +371,7 @@ def main(argv=None):
                 config = {
                     "experiment": "graank" if exp == "version" else exp,
                     "method": "apriori" if exp == "version" else method,
-                    "data_path": str(prepared.resolve()),
+                    "data_csv": data_csv,
                     "support": support,
                     "seed": seed,
                     "target": metadata["target_index"],

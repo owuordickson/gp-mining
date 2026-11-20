@@ -4,16 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import io
-import urllib.request
 from pathlib import Path
 
 import pandas as pd
 
-REVISION = "9f128eada3da0604fe18e6474d427ced7e72ffc6"
-BASE_URL = (
-    "https://raw.githubusercontent.com/owuordickson/meso-hpc-lr/"
-    f"{REVISION}/hpc%40lr/data/"
-)
+
 # Files can be explicitly overridden via the variants, never silently substituted.
 DATASETS = {
     "BCR": ("breast_cancer.csv", "Glucose", "synthetic"),
@@ -38,41 +33,19 @@ def _hash(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _load(path: Path, name: str, download: bool) -> bytes:
+def _load(path: Path, name: str) -> bytes:
     if not path.is_file():
-        if not download:
-            raise FileNotFoundError(
-                f"Dataset {path} not found; enable download explicitly"
-            )
-        request = urllib.request.Request(
-            BASE_URL + name, headers={"User-Agent": "so4gp-benchmark"}
+        raise FileNotFoundError(
+            f"Dataset {path} not found; enable download explicitly"
         )
-        with urllib.request.urlopen(request, timeout=60) as response:
-            data = response.read()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
-        return data
     return path.read_bytes()
 
-
-def available_sites(
-    data_dir: str | Path, *, dataset_code: str = "DIR", download: bool = False
-) -> list[str]:
-    """Return the distinct DIR site identifiers without combining their series."""
-    code = dataset_code.upper()
-    if code not in DATASETS or DATASETS[code][2] != "directio":
-        raise ValueError(f"Not a Directio dataset: {dataset_code!r}")
-    name = DATASETS[code][0]
-    raw = _load(Path(data_dir) / name, name, download)
-    sites = pd.read_csv(io.BytesIO(raw), usecols=["id_site"])["id_site"]
-    return sorted(sites.dropna().astype(str).unique().tolist())
 
 
 def prepare(
     dataset_code: str,
     data_dir: str | Path,
     *,
-    download: bool = False,
     rows: int | None = None,
     features: int | None = None,
     target: str | None = None,
@@ -95,7 +68,7 @@ def prepare(
         raise ValueError("features must be at least 2")
     name, default_target, kind = DATASETS[code]
     chosen_target = target or default_target
-    raw = _load(Path(data_dir) / name, name, download)
+    raw = _load(Path(data_dir) / name, name)
     separator = ";" if kind == "power" else ","
     frame = pd.read_csv(io.BytesIO(raw), sep=separator, na_values=["?", "na", "NA"])
     raw_rows = len(frame)
@@ -205,8 +178,6 @@ def prepare(
     metadata = {
         "dataset": code,
         "filename": name,
-        "source_revision": REVISION,
-        "source_url": BASE_URL + name,
         "raw_sha256": _hash(raw),
         "prepared_sha256": _hash(prepared_bytes),
         "raw_rows": raw_rows,

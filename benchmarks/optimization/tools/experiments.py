@@ -7,6 +7,7 @@ packages must always run in different interpreter processes.
 
 from __future__ import annotations
 
+import io
 import json
 import random
 import sys
@@ -152,7 +153,10 @@ def _patterns(engine, data, min_support):
 
 def run_experiment(config: dict) -> dict:
     """Execute one requested experiment and return a JSON-serializable record."""
-    data = pd.read_csv(config["data_path"])
+    if "data_csv" in config:
+        data = pd.read_csv(io.StringIO(config["data_csv"]))
+    else:
+        data = pd.read_csv(config["data_path"])
     experiment = config["experiment"]
     if experiment == "kernel":
         method = config.get("method", "dense")

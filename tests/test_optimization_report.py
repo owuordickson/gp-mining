@@ -2,7 +2,6 @@
 
 import csv
 import importlib.util
-import json
 from pathlib import Path
 
 import pytest
@@ -121,12 +120,15 @@ def test_empty_and_nonempty_reports_are_valid_files(tmp_path):
     report = load_report()
     result = report.write_reports(tmp_path, [])
     assert result == {"summary": [], "paired": []}
-    assert json.loads((tmp_path / "summary.json").read_text()) == result
-    assert (tmp_path / "report.md").is_file()
+    assert not (tmp_path / "summary.json").exists()
+    assert (tmp_path / "summary.csv").is_file()
+    assert not (tmp_path / "report.md").exists()
     data = [trial("all", 0, 8), trial("ami", 0, 2)]
     report.write_reports(tmp_path, data)
     with (tmp_path / "paired_summary.csv").open(newline="") as stream:
         assert list(csv.DictReader(stream))[0]["speedup_median"] == "4.0"
+    assert not (tmp_path / "report.md").exists()
+    assert not (tmp_path / "summary.json").exists()
 
 
 def test_search_quality_plot_uses_completed_reference_patterns(tmp_path):

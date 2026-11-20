@@ -281,7 +281,7 @@ def _write_quality_plot(path, summary, paired):
 
 
 def write_reports(output_dir, records):
-    """Write machine-readable summaries and a human-readable Markdown report."""
+    """Write machine-readable summaries and an optional quality plot."""
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     summary = summarize(records)
@@ -297,58 +297,5 @@ def write_reports(output_dir, records):
         paired,
         (*GROUP_FIELDS, "baseline", "method", "completed_pairs", "speedup_median"),
     )
-    (output / "summary.json").write_text(
-        json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8"
-    )
     _write_quality_plot(output / "time_vs_pattern_recovery.png", summary, paired)
-    lines = [
-        "# Optimization benchmark",
-        "",
-        "Speedup is baseline elapsed time divided by method elapsed time. "
-        "Only uniquely matched successful trials contribute; censored and "
-        "unmatched pairs are counted separately.",
-        "",
-        "## Trial summary",
-        "",
-        "| Dataset | Experiment | Method | Completed / attempted | "
-        "Median seconds | Timeouts |",
-        "| --- | --- | --- | ---: | ---: | ---: |",
-    ]
-    for row in summary:
-        median = row["elapsed_median_seconds"]
-        lines.append(
-            f"| {row['dataset']} | {row['experiment']} | {row['method']} | "
-            f"{row['completed']} / {row['attempts']} | "
-            f"{median if median is not None else '—'} | {row['timeout']} |"
-        )
-    lines.extend(
-        [
-            "",
-            "## Paired comparisons",
-            "",
-            "| Dataset | Experiment | Baseline | Method | Completed pairs | "
-            "Censored or unmatched | Median speedup |",
-            "| --- | --- | --- | --- | ---: | ---: | ---: |",
-        ]
-    )
-    for row in paired:
-        value = row["speedup_median"]
-        lines.append(
-            f"| {row['dataset']} | {row['experiment']} | {row['baseline']} | "
-            f"{row['method']} | {row['completed_pairs']} | "
-            f"{row['unmatched_or_censored_pairs']} | "
-            f"{value if value is not None else '—'} |"
-        )
-    lines.extend(
-        [
-            "",
-            "Historical revision differences are version comparisons. The "
-            "itemset overlap compares gradual items only: it ignores supports "
-            "and temporal lags and is not a ground-truth accuracy score. Kernel "
-            "process memory includes both representations; inspect array byte "
-            "counts rather than comparing process memory as representation size.",
-            "",
-        ]
-    )
-    (output / "report.md").write_text("\n".join(lines), encoding="utf-8")
     return data

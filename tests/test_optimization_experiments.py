@@ -24,6 +24,26 @@ THREAD_ENV = {
 }
 
 
+def test_worker_accepts_in_memory_csv_via_stdin():
+    config = {
+        "experiment": "kernel",
+        "method": "packed",
+        "data_csv": "time,a,b\n2020-01-01,1,2\n2020-01-02,3,1\n2020-01-03,2,3\n",
+    }
+    process = subprocess.run(
+        [sys.executable, str(PATH)],
+        input=json.dumps(config),
+        text=True,
+        capture_output=True,
+        check=True,
+        env=THREAD_ENV,
+    )
+    result = json.loads(process.stdout)
+    assert result["equal"] is True
+    assert result["dense_count"] == result["packed_count"] == 1
+    assert result["packed_bytes"] == 4
+
+
 def test_kernel_agrees_with_dense_for_partial_byte(tmp_path):
     path = tmp_path / "data.csv"
     pd.DataFrame({"a": [1, 3, 2], "b": [2, 1, 3]}).to_csv(path, index=False)
