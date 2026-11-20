@@ -27,7 +27,7 @@ def _hash(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _load(path: Path, name: str) -> bytes:
+def _load(path: Path) -> bytes:
     if not path.is_file():
         raise FileNotFoundError(
             f"Dataset {path} not found; enable download explicitly"
@@ -63,7 +63,7 @@ def prepare(
 
     name, default_target, kind = DATASETS[d_set]
     chosen_target = target or default_target
-    raw = _load(Path(data_dir) / name, name)
+    raw = _load(Path(data_dir) / name)
     separator = ";" if d_set == "PWC" else ","
     frame = pd.read_csv(io.BytesIO(raw), sep=separator, na_values=["?", "na", "NA"])
     raw_rows = len(frame)
