@@ -4,12 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import io
-import sys
 from pathlib import Path
 import pandas as pd
-
-if __name__ == "__main__":
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 
 # Files can be explicitly overridden via the variants, never silently substituted.

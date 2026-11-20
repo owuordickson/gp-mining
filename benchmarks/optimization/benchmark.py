@@ -14,16 +14,28 @@ import threading
 import time
 from pathlib import Path
 
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 LEGACY = "affc7860397002fba26af96dcb2f0461f2cdda9d"
-DATASETS = ("BCR", "C2K", "AQY", "DIR", "PWC", "APS")
+
+if __package__:
+    from .tools.datasets import DATASETS, prepare
+    from .tools.process_control import kill_tree, sample_tree
+    from .tools.report import write_reports
+else:
+    # PyCharm invokes the script without a parent package.
+    sys.path.insert(0, str(HERE))
+    from tools.datasets import DATASETS, prepare
+    from tools.process_control import kill_tree, sample_tree
+    from tools.report import write_reports
 
 
 def run_child(config, timeout, command=None, memory_limit_bytes=None):
     """Execute a JSON worker and distinguish timeout, memory limit, and errors."""
-    from .tools.process_control import kill_tree, sample_tree
-
     command = command or [sys.executable, str(HERE / "tools" / "experiments.py")]
     env = os.environ.copy()
     env.update(
@@ -149,7 +161,7 @@ def _total_ram_bytes():
 def _parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--datasets", nargs="+", choices=DATASETS, default=list(DATASETS)
+        "--datasets", nargs="+", choices=tuple(DATASETS), default=list(DATASETS)
     )
     parser.add_argument(
         "--experiment",
@@ -218,9 +230,6 @@ def main(argv=None):
         raise ValueError("Invalid support, timeout, or iteration count")
     if args.profile == "full" and args.memory_mib is None:
         raise ValueError("The full profile requires a positive --memory-mib limit")
-    from tools.datasets import prepare
-    from tools.report import write_reports
-
     defaults = {"quick": (64, 6, 2), "study": (1000, 12, 10), "full": (None, None, 10)}
     rows, features, lag = defaults[args.profile]
     rows, features, lag = args.rows or rows, args.features or features, args.lag or lag

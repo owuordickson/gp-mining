@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 def load_runner():
     path = Path(__file__).resolve().parents[1] / "benchmarks/optimization/benchmark.py"
@@ -32,7 +34,8 @@ def test_worker_error_preserves_diagnostic(tmp_path):
     assert "bad input" in result["error"]
 
 
-def test_run_uses_data_directory_without_writing_prepared_files(tmp_path):
+@pytest.mark.parametrize("launch", ["script", "module"])
+def test_run_uses_data_directory_without_writing_prepared_files(tmp_path, launch):
     data_dir = tmp_path / "data"
     data_dir.mkdir()
     source = data_dir / "breast_cancer.csv"
@@ -45,10 +48,17 @@ def test_run_uses_data_directory_without_writing_prepared_files(tmp_path):
     runner = (
         Path(__file__).resolve().parents[1] / "benchmarks/optimization/benchmark.py"
     )
+    if launch == "script":
+        command = [sys.executable, str(runner)]
+        cwd = runner.parent  # PyCharm uses the script's directory by default.
+    else:
+        command = [sys.executable, "-m", "benchmarks.optimization.benchmark"]
+        cwd = runner.parents[2]
     result = subprocess.run(
         [
-            sys.executable,
-            str(runner),
+            *command,
+            "--profile",
+            "quick",
             "--datasets",
             "BCR",
             "--experiment",
@@ -69,6 +79,7 @@ def test_run_uses_data_directory_without_writing_prepared_files(tmp_path):
         text=True,
         capture_output=True,
         timeout=90,
+        cwd=cwd,
     )
     assert result.returncode == 0, result.stderr + result.stdout
     assert source.read_bytes() == original

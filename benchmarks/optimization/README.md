@@ -25,6 +25,12 @@ Synthetic timestamps encode original row positions; they do not establish tempor
 
 ## Run
 
+In PyCharm, open `benchmarks/optimization/benchmark.py` and choose **Run** with
+the project's Python interpreter. The run configuration can use **Script path**
+with `benchmark.py` or **Module name** with `benchmarks.optimization.benchmark`
+from the repository root. With no parameters, the runner uses the study profile
+and the dataset entries enabled in `tools/datasets.py`.
+
 From the repository root, use the project's Python environment with its dependencies installed:
 
 ```powershell
