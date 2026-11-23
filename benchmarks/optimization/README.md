@@ -147,6 +147,13 @@ available. The runner passes selected data from `data/` in memory to each
 isolated worker. Timeouts, memory limits, input failures, and algorithm
 exceptions are recorded as failures.
 
+The pattern columns in `summary.csv` total returned patterns across successful
+trials in each row. A pattern is valid if its recomputed support meets the
+threshold. Patterns whose validity could not be checked have their own count.
+Blank cells indicate unavailable counts, including for temporal and kernel trials.
+The summary gives median peak resident memory in bytes and MiB, where
+1 MiB equals 1,048,576 bytes.
+
 To continue a stopped run, use `--resume --output <same-run-folder>` with the
 same run options, source, and data. The runner rebuilds the reports from
 `trials.jsonl` and skips trials already recorded there. An interrupted trial

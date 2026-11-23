@@ -20,6 +20,11 @@ BASELINES = {
     "version": "legacy",
 }
 SUCCESS = {"ok", "success"}
+PATTERN_COUNT_FIELDS = (
+    "valid_pattern_count",
+    "invalid_pattern_count",
+    "unknown_pattern_count",
+)
 
 
 def _finite(value):
@@ -73,6 +78,15 @@ def summarize(records):
             for row in completed
             if _finite(row.get("peak_rss_bytes")) and row["peak_rss_bytes"] >= 0
         ]
+        peak_rss_median = statistics.median(memory) if memory else None
+        pattern_totals = {}
+        for field in PATTERN_COUNT_FIELDS:
+            counts = [trial.get(field) for trial in completed]
+            pattern_totals[f"{field}_total"] = (
+                sum(counts)
+                if counts and all(type(count) is int and count >= 0 for count in counts)
+                else None
+            )
         median = statistics.median(elapsed) if elapsed else None
         row = dict(zip(GROUP_FIELDS, key))
         row.update(
@@ -96,7 +110,11 @@ def summarize(records):
                 )
                 if elapsed
                 else None,
-                "peak_rss_median_bytes": statistics.median(memory) if memory else None,
+                "peak_rss_median_bytes": peak_rss_median,
+                "peak_rss_median_mib": peak_rss_median / 1024**2
+                if peak_rss_median is not None
+                else None,
+                **pattern_totals,
             }
         )
         result.append(row)
@@ -290,7 +308,15 @@ def write_reports(output_dir, records):
     _write_csv(
         output / "summary.csv",
         summary,
-        (*GROUP_FIELDS, "method", "attempts", "completed"),
+        (
+            *GROUP_FIELDS,
+            "method",
+            "attempts",
+            "completed",
+            "peak_rss_median_bytes",
+            "peak_rss_median_mib",
+            *(f"{field}_total" for field in PATTERN_COUNT_FIELDS),
+        ),
     )
     _write_csv(
         output / "paired_summary.csv",
