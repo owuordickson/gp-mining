@@ -598,11 +598,6 @@ class GRAANK:
         for index, recording in enumerate(recordings):
             temp_idx, temp_arr = encode_recording(recording)
             # Create a DataFrame for just this recording
-            """df_rec = pds.DataFrame(
-                temp_arr,  # Keep 2D shape: (len(temp_idx), len(descriptors))
-                index=pds.Index(tuple(temp_idx), name="pattern"),
-                columns=pds.Index(descriptors, name="descriptor")
-            )"""
             df_rec = pds.DataFrame(temp_arr, columns=descriptors)
             df_rec.insert(0, "pattern", temp_idx)
             df_rec.insert(0, "recording", index)

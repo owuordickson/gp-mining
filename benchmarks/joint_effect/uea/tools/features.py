@@ -258,10 +258,6 @@ def build_features(
     gp_basic = np.zeros((num_recordings, max_patterns * 2))
     gp_extra = np.zeros((num_recordings, max_patterns * len(DESCRIPTORS)))
 
-    test_df = GRAANK.build_gradual_features(sequences, max_patterns, pattern_level=2)
-    print(test_df)
-    return
-
     for index, raw_recording in enumerate(sequences):
         recording = np.asarray(raw_recording, dtype=np.float64)
 
