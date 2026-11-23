@@ -20,7 +20,8 @@ import pandas as pd
 SEARCH_TYPES = ("apriori", "pso", "ga", "hc", "random")
 DEFAULT_ITERATIONS = 10
 DEFAULT_SUPPORT = 0.2
-TEMPORAL_METHODS = ("all", "ami")
+TEMPORAL_STEP_METHODS = ("ami", "random")
+TEMPORAL_METHODS = ("all", *TEMPORAL_STEP_METHODS)
 TEMPORAL_SUPPORT = 0.01
 TEMPORAL_MIN_REP = 0.75
 TEMPORAL_ERROR_MARGIN = 1e-5
@@ -83,8 +84,10 @@ def _run_temporal(config, data):
     method = config["method"]
     if method not in TEMPORAL_METHODS:
         raise ValueError(f"Unknown TGRAANK method: {method}")
-    ami = method == "ami"
+    ami = method in TEMPORAL_STEP_METHODS
     steps = config.get("transformation_steps")
+    if method == "random" and not steps:
+        raise ValueError("The random TGRAANK-AMI trial requires seeded k-steps")
     if steps is not None:
         steps = {int(column): int(step) for column, step in steps.items()}
     _seed(int(config.get("seed", 0)))

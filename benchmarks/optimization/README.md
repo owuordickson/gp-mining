@@ -63,7 +63,7 @@ limit for both APRIORI methods. Use `--rows`, `--features`, `--support`, `--targ
 and `--seeds` to define a workload.
 `--memory-mib`, `--timeout`, and `--warmups` control the trial limits and warm-ups.
 
-## Results and resuming
+## GRAANK Results
 
 Each run creates a folder under [`results/`](results/) with `manifest.json`,
 `trials.jsonl`, `summary.csv`, and `paired_summary.csv`. The manifest records
@@ -92,11 +92,11 @@ Resume a run with `--resume --output <same-run-folder>` and the original
 options, source, and data. The runner rebuilds the CSVs from `trials.jsonl`,
 skips saved trials, and retries any interrupted trial without a record.
 
-## TGRAANK and TGRAANK-AMI on rainfall and EVI
+## TGRAANK comparison on rainfall and EVI
 
 The temporal experiment uses the notebook's rainfall and Enhanced Vegetation
 Index (EVI) CSVs. Each file has 23 annual observations from 2000 through 2022,
-with NRB, KAK, MAK, and WAJ as the four targets. [Original notebook](https://github.com/owuordickson/t-graank/blob/709594630c5423309ee7c9a4f47cfeb1de0274d4/analysis/tgraank_performance.ipynb)
+with NRB, KAK, MAK, and WAJ as the four targets.
 
 ```powershell
 python benchmarks/optimization/benchmark.py --experiment temporal --warmups 0
@@ -107,11 +107,18 @@ Both commands use [`results/tgraank-mi/`](results/tgraank-mi/) by default. To
 repeat the experiment in a separate folder, set `--output` on the benchmark
 and pass that directory to the analysis helper.
 
-Both methods mine fuzzy temporal gradual patterns with minimum support 0.01,
-minimum representativity 0.75, and descriptors enabled. TGRAANK tests shifts of
-one through five observations on each dataset (`all` in the benchmark).
+All three methods mine fuzzy temporal gradual patterns with minimum support
+0.01 and initial minimum representativity 0.75. The worker calls SO4GP's
+`TGrad` and `TGradAMI` engines with descriptors enabled. TGRAANK tests shifts
+of one through five observations on each dataset (`all` in the benchmark).
 TGRAANK-AMI estimates shifts on rainfall with an MI error margin of 0.00001
 and reuses those shifts for the corresponding EVI target (`ami`).
+
+TGRAANK-AMI (Random) draws one integer k-step per feature from 1 through 6
+for each target (`random`). The runner uses
+`42 * target_column_index + trial_seed` as the random seed for those draws
+and applies them to both rainfall and EVI. With the default trial seed of 0,
+the draws use the notebook's target-specific seeds.
 
 The analysis uses rainfall as the prediction and EVI as the reference proxy.
 It matches patterns once using SO4GP's temporal similarity rule, which compares
@@ -142,12 +149,6 @@ positives and false negatives from 6.5 to 1.0 each per site on average.
 Accuracy rose at KAK, NRB, and WAJ. At MAK it fell from 76.92% to 69.23%.
 [Per-site scores](results/tgraank-mi/confusion_matrix.csv)
 
-The notebook reported mean accuracies of 83.8% for TGRAANK and 89.3% for
-TGRAANK-AMI. This rerun reproduced the higher mean accuracy for AMI, with
-different confusion counts. Each method is scored on its own rainfall and EVI
-pattern lists, so these figures quantify agreement with the EVI proxy across
-the four sites. [Notebook results](https://github.com/owuordickson/t-graank/blob/709594630c5423309ee7c9a4f47cfeb1de0274d4/analysis/tgraank_performance.ipynb)
-
 ## Full BCR run at support 0.2
 
 This run used all 116 rows and nine features, with Glucose as the target and
@@ -166,31 +167,3 @@ for each heuristic.
 The APRIORI itemsets agreed after sign normalization. GA and HC each recovered
 one of the 53 distinct packed APRIORI itemsets. PSO and random had zero overlap
 with that set.
-
-## Full BCR APRIORI run at support 0.5
-
-One measured pair used all 116 BCR rows and nine features, with Glucose as the
-target, support 0.5, seed 0, and no warm-up. The packed worker imported SO4GP
-1.1.2 from the project interpreter.
-
-| Method | Time (ms) | Peak RSS (MiB) | Valid patterns | Invalid patterns |
-| --- | ---: | ---: | ---: | ---: |
-| Dense | 58.3 | 373.6 | 8 | 35 |
-| Packed | 54.2 | 371.7 | 8 | 35 |
-
-Returned itemsets agreed after sign normalization. The dense-to-packed ratios
-were 1.08 for elapsed time and 1.005 for peak RSS.
-
-## Earlier BCR comparison
-
-The saved BCR comparison used 32 rows, four numeric attributes, support 0.7,
-Glucose as the target, and one trial per method. It used the pinned dense
-revision and packed source at `eb981fb`. [Saved records](benchmarking-results.json)
-
-| Method | Time (ms) | Peak RSS (MiB) | Returned patterns |
-| --- | ---: | ---: | ---: |
-| Dense | 14.542 | 372.6 | 0 |
-| Packed | 7.707 | 372.3 | 0 |
-
-On this input, the dense trial took 1.89 times as long. The sampled peak RSS
-differed by 0.3 MiB, and both searches returned an empty pattern set.

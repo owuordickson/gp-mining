@@ -29,6 +29,7 @@ if __package__:
         TEMPORAL_ERROR_MARGIN,
         TEMPORAL_METHODS,
         TEMPORAL_MIN_REP,
+        TEMPORAL_STEP_METHODS,
         TEMPORAL_SUPPORT,
     )
     from .tools.process_control import kill_tree, sample_tree
@@ -44,6 +45,7 @@ else:
         TEMPORAL_ERROR_MARGIN,
         TEMPORAL_METHODS,
         TEMPORAL_MIN_REP,
+        TEMPORAL_STEP_METHODS,
         TEMPORAL_SUPPORT,
     )
     from tools.process_control import kill_tree, sample_tree
@@ -332,6 +334,7 @@ def main(argv=None):
             "error_margin": TEMPORAL_ERROR_MARGIN,
             "compute_descriptors": True,
             "ami_reference_eval_mode": True,
+            "random_seed": "42 * target_index + seed",
             "notebook_revision": "709594630c5423309ee7c9a4f47cfeb1de0274d4",
         }
     if manifest_path.exists():
@@ -357,10 +360,10 @@ def main(argv=None):
         write_reports(args.output, records)
     completed = {r.get("trial_id") for r in records}
     rainfall_steps = {
-        (r["seed"], r["target_site"]): r["transformation_steps"]
+        (r["method"], r["seed"], r["target_site"]): r["transformation_steps"]
         for r in records
         if r.get("dataset") == "KE_RAIN"
-        and r.get("method") == "ami"
+        and r.get("method") in TEMPORAL_STEP_METHODS
         and r.get("status") == "ok"
     }
     rainfall_panel = None
@@ -471,6 +474,7 @@ def main(argv=None):
                 }
                 if temporal:
                     target_site = target_name.split(" (")[0]
+                    step_key = method, seed, target_site
                     record["target_site"] = target_site
                     config.update(
                         min_rep=TEMPORAL_MIN_REP, error_margin=TEMPORAL_ERROR_MARGIN
@@ -482,13 +486,25 @@ def main(argv=None):
                         if dense_source is None:
                             dense_source = _dense_source()
                         config["source_path"] = dense_source
-                    if temporal and dataset == "KE_EVI" and method == "ami":
-                        steps = rainfall_steps.get((seed, target_site))
-                        if not steps:
-                            raise RuntimeError(
-                                f"No rainfall AMI steps for {target_site}, seed {seed}"
-                            )
-                        config["transformation_steps"] = steps
+                    if temporal and method in TEMPORAL_STEP_METHODS:
+                        if method == "random":
+                            shift_seed = 42 * target_index + seed
+                            record["shift_seed"] = shift_seed
+                        if dataset == "KE_EVI":
+                            steps = rainfall_steps.get(step_key)
+                            if not steps:
+                                raise RuntimeError(
+                                    f"No rainfall {method} steps for {target_site}, "
+                                    f"seed {seed}"
+                                )
+                            config["transformation_steps"] = steps
+                        elif method == "random":
+                            rng = random.Random(shift_seed)
+                            max_step = len(frame) - int(TEMPORAL_MIN_REP * len(frame))
+                            config["transformation_steps"] = {
+                                str(column): rng.randint(1, max_step)
+                                for column in targets
+                            }
                     limit = int(args.memory_mib * 1048576) if args.memory_mib else None
                     warmup_statuses = []
                     for _ in range(args.warmups):
@@ -505,10 +521,10 @@ def main(argv=None):
                 if (
                     temporal
                     and dataset == "KE_RAIN"
-                    and method == "ami"
+                    and method in TEMPORAL_STEP_METHODS
                     and result["status"] == "ok"
                 ):
-                    rainfall_steps[seed, target_site] = result["transformation_steps"]
+                    rainfall_steps[step_key] = result["transformation_steps"]
                 records.append(record)
                 with trials_path.open("a", encoding="utf-8") as stream:
                     stream.write(json.dumps(record, default=str) + "\n")

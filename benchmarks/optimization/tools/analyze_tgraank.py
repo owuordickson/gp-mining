@@ -10,7 +10,11 @@ import pandas as pd
 
 from so4gp import GI, TGP, TimeDelay
 
-METHODS = {"all": "TGRAANK", "ami": "TGRAANK-AMI"}
+METHODS = {
+    "all": "TGRAANK",
+    "ami": "TGRAANK-AMI",
+    "random": "TGRAANK-AMI (Random)",
+}
 COUNTS = ("tp", "fp", "fn", "tn")
 METRICS = ("accuracy", "precision", "recall", "specificity", "f1")
 SUPPORT_THRESHOLD = 0.5
@@ -82,12 +86,12 @@ def score(records):
                 raise ValueError(
                     f"Missing rainfall/EVI pair for {algorithm}, {site}, {seed}"
                 )
-            if method == "ami" and (
+            if method != "all" and (
                 not rain["transformation_steps"]
                 or rain["transformation_steps"] != evi["transformation_steps"]
             ):
                 raise ValueError(
-                    f"EVI did not reuse rainfall AMI steps for {site}, {seed}"
+                    f"EVI did not reuse rainfall {method} steps for {site}, {seed}"
                 )
             rows.append(
                 {
@@ -121,7 +125,10 @@ def _plot_confusion_matrix(summary, path):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, 2, figsize=(8, 4), layout="constrained")
+    n_methods = len(summary)
+    fig, axes = plt.subplots(
+        1, n_methods, figsize=(4 * n_methods, 4), layout="constrained"
+    )
     fig.suptitle("Mean confusion counts per site", fontsize=14)
     limit = summary[[f"{name}_mean" for name in COUNTS]].max().max()
     for axis, row in zip(axes, summary.itertuples(index=False), strict=True):
