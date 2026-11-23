@@ -1,8 +1,10 @@
-"""Run reproducible optimization comparisons in isolated subprocesses."""
+"""Benchmark GRAANK search types and the two APRIORI bitmap representations."""
 
 import argparse
 import hashlib
 import importlib.metadata
+import importlib.util
+import io
 import json
 import os
 import platform
@@ -14,22 +16,20 @@ import threading
 import time
 from pathlib import Path
 
-if __name__ == "__main__":
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-
-
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-LEGACY = "affc7860397002fba26af96dcb2f0461f2cdda9d"
+DENSE_REVISION = "affc7860397002fba26af96dcb2f0461f2cdda9d"
 
 if __package__:
     from .tools.datasets import DATASETS, prepare
+    from .tools.experiments import DEFAULT_ITERATIONS, DEFAULT_SUPPORT, SEARCH_TYPES
     from .tools.process_control import kill_tree, sample_tree
     from .tools.report import write_reports
 else:
     # PyCharm invokes the script without a parent package.
     sys.path.insert(0, str(HERE))
     from tools.datasets import DATASETS, prepare
+    from tools.experiments import DEFAULT_ITERATIONS, DEFAULT_SUPPORT, SEARCH_TYPES
     from tools.process_control import kill_tree, sample_tree
     from tools.report import write_reports
 
@@ -107,19 +107,17 @@ def run_child(config, timeout, command=None, memory_limit_bytes=None):
     return {**common, **result, "status": "ok"}
 
 
-def _legacy_source():
-    """Extract the pinned historical package from local Git objects."""
-    cache = ROOT / ".superpowers" / "optimization" / LEGACY
+def _dense_source():
+    """Extract and verify the pinned dense package from local Git objects."""
+    cache = ROOT / ".superpowers" / "optimization" / DENSE_REVISION
     source = cache / "src" / "so4gp" / "__init__.py"
     cache.mkdir(parents=True, exist_ok=True)
     archive = subprocess.run(
-        ["git", "archive", LEGACY, "src/so4gp"],
+        ["git", "archive", DENSE_REVISION, "src/so4gp"],
         cwd=ROOT,
         check=True,
         stdout=subprocess.PIPE,
     ).stdout
-    import io
-
     with tarfile.open(fileobj=io.BytesIO(archive)) as tree:
         expected = {
             member.name: hashlib.sha256(tree.extractfile(member).read()).hexdigest()
@@ -139,7 +137,7 @@ def _legacy_source():
         }
         if actual != expected:
             raise RuntimeError(
-                "Historical source cache does not match its pinned Git revision"
+                "Dense source cache does not match its pinned Git revision"
             )
     return str(cache / "src")
 
@@ -165,12 +163,17 @@ def _parser():
     )
     parser.add_argument(
         "--experiment",
-        choices=("all", "graank", "kernel", "version"),
-        default="all",
+        choices=("graank",),
+        default="graank",
     )
     parser.add_argument(
-        "--profile", choices=("quick", "study", "full"), default="full"
+        "--search-types",
+        nargs="+",
+        choices=SEARCH_TYPES,
+        default=list(SEARCH_TYPES),
+        help="GRAANK search types to run (default: all listed)",
     )
+    parser.add_argument("--profile", choices=("quick", "study", "full"), default="full")
     parser.add_argument("--data-dir", type=Path, default=HERE / "data")
     parser.add_argument(
         "--output",
@@ -184,8 +187,13 @@ def _parser():
     parser.add_argument(
         "--site", help="Select a Directio site when a file contains several"
     )
-    parser.add_argument("--support", type=float, default=0.2)
-    parser.add_argument("--iterations", type=int, default=10)
+    parser.add_argument("--support", type=float, default=DEFAULT_SUPPORT)
+    parser.add_argument(
+        "--iterations",
+        type=int,
+        default=DEFAULT_ITERATIONS,
+        help="Iteration budget per heuristic trial (default: %(default)s)",
+    )
     parser.add_argument(
         "--apriori-level",
         type=int,
@@ -197,7 +205,10 @@ def _parser():
         "--warmups", type=int, default=1, help="Discarded warm-up trials per workload"
     )
     parser.add_argument(
-        "--memory-mib", type=float, default=6144, help="Best-effort sampled working-set limit"
+        "--memory-mib",
+        type=float,
+        default=6144,
+        help="Best-effort sampled working-set limit",
     )
     parser.add_argument("--resume", action="store_true")
     return parser
@@ -212,13 +223,23 @@ def main(argv=None):
     )
     if (
         args.timeout <= 0
-        or args.iterations < 1
         or args.warmups < 0
         or (args.memory_mib is not None and args.memory_mib <= 0)
     ):
-        raise ValueError("Invalid support, timeout, or iteration count")
+        raise ValueError(
+            "Timeout and memory limit must be positive and warmups nonnegative"
+        )
     if args.profile == "full" and args.memory_mib is None:
         raise ValueError("The full profile requires a positive --memory-mib limit")
+    if args.iterations < 1:
+        raise ValueError("Heuristic iterations must be positive")
+    run_apriori = "apriori" in args.search_types
+    workloads = [("apriori", "dense")] if run_apriori else []
+    workloads.extend(
+        (search_type, "packed")
+        for search_type in SEARCH_TYPES
+        if search_type in args.search_types
+    )
     defaults = {"quick": (64, 6), "study": (1000, 12), "full": (None, None)}
     rows, features = defaults[args.profile]
     rows, features = args.rows or rows, args.features or features
@@ -247,17 +268,20 @@ def main(argv=None):
         for file in HERE.rglob("*.py")
     }
     versions = {}
-    for package in ("numpy", "pandas", "torch", "scikit-learn", "scikit-fuzzy"):
+    packages = ("so4gp", "numpy", "pandas", "torch", "scikit-learn", "scikit-fuzzy")
+    for package in packages:
         try:
             versions[package] = importlib.metadata.version(package)
         except importlib.metadata.PackageNotFoundError:
             versions[package] = None
+    packed_spec = importlib.util.find_spec("so4gp")
     manifest = {
         "settings": settings,
         "revision": head,
         "source_diff_sha256": hashlib.sha256(diff).hexdigest(),
         "benchmark_sha256": benchmark_hashes,
-        "legacy_revision": LEGACY,
+        "dense_revision": DENSE_REVISION if run_apriori else None,
+        "packed_source_path": packed_spec.origin if packed_spec else None,
         "python": sys.version,
         "platform": platform.platform(),
         "processor": platform.processor(),
@@ -267,7 +291,7 @@ def main(argv=None):
         "timing": "worker algorithm elapsed; process startup and preparation separate",
         "memory": (
             "sampled worker process-tree resident memory every 0.05s; "
-            "includes imports and post-mining validation"
+            "includes imports and result collection"
         ),
     }
     if manifest_path.exists():
@@ -292,13 +316,7 @@ def main(argv=None):
     if args.resume and records:
         write_reports(args.output, records)
     completed = {r.get("trial_id") for r in records}
-    experiments = {
-        "graank": ["apriori", "aco", "ga", "pso", "hc", "random"],
-        "kernel": ["dense", "packed"],
-        #"version": ["legacy", "current"],
-    }
-    if args.experiment != "all":
-        experiments = {args.experiment: experiments[args.experiment]}
+    dense_source = None
     for dataset in args.datasets:
         records_before_dataset = len(records)
         try:
@@ -345,32 +363,30 @@ def main(argv=None):
             write_reports(args.output, records)
             continue
         for seed in seeds:
-            work = [
-                (exp, method)
-                for exp, methods in experiments.items()
-                for method in methods
-            ]
-            random.Random(seed).shuffle(work)
-            for exp, method in work:
-                digest = metadata.get("prepared_sha256")
-                trial_id = f"{dataset}:{exp}:{method}:{seed}:{digest}"
+            trials = workloads.copy()
+            random.Random(seed).shuffle(trials)
+            for search_type, method in trials:
+                digest = metadata["prepared_sha256"]
+                trial_id = f"{dataset}:graank:{search_type}:{method}:{seed}:{digest}"
                 if trial_id in completed:
                     continue
                 config = {
-                    "experiment": "graank" if exp == "version" else exp,
-                    "method": "apriori" if exp == "version" else method,
+                    "experiment": "graank",
+                    "method": method,
+                    "search_type": search_type,
                     "data_csv": data_csv,
                     "support": args.support,
                     "seed": seed,
                     "target": metadata["target_index"],
+                    "apriori_level": args.apriori_level,
                     "iterations": args.iterations,
-                    "apriori_level": None, #args.apriori_level,
                 }
                 record = {
                     "trial_id": trial_id,
                     "dataset": dataset,
-                    "experiment": exp,
+                    "experiment": "graank",
                     "method": method,
+                    "search_type": search_type,
                     "seed": seed,
                     "support": args.support,
                     "target": metadata["target_name"],
@@ -379,8 +395,10 @@ def main(argv=None):
                     "features": len(metadata["columns"]) - 1,
                 }
                 try:
-                    if exp == "version" and method == "legacy":
-                        config["source_path"] = _legacy_source()
+                    if method == "dense":
+                        if dense_source is None:
+                            dense_source = _dense_source()
+                        config["source_path"] = dense_source
                     limit = int(args.memory_mib * 1048576) if args.memory_mib else None
                     warmup_statuses = []
                     for _ in range(args.warmups):
@@ -398,7 +416,8 @@ def main(argv=None):
                 with trials_path.open("a", encoding="utf-8") as stream:
                     stream.write(json.dumps(record, default=str) + "\n")
                 print(
-                    f"{dataset} {exp}/{method} seed={seed}: {record['status']}",
+                    f"{dataset} graank/{search_type}/{method} seed={seed}: "
+                    f"{record['status']}",
                     flush=True,
                 )
         if len(records) > records_before_dataset:

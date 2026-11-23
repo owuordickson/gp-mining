@@ -151,6 +151,70 @@ def test_kernel_memory_ratio_is_not_reported_as_representation_memory():
     assert result["memory_ratio_median"] is None
 
 
+def test_packed_graank_is_paired_against_dense():
+    data = [
+        trial(
+            "dense",
+            0,
+            8,
+            experiment="graank",
+            peak_rss_bytes=80,
+            patterns=[{"items": ["1+", "2-"]}],
+        ),
+        trial(
+            "packed",
+            0,
+            2,
+            experiment="graank",
+            peak_rss_bytes=40,
+            patterns=[{"items": ["2+", "1-"]}],
+        ),
+    ]
+    (result,) = load_report().paired_summaries(data)
+    assert result["baseline"] == "dense"
+    assert result["method"] == "packed"
+    assert result["completed_pairs"] == 1
+    assert result["speedup_median"] == 4
+    assert result["memory_ratio_median"] == 2
+    assert result["itemset_jaccard_median"] == result["apriori_output_recall"] == 1
+
+
+def test_graank_groups_search_types_and_uses_matching_bitmap_baselines():
+    data = [
+        trial(
+            method,
+            0,
+            elapsed,
+            experiment="graank",
+            search_type=search_type,
+            peak_rss_bytes=memory,
+        )
+        for search_type, method, elapsed, memory in [
+            ("apriori", "dense", 8, 80),
+            ("apriori", "packed", 4, 40),
+            ("ga", "packed", 2, 50),
+            ("pso", "packed", 1, 20),
+        ]
+    ]
+    report = load_report()
+    summary = report.summarize(data)
+    assert len(summary) == 4
+    assert all(row["completed"] == 1 for row in summary)
+    paired = {row["search_type"]: row for row in report.paired_summaries(data)}
+    assert {
+        (search, row["baseline_search_type"], row["baseline"], row["method"])
+        for search, row in paired.items()
+    } == {
+        ("apriori", "apriori", "dense", "packed"),
+        ("ga", "apriori", "packed", "packed"),
+        ("pso", "apriori", "packed", "packed"),
+    }
+    assert paired["apriori"]["speedup_median"] == 2
+    assert paired["ga"]["speedup_median"] == 2
+    assert paired["ga"]["memory_ratio_median"] == 0.8
+    assert paired["pso"]["speedup_median"] == 4
+
+
 def test_empty_and_nonempty_reports_are_valid_files(tmp_path):
     report = load_report()
     result = report.write_reports(tmp_path, [])

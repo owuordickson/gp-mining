@@ -1,8 +1,7 @@
-"""Isolated workers for the optimization benchmark.
+"""Isolated GRAANK worker for the optimization benchmark.
 
 The runner sends one JSON object on standard input and receives one JSON result.
-Source selection happens before importing SO4GP, so historical and current
-packages must always run in different interpreter processes.
+The dense worker selects the pinned SO4GP source before importing it.
 """
 
 from __future__ import annotations
@@ -18,88 +17,40 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
-def search_iteration_limit(config, method):
-    """APRIORI depth and stochastic iteration counts have different meanings."""
-    return (
-        config.get("apriori_level") if method == "apriori" else config.get("iterations")
-    )
+SEARCH_TYPES = ("apriori", "pso", "ga", "hc", "random")
+DEFAULT_ITERATIONS = 10
+DEFAULT_SUPPORT = 0.2
+EMPTY_SEARCH_ERRORS = ("Search space is empty!", "Pairwise matrices not available!")
 
 
-def _kernel(data, repeats, method):
-    numeric = data.select_dtypes(include=[np.number])
-    if numeric.shape[1] < 2 or len(numeric) < 2:
-        raise ValueError("kernel requires two numeric columns and two rows")
-    if repeats < 1:
-        raise ValueError("repeats must be positive")
-    if method not in ("dense", "packed"):
-        raise ValueError(f"unknown kernel method: {method}")
-    values = numeric.iloc[:, :2].to_numpy(dtype=float)
-    n = len(values)
-    start = time.perf_counter()
-    left = values[:, 0, None] < values[None, :, 0]
-    right = values[:, 1, None] < values[None, :, 1]
-    dense_build = time.perf_counter() - start
-    start = time.perf_counter()
-    left_packed = np.packbits(left.ravel())
-    right_packed = np.packbits(right.ravel())
-    pack_seconds = time.perf_counter() - start
-    # Validate one intersection of each representation outside the measured loop.
-    dense = np.logical_and(left, right)
-    packed = np.bitwise_and(left_packed, right_packed)
-    reconstructed = np.unpackbits(packed, count=n * n).reshape(n, n).astype(bool)
-    dense_count = int(np.count_nonzero(dense))
-    packed_count = int(np.count_nonzero(reconstructed))
-    if dense_count != packed_count or not np.array_equal(dense, reconstructed):
-        raise ValueError("dense and packed intersections do not agree")
-    del dense, packed, reconstructed
-    start = time.perf_counter()
+def _load_graank(method, source_path):
+    expected_source = None
     if method == "dense":
-        for _ in range(repeats):
-            dense = np.logical_and(left, right)
-            np.count_nonzero(dense)
-    else:
-        for _ in range(repeats):
-            packed = np.bitwise_and(left_packed, right_packed)
-            if hasattr(np, "bitwise_count"):
-                np.bitwise_count(packed).sum(dtype=np.uint64)
-            else:
-                np.unpackbits(packed).sum(dtype=np.uint64)
-    elapsed = time.perf_counter() - start
-    pair_count = n * (n - 1) / 2
-    return {
-        "equal": True,
-        "dense_count": dense_count,
-        "packed_count": packed_count,
-        "intersection_support": dense_count / pair_count,
-        "dense_bytes": int(left.nbytes + right.nbytes),
-        "packed_bytes": int(left_packed.nbytes + right_packed.nbytes),
-        "dense_build_seconds": dense_build,
-        "pack_seconds": pack_seconds,
-        f"{method}_intersection_seconds": elapsed,
-        "repeats": repeats,
-    }
+        if not source_path:
+            raise ValueError("Dense GRAANK requires the pinned source_path")
+        path = Path(source_path).resolve()
+        expected_source = path / "so4gp" / "__init__.py"
+        if not expected_source.is_file():
+            raise ValueError(f"No dense SO4GP package at {path}")
+        if "so4gp" in sys.modules:
+            raise RuntimeError("Dense GRAANK requires a fresh worker process")
+        sys.path.insert(0, str(path))
+    elif source_path is not None:
+        raise ValueError("A source_path override is only supported for dense GRAANK")
 
-
-def _select_source(source_path):
-    path = (
-        Path(source_path).resolve()
-        if source_path
-        else Path(__file__).resolve().parents[3] / "src"
-    )
-    if not (path / "so4gp" / "__init__.py").is_file():
-        raise ValueError(f"no SO4GP package at {path}")
-    if "so4gp" in sys.modules:
-        actual = Path(sys.modules["so4gp"].__file__).resolve()
-        if not actual.is_relative_to(path):
-            raise RuntimeError("SO4GP was already imported from a different source")
-    sys.path.insert(0, str(path))
     import so4gp
+    from so4gp.algorithms import GRAANK
+    from so4gp.gradual_patterns import PairwiseMatrix
 
     actual = Path(so4gp.__file__).resolve()
-    if not actual.is_relative_to(path):
-        raise RuntimeError(f"incorrect SO4GP import: {actual}")
-    return str(actual)
+    if expected_source is not None and actual != expected_source:
+        raise RuntimeError(
+            f"Expected to import SO4GP from {expected_source}, got {actual}"
+        )
+    bitmap_field = "bin_mat" if method == "dense" else "packed_bin_mat"
+    if bitmap_field not in PairwiseMatrix.__dataclass_fields__:
+        raise RuntimeError(f"SO4GP at {actual} does not provide {method} bitmaps")
+    return GRAANK, str(actual)
 
 
 def _mining_engine(miner):
@@ -108,29 +59,24 @@ def _mining_engine(miner):
     return engine if engine is not None else miner.mining_engine
 
 
-def _patterns(engine):
-    """Collect canonical patterns and recompute strict full support on input."""
-    result = []
-    for pattern in engine.gradual_patterns or []:
-        entry = {"items": pattern.to_string(), "reported_support": float(pattern.support)}
-        result.append(entry)
-    return result
-
-
 def run_experiment(config: dict) -> dict:
     """Execute one requested experiment and return a JSON-serializable record."""
+    if config["experiment"] != "graank":
+        raise ValueError(f"Unknown experiment: {config['experiment']}")
+    method = config["method"]
+    if method not in ("dense", "packed"):
+        raise ValueError(f"Unknown GRAANK bitmap method: {method}")
+    search_type = config.get("search_type", "apriori")
+    if search_type not in SEARCH_TYPES:
+        raise ValueError(f"Unknown GRAANK search type: {search_type}")
+    if method == "dense" and search_type != "apriori":
+        raise ValueError("Dense GRAANK supports only APRIORI")
     if "data_csv" in config:
         data = pd.read_csv(io.StringIO(config["data_csv"]))
     else:
         data = pd.read_csv(config["data_path"])
-    experiment = config["experiment"]
-    if experiment == "kernel":
-        method = config.get("method", "dense")
-        result = _kernel(data, int(config.get("repeats", 10)), method)
-        result["elapsed_seconds"] = result[f"{method}_intersection_seconds"]
-        return result
 
-    source = _select_source(config.get("source_path"))
+    graank, source = _load_graank(method, config.get("source_path"))
     seed = int(config.get("seed", 0))
     random.seed(seed)
     np.random.seed(seed)
@@ -141,52 +87,57 @@ def run_experiment(config: dict) -> dict:
         torch.manual_seed(seed)
     except ImportError:
         pass
-    support = float(config.get("support", 0.5))
-    method = config.get("method", "apriori")
-
-    if experiment == "graank":
-        from so4gp.algorithms.graank import GRAANK
-
-        start = time.perf_counter()
-        miner = GRAANK(data.copy(), min_sup=support, eq=False)
+    support = float(config.get("support", DEFAULT_SUPPORT))
+    iteration_limit = (
+        config.get("apriori_level")
+        if search_type == "apriori"
+        else config.get("iterations", DEFAULT_ITERATIONS)
+    )
+    start = time.perf_counter()
+    miner = graank(data.copy(), min_sup=support, eq=False)
+    try:
         result_json = miner.discover(
-            search_type=method,
-            max_iteration=search_iteration_limit(config, method),
+            search_type=search_type,
+            max_iteration=iteration_limit,
             target_col=config.get("target"),
             compute_descriptors=False,
         )
-        elapsed = time.perf_counter() - start
-        engine = _mining_engine(miner)
-        extra = {}
-    else:
-        raise ValueError(f"unknown experiment: {experiment}")
+    except (AttributeError, ValueError) as exc:
+        # Some releases of GA and PSO pass the ValueError to the JSON encoder.
+        error = (
+            exc.obj if isinstance(exc, AttributeError) and exc.name == "tolist" else exc
+        )
+        if not isinstance(error, ValueError) or str(error) not in EMPTY_SEARCH_ERRORS:
+            raise
+        result_json = json.dumps({"Error": str(error)})
+    elapsed = time.perf_counter() - start
+    engine = _mining_engine(miner)
     result = json.loads(result_json)
+    invalid_count = result.get("Invalid Count")
+    extra = {}
     if "Error" in result:
         error = result["Error"]
-        if (
-            experiment == "graank"
-            and engine.valid_bins is None
-            and error in ("Search space is empty!", "Pairwise matrices not available!")
-        ):
+        if engine.valid_bins is None and error in EMPTY_SEARCH_ERRORS:
             # Too few gradual items passed support filtering to form a pattern.
             extra["empty_search_space"] = True
             result["Empty search reason"] = result.pop("Error")
+            invalid_count = 0
         else:
             raise RuntimeError(str(error))
-    patterns = _patterns(engine, data, support)
-    if experiment == "graank":
-        extra.update(
-            {
-                "valid_pattern_count": sum(p.get("valid") is True for p in patterns),
-                "invalid_pattern_count": sum(p.get("valid") is False for p in patterns),
-                "unknown_pattern_count": sum(p.get("valid") is None for p in patterns),
-            }
-        )
+    patterns = [
+        {"items": pattern.to_string(), "reported_support": float(pattern.support)}
+        for pattern in engine.gradual_patterns or []
+    ]
     return {
         "elapsed_seconds": elapsed,
         "source_path": source,
         "patterns": patterns,
         "pattern_count": len(patterns),
+        "valid_pattern_count": len(patterns),
+        "invalid_pattern_count": (
+            int(invalid_count) if invalid_count is not None else None
+        ),
+        "unknown_pattern_count": 0,
         "algorithm_result": result,
         **extra,
     }

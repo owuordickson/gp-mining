@@ -11,13 +11,14 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 GROUP_FIELDS = ("dataset", "experiment", "support", "target", "rows", "features")
+SUMMARY_FIELDS = (*GROUP_FIELDS, "search_type", "method")
 PAIR_FIELDS = ("seed", "repeat")
 INPUT_FIELDS = ("prepared_sha256",)
-BASELINES = {
-    "graank": "apriori",
-    "temporal": "all",
-    "kernel": "dense",
-    "version": "legacy",
+ARCHIVED_BASELINES = {
+    "graank": (None, "apriori"),
+    "temporal": (None, "all"),
+    "kernel": (None, "dense"),
+    "version": (None, "legacy"),
 }
 SUCCESS = {"ok", "success"}
 PATTERN_COUNT_FIELDS = (
@@ -37,6 +38,18 @@ def _finite(value):
 
 def _group(record):
     return tuple(record.get(field) for field in GROUP_FIELDS)
+
+
+def _search_variant(record):
+    method = record.get("method")
+    search_type = record.get("search_type")
+    if (
+        search_type is None
+        and record.get("experiment") == "graank"
+        and method in ("dense", "packed")
+    ):
+        search_type = "apriori"
+    return search_type, method
 
 
 def _percentile(values, fraction):
@@ -63,9 +76,9 @@ def summarize(records):
     """Return per-workload, per-method counts and successful-trial medians."""
     groups = defaultdict(list)
     for record in records:
-        groups[(_group(record), record.get("method"))].append(record)
+        groups[(*_group(record), *_search_variant(record))].append(record)
     result = []
-    for (key, method), trials in groups.items():
+    for key, trials in groups.items():
         statuses = Counter(str(row.get("status", "error")) for row in trials)
         completed = [row for row in trials if row.get("status") in SUCCESS]
         elapsed = [
@@ -88,10 +101,9 @@ def summarize(records):
                 else None
             )
         median = statistics.median(elapsed) if elapsed else None
-        row = dict(zip(GROUP_FIELDS, key))
+        row = dict(zip(SUMMARY_FIELDS, key))
         row.update(
             {
-                "method": method,
                 "attempts": len(trials),
                 "completed": len(completed),
                 "timeout": statuses["timeout"],
@@ -120,9 +132,7 @@ def summarize(records):
         result.append(row)
     return sorted(
         result,
-        key=lambda item: tuple(
-            str(item.get(field, "")) for field in (*GROUP_FIELDS, "method")
-        ),
+        key=lambda item: tuple(str(item.get(field, "")) for field in SUMMARY_FIELDS),
     )
 
 
@@ -130,6 +140,9 @@ def _patterns(record):
     patterns = record.get("patterns")
     if patterns is None or not isinstance(patterns, list):
         return None
+    bitmap_comparison = record.get("experiment") == "graank" and record.get(
+        "method"
+    ) in ("dense", "packed")
     identities = []
     for pattern in patterns:
         if isinstance(pattern, dict):
@@ -143,6 +156,11 @@ def _patterns(record):
                 continue
             if "items" in pattern:
                 pattern = pattern["items"]
+        if bitmap_comparison and isinstance(pattern, list):
+            inverse = [
+                item[:-1] + ("-" if item[-1] == "+" else "+") for item in pattern
+            ]
+            pattern = min(sorted(pattern), sorted(inverse))
         identities.append(
             json.dumps(pattern, sort_keys=True, separators=(",", ":"), default=str)
         )
@@ -157,19 +175,26 @@ def paired_summaries(records):
     result = []
     for key, trials in groups.items():
         experiment = dict(zip(GROUP_FIELDS, key)).get("experiment")
-        baseline = BASELINES.get(experiment)
-        if baseline is None:
-            continue
-        methods = {row.get("method") for row in trials} - {baseline, None}
-        for method in sorted(methods):
+        variants = defaultdict(list)
+        for row in trials:
+            variants[_search_variant(row)].append(row)
+        for variant, candidate_trials in variants.items():
+            search_type, method = variant
+            if experiment == "graank" and search_type is not None:
+                baseline = (
+                    "apriori",
+                    "dense" if search_type == "apriori" else "packed",
+                )
+            else:
+                baseline = ARCHIVED_BASELINES.get(experiment)
+            if baseline is None or baseline == variant or method is None:
+                continue
             candidates = defaultdict(list)
             references = defaultdict(list)
-            for row in trials:
-                pair = tuple(row.get(field) for field in PAIR_FIELDS)
-                if row.get("method") == method:
-                    candidates[pair].append(row)
-                elif row.get("method") == baseline:
-                    references[pair].append(row)
+            for row in candidate_trials:
+                candidates[tuple(row.get(field) for field in PAIR_FIELDS)].append(row)
+            for row in variants.get(baseline, []):
+                references[tuple(row.get(field) for field in PAIR_FIELDS)].append(row)
             ratios, memory_ratios, overlaps, recalls = [], [], [], []
             pair_ids = set(candidates) | set(references)
             for pair in pair_ids:
@@ -214,7 +239,9 @@ def paired_summaries(records):
             row = dict(zip(GROUP_FIELDS, key))
             row.update(
                 {
-                    "baseline": baseline,
+                    "baseline_search_type": baseline[0],
+                    "baseline": baseline[1],
+                    "search_type": search_type,
                     "method": method,
                     "completed_pairs": len(ratios),
                     "unmatched_or_censored_pairs": len(pair_ids) - len(ratios),
@@ -235,9 +262,7 @@ def paired_summaries(records):
             result.append(row)
     return sorted(
         result,
-        key=lambda item: tuple(
-            str(item.get(field, "")) for field in (*GROUP_FIELDS, "method")
-        ),
+        key=lambda item: tuple(str(item.get(field, "")) for field in SUMMARY_FIELDS),
     )
 
 
@@ -258,10 +283,11 @@ def _write_quality_plot(path, summary, paired):
         if not _finite(recall):
             continue
         key = tuple(comparison.get(field) for field in GROUP_FIELDS)
+        variant = _search_variant(comparison)
         matching = [
             row
             for row in summary
-            if _group(row) == key and row["method"] == comparison["method"]
+            if _group(row) == key and _search_variant(row) == variant
         ]
         if matching and _finite(matching[0]["elapsed_median_seconds"]):
             points.append(
@@ -269,7 +295,7 @@ def _write_quality_plot(path, summary, paired):
                     matching[0]["elapsed_median_seconds"],
                     recall,
                     comparison["dataset"],
-                    comparison["method"],
+                    "/".join(value for value in variant if value is not None),
                 )
             )
     if not points:
@@ -309,8 +335,7 @@ def write_reports(output_dir, records):
         output / "summary.csv",
         summary,
         (
-            *GROUP_FIELDS,
-            "method",
+            *SUMMARY_FIELDS,
             "attempts",
             "completed",
             "peak_rss_median_bytes",
@@ -321,7 +346,13 @@ def write_reports(output_dir, records):
     _write_csv(
         output / "paired_summary.csv",
         paired,
-        (*GROUP_FIELDS, "baseline", "method", "completed_pairs", "speedup_median"),
+        (
+            *SUMMARY_FIELDS,
+            "baseline_search_type",
+            "baseline",
+            "completed_pairs",
+            "speedup_median",
+        ),
     )
     _write_quality_plot(output / "time_vs_pattern_recovery.png", summary, paired)
     return data
