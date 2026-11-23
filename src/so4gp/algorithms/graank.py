@@ -566,18 +566,18 @@ class GRAANK:
             "singularity",
         )
 
-        def encode_recording(recording: np.ndarray) -> np.ndarray:
+        def encode_recording(rec_data: np.ndarray) -> np.ndarray:
             """Fit used GI bitmaps once and intersect each requested pattern."""
-            values = recording[:, needed_columns]
+            vals = rec_data[:, needed_columns]
             source = pds.DataFrame(
-                values, columns=[f"channel_{i}" for i in needed_columns]
+                vals, columns=[f"channel_{i}" for i in needed_columns]
             )
             engine = cls(source, min_sup=0.0).mining_engine
             if len(needed_columns) == 1:
                 # fit_bitmap requires two attributes for mining. GI feature
                 # extraction also supports a single attribute.
                 bitmap = engine._compute_pairwise_bitmap(
-                    np.asarray(values[:, 0], dtype=np.float64)
+                    np.asarray(vals[:, 0], dtype=np.float64)
                 )
                 forward = sum(
                     np.count_nonzero(row[i + 1 :]) for i, row in enumerate(bitmap)
@@ -599,7 +599,7 @@ class GRAANK:
                 for sign in ("+", "-")
             }
             result = np.empty((len(patterns), len(descriptors)), dtype=float)
-            for index, pattern in enumerate(patterns):
+            for idx, pattern in enumerate(patterns):
                 bitmap = lookup[pattern[0]]
                 for item in pattern[1:]:
                     bitmap = GP.perform_and(bitmap, lookup[item], num_observations)
@@ -610,8 +610,8 @@ class GRAANK:
                 )
                 gp = GP()
                 if not gp.compute_descriptors(pairs, num_observations):
-                    raise ValueError(f"Invalid concordance set for {names[index]}")
-                result[index] = (
+                    raise ValueError(f"Invalid concordance set for {names[idx]}")
+                result[idx] = (
                     bitmap.support,
                     gp.density,
                     gp.graph_connectivity,

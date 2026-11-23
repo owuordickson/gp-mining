@@ -134,7 +134,7 @@ class GeneticGRAANK(BaseGrad):
             if s_space is None:
                 return {"Error": "Search space is empty!"}
         except ValueError as e:
-            return {"Error": e}
+            return {"Error": str(e)}
 
         num_children = int(
             np.round(self._children_pop * self._parent_pop / 2) * 2

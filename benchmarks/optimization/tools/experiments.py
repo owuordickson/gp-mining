@@ -171,6 +171,7 @@ def run_experiment(config: dict) -> dict:
 
     try:
         import torch
+
         torch.manual_seed(seed)
     except ImportError:
         pass
@@ -230,7 +231,17 @@ def run_experiment(config: dict) -> dict:
         raise ValueError(f"unknown experiment: {experiment}")
     result = json.loads(result_json)
     if "Error" in result:
-        raise RuntimeError(str(result["Error"]))
+        error = result["Error"]
+        if (
+            experiment == "graank"
+            and engine.valid_bins is None
+            and error in ("Search space is empty!", "Pairwise matrices not available!")
+        ):
+            # Too few gradual items passed support filtering to form a pattern.
+            extra["empty_search_space"] = True
+            result["Empty search reason"] = result.pop("Error")
+        else:
+            raise RuntimeError(str(error))
     patterns = _patterns(engine, data, support)
     if experiment == "graank":
         extra.update(

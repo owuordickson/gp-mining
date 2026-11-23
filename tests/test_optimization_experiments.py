@@ -13,6 +13,7 @@ import pytest
 PATH = (
     Path(__file__).resolve().parents[1] / "benchmarks/optimization/tools/experiments.py"
 )
+EMPTY_SEARCH_CSV = "a,b\n2,3\n1,4\n4,1\n3,2\n"
 spec = importlib.util.spec_from_file_location("optimization_experiments", PATH)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -152,6 +153,36 @@ def test_current_graank_worker_returns_parseable_result(tmp_path):
     assert result["source_path"].endswith("so4gp\\__init__.py") or result[
         "source_path"
     ].endswith("so4gp/__init__.py")
+
+
+@pytest.mark.parametrize("method", ["ga", "pso"])
+def test_graank_serializes_missing_bitmap_diagnostic(method):
+    from io import StringIO
+
+    from so4gp.algorithms.graank import GRAANK
+
+    miner = GRAANK(pd.read_csv(StringIO(EMPTY_SEARCH_CSV)), min_sup=0.7)
+    result = json.loads(miner.discover(search_type=method, compute_descriptors=False))
+    assert result["Error"] == "Pairwise matrices not available!"
+    assert result["Patterns"] == []
+
+
+@pytest.mark.parametrize("method", ["apriori", "aco", "ga", "pso", "hc", "random"])
+def test_graank_worker_completes_when_no_item_pairs_meet_support(method):
+    result = module.run_experiment(
+        {
+            "experiment": "graank",
+            "method": method,
+            "data_csv": EMPTY_SEARCH_CSV,
+            "support": 0.7,
+            "target": 0,
+        }
+    )
+    assert result["empty_search_space"] is True
+    assert result["pattern_count"] == 0
+    assert result["patterns"] == []
+    assert "Error" not in result["algorithm_result"]
+    assert result["elapsed_seconds"] > 0
 
 
 @pytest.mark.parametrize("method", ["all", "ami", "random"])

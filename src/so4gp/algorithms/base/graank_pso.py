@@ -87,7 +87,7 @@ class ParticleGRAANK(BaseGrad):
             if s_space is None:
                 return {"Error": "Search space is empty!"}
         except ValueError as e:
-            return {"Error": e}
+            return {"Error": str(e)}
 
         pbest_pop = s_space.pop.copy()
         gbest_particle = pbest_pop[0]

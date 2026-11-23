@@ -136,6 +136,9 @@ libraries, so they do not show bitmap storage savings on their own.
 
 ## Result files and interpretation
 
+When too few gradual items meet the support threshold to start GRAANK's search,
+the trial completes with zero patterns and records `empty_search_space: true`.
+
 Each run creates a new folder under `results/`, with `manifest.json`, `trials.jsonl`, `summary.csv`, and `paired_summary.csv`. A figure is created when sufficient pattern-recovery data is available. The source data stays in `data/`; selected data is passed in memory to each isolated worker. Use `--output` to choose a directory and `--resume` only with the same settings, source and prepared inputs. A timeout, memory limit, input failure, or algorithm exception is recorded as a failure rather than as a zero-duration result.
 
 The algorithm timer includes miner construction and mining; input preparation and process startup are excluded, and process elapsed time is recorded separately. Sampled process-tree resident memory includes imports and post-mining validation, and is not a representation-only memory measure. Kernel records include separate dense and packed array sizes and intersection timings; both representations exist in each kernel process. Results from small smoke inputs check the pipeline and are not general performance claims.
