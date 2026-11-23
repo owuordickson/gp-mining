@@ -1,0 +1,6 @@
+dataset,experiment,support,target,rows,features,baseline_search_type,baseline,search_type,method,completed_pairs,unmatched_or_censored_pairs,speedup_median,speedup_ci_low,speedup_ci_high,memory_ratio_median,itemset_jaccard_median,apriori_output_recall
+BCR,graank,0.2,Glucose,116,9,apriori,dense,apriori,packed,1,0,47.35203039722898,,,1.005592677153809,1.0,1.0
+BCR,graank,0.2,Glucose,116,9,apriori,packed,ga,packed,1,0,4.84972645339056,,,1.001331865135546,0.05172413793103448,0.05660377358490566
+BCR,graank,0.2,Glucose,116,9,apriori,packed,hc,packed,1,0,13.270073251961074,,,1.0015314256943861,0.018867924528301886,0.018867924528301886
+BCR,graank,0.2,Glucose,116,9,apriori,packed,pso,packed,1,0,4.900265125911563,,,1.000419102701117,0.0,0.0
+BCR,graank,0.2,Glucose,116,9,apriori,packed,random,packed,1,0,15.585872557337987,,,1.0000314205217902,0.0,0.0
