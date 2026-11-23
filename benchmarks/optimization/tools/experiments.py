@@ -19,15 +19,6 @@ import numpy as np
 import pandas as pd
 
 
-def canonical_pattern(items):
-    """Normalize ordering and global sign reversal of gradual items."""
-    normal = tuple(sorted(str(item) for item in items))
-    swapped = tuple(
-        sorted(item[:-1] + ("-" if item[-1] == "+" else "+") for item in normal)
-    )
-    return min(normal, swapped)
-
-
 def search_iteration_limit(config, method):
     """APRIORI depth and stochastic iteration counts have different meanings."""
     return (
@@ -117,29 +108,11 @@ def _mining_engine(miner):
     return engine if engine is not None else miner.mining_engine
 
 
-def _patterns(engine, data, min_support):
+def _patterns(engine):
     """Collect canonical patterns and recompute strict full support on input."""
     result = []
-    n = len(data)
     for pattern in engine.gradual_patterns or []:
-        raw = [str(item.to_string()) for item in pattern.gradual_items]
-        items = canonical_pattern(raw)
-        entry = {"items": list(items), "reported_support": float(pattern.support)}
-        try:
-            comparisons = np.ones((n, n), dtype=bool)
-            for item in raw:
-                column, sign = int(item[:-1]), item[-1]
-                values = pd.to_numeric(data.iloc[:, column]).to_numpy(dtype=float)
-                comparisons &= (
-                    (values[:, None] < values[None, :])
-                    if sign == "+"
-                    else (values[:, None] > values[None, :])
-                )
-            entry["recomputed_support"] = int(comparisons.sum()) / (n * (n - 1) / 2)
-            entry["valid"] = entry["recomputed_support"] + 1e-12 >= min_support
-        except ValueError, IndexError, TypeError:
-            entry["recomputed_support"] = None
-            entry["valid"] = None
+        entry = {"items": pattern.to_string(), "reported_support": float(pattern.support)}
         result.append(entry)
     return result
 
