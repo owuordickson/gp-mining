@@ -136,7 +136,7 @@ class OrigGRAANK(BaseGrad):
         target_gi_dict = self.valid_bins
         valid_bins_dict = target_gi_dict
 
-        if valid_bins_dict is None or target_gi_dict is None:
+        if target_gi_dict is None:
             return {"Error": "Pairwise matrices not available!"}
 
         candidate_level = 1

@@ -192,7 +192,7 @@ def _parser():
         help="Support sweep; study defaults to 0.5 0.7 0.9",
     )
     parser.add_argument("--lag", type=int)
-    parser.add_argument("--iterations", type=int, default=5)
+    parser.add_argument("--iterations", type=int, default=10)
     parser.add_argument(
         "--apriori-level",
         type=int,
