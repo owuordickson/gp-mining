@@ -139,7 +139,7 @@ def test_build_features_mines_each_recording_with_graank(monkeypatch):
     def observe(miner, *args, **kwargs):
         """Run the miner and record the numerical data held by its engine."""
         result = discover(miner, *args, **kwargs)
-        observed.append(miner.mining_engine.data.copy())
+        observed.append(miner.mine_engine.data.copy())
         return result
 
     monkeypatch.setattr(GRAANK, "discover", observe)

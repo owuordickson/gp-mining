@@ -81,13 +81,10 @@ class ParticleGRAANK(BaseGrad):
 
         start = time.time()
         self.target_col = target_col
-        try:
-            self.init_search_space(self._n_particles)
-            s_space = self.search_space
-            if s_space is None:
-                return {"Error": "Search space is empty!"}
-        except ValueError as e:
-            return {"Error": str(e)}
+        self.init_search_space(self._n_particles)
+        s_space = self.search_space
+        if s_space is None:
+            return {"Error": "Search space is empty!"}
 
         pbest_pop = s_space.pop.copy()
         gbest_particle = pbest_pop[0]

@@ -369,7 +369,7 @@ class TGrad(OrigGRAANK):
             compute_descriptors=self._compute_descriptors,
             max_iteration=self._algorithm_max_iter,
         )
-        return mine_obj.mining_engine.gradual_patterns
+        return mine_obj.mine_engine.gradual_patterns
 
     def get_time_diffs(self, step: int) -> tuple[dict, np.ndarray]:  # optimized
         """

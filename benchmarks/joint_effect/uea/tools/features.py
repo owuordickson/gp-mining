@@ -152,7 +152,7 @@ def _gradual_features(
     lst_gp_extra = []
     mine_obj = GRAANK(_recording_df(recording), min_sup=min_sup)
     mine_obj.discover(max_iteration=2, compute_descriptors=True)
-    miner = mine_obj.mining_engine
+    miner = mine_obj.mine_engine
 
     for gi_key, gi_data in (miner.valid_bins or {}).items():
         item = GI.from_string(gi_key)
@@ -257,6 +257,10 @@ def build_features(
     gi_only = np.zeros((num_recordings, 2 * num_channels * len(DESCRIPTORS)))
     gp_basic = np.zeros((num_recordings, max_patterns * 2))
     gp_extra = np.zeros((num_recordings, max_patterns * len(DESCRIPTORS)))
+
+    test_df = GRAANK.build_gradual_features(sequences, max_patterns, pattern_level=2)
+    print(test_df)
+    return
 
     for index, raw_recording in enumerate(sequences):
         recording = np.asarray(raw_recording, dtype=np.float64)

@@ -110,10 +110,6 @@ class TGRAANK:
                 * ``cpu`` (default) — will use Numpy operations.
                 * ``gpu`` — will use GPU (Tensor) operations.
 
-        Attributes:
-            mining_engine:
-                Active temporal mining engine.
-
         Example:
             >>> import pandas as pd
             >>> from so4gp.algorithms import TGRAANK
@@ -141,7 +137,7 @@ class TGRAANK:
         self._clustering_alg = clustering_algorithm
         self._inference_method = inference_method
         self._device = device
-        self._mine_obj = TGrad(
+        self._miner = TGrad(
             data_source,
             min_sup=min_sup,
             min_rep=min_rep,
@@ -154,8 +150,9 @@ class TGRAANK:
         )
 
     @property
-    def mining_engine(self):
-        return self._mine_obj
+    def mine_engine(self):
+        """Active temporal mining engine."""
+        return self._miner
 
     def discover(
         self,
@@ -317,7 +314,7 @@ class TGRAANK:
 
         try:
             if transformations == "all":
-                self._mine_obj = TGrad(
+                self._miner = TGrad(
                     self._data_src,
                     min_sup=self._min_supp,
                     min_rep=self._min_rep,
@@ -332,7 +329,7 @@ class TGRAANK:
                 # if num_cores <= 1:
                 #    num_cores = get_num_cores()
                 ignore_time = kwargs.get("ignore_time", False)
-                res_dict = self._mine_obj.discover_tgp(
+                res_dict = self._miner.discover_tgp(
                     target_col=target_col,
                     search_algorithm=search_algorithm,
                     max_iteration=max_iteration,
@@ -341,7 +338,7 @@ class TGRAANK:
             elif transformations == "ami":
                 from .base.tgrad_ami import TGradAMI
 
-                self._mine_obj = TGradAMI(
+                self._miner = TGradAMI(
                     self._data_src,
                     min_sup=self._min_supp,
                     min_rep=self._min_rep,
@@ -352,7 +349,7 @@ class TGRAANK:
                     add_time=True,
                     device=self._device,
                 )
-                res_dict = self._mine_obj.discover_tgp_ami(
+                res_dict = self._miner.discover_tgp_ami(
                     target_col=target_col,
                     transformation_steps=transformation_steps,
                     max_iteration=max_iteration,
@@ -364,17 +361,17 @@ class TGRAANK:
                 raise ValueError("Invalid transformation algorithm")
 
             if save_results:
-                self._mine_obj.generate_output_files(res_dict, target_col=target_col)
-            res_dict.update({"Patterns": self._mine_obj.display_patterns})
+                self._miner.generate_output_files(res_dict, target_col=target_col)
+            res_dict.update({"Patterns": self._miner.display_patterns})
 
             if compute_causality:
                 # Causal Inference
                 from ..gradual_patterns import TGP
 
                 causal_relations = []
-                for tgp in self._mine_obj.gradual_patterns or []:
+                for tgp in self._miner.gradual_patterns or []:
                     if isinstance(tgp, TGP):
-                        res = tgp.get_causal_relations(self._mine_obj.titles)
+                        res = tgp.get_causal_relations(self._miner.titles)
                         causal_relations.extend(res)
                 res_dict.update({"Causality": causal_relations})
         except RuntimeError as e:
@@ -422,22 +419,22 @@ class TGRAANK:
             :doc:`causal discovery tutorial </tutorials/causal_discovery>`.
         """
 
-        if not 0 <= max_lag < self._mine_obj.row_count:
+        if not 0 <= max_lag < self._miner.row_count:
             raise ValueError(
-                f"'max_lag' must be between 0 and {self._mine_obj.row_count - 1}."
+                f"'max_lag' must be between 0 and {self._miner.row_count - 1}."
             )
 
         # Compute minimum representativity from the maximum lag
         if max_lag > 0:
             self._min_rep = (
-                self._mine_obj.row_count - max_lag
-            ) / self._mine_obj.row_count
+                                    self._miner.row_count - max_lag
+            ) / self._miner.row_count
 
         self._min_supp = 1e-6
-        feature_cols = self._mine_obj.attr_cols
+        feature_cols = self._miner.attr_cols
 
         # Full adjacency matrix indexed by original column numbers
-        n = self._mine_obj.col_count
+        n = self._miner.col_count
         dependency_matrix = np.zeros((n, n), dtype=np.float32)
 
         for target in feature_cols:
@@ -472,7 +469,7 @@ class TGRAANK:
         # Keep only feature columns (exclude time columns, etc.)
         dependency_matrix = dependency_matrix[np.ix_(feature_cols, feature_cols)]
 
-        feature_titles = [self._mine_obj.titles[i] for i in feature_cols]
+        feature_titles = [self._miner.titles[i] for i in feature_cols]
 
         return pds.DataFrame(
             dependency_matrix,

@@ -4,14 +4,11 @@
 
 
 import json
-from itertools import combinations, islice, product
-from numbers import Integral
-
 # import torch
 import numpy as np
 import pandas as pds
 
-from ..gradual_patterns import GP, PairwiseMatrix
+from ..gradual_patterns import GP, GI
 from .base.graank_alg import OrigGRAANK
 
 
@@ -60,7 +57,7 @@ class GRAANK:
     """
 
     def __init__(
-        self, data_source, min_sup: float = 0.5, eq: bool = False, device: str = "cpu"
+            self, data_source, min_sup: float = 0.5, eq: bool = False, device: str = "cpu"
     ) -> None:
         """
         Initialize a gradual pattern mining session.
@@ -104,10 +101,6 @@ class GRAANK:
 
                 * ``gpu``: will use GPU (Tensor) operations.
 
-        Attributes:
-            mining_engine:
-                Active mining engine used by ``discover()``.
-
         Raises:
             ValueError:
                 If the supplied dataset cannot be loaded.
@@ -135,22 +128,23 @@ class GRAANK:
         self._min_supp: float = min_sup
         self._eq: bool = eq
         self._device = device
-        self._mine_obj = OrigGRAANK(data_source, min_sup=min_sup, eq=eq, device=device)
+        self._miner = OrigGRAANK(data_source, min_sup=min_sup, eq=eq, device=device)
 
     @property
-    def mining_engine(self):
-        return self._mine_obj
+    def mine_engine(self):
+        """Active mining engine used by ``discover()``"""
+        return self._miner
 
     def discover(
-        self,
-        search_type: str = "apriori",
-        max_iteration: int | None = None,
-        target_col: int | None = None,
-        exclude_target: bool = False,
-        time_data: dict | None = None,
-        compute_descriptors: bool = True,
-        save_results: bool = False,
-        **kwargs,
+            self,
+            search_type: str = "apriori",
+            max_iteration: int | None = None,
+            target_col: int | None = None,
+            exclude_target: bool = False,
+            time_data: dict | None = None,
+            compute_descriptors: bool = True,
+            save_results: bool = False,
+            **kwargs,
     ) -> str:
         """
         Discover gradual patterns using the selected search strategy.
@@ -329,7 +323,7 @@ class GRAANK:
         """
 
         if search_type == "apriori":
-            self._mine_obj = OrigGRAANK(
+            self._miner = OrigGRAANK(
                 self._data_src,
                 min_sup=self._min_supp,
                 eq=self._eq,
@@ -341,7 +335,7 @@ class GRAANK:
             from .base.graank_ga import GeneticGRAANK
 
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = GeneticGRAANK(
+            self._miner = GeneticGRAANK(
                 self._data_src,
                 min_sup=self._min_supp,
                 eq=self._eq,
@@ -353,7 +347,7 @@ class GRAANK:
             from .base.graank_aco import AntGRAANK
 
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = AntGRAANK(
+            self._miner = AntGRAANK(
                 self._data_src,
                 min_sup=self._min_supp,
                 eq=self._eq,
@@ -365,7 +359,7 @@ class GRAANK:
             from .base.graank_pso import ParticleGRAANK
 
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = ParticleGRAANK(
+            self._miner = ParticleGRAANK(
                 self._data_src,
                 min_sup=self._min_supp,
                 eq=self._eq,
@@ -377,7 +371,7 @@ class GRAANK:
             from .base.graank_hc import HillClimbingGRAANK
 
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = HillClimbingGRAANK(
+            self._miner = HillClimbingGRAANK(
                 self._data_src,
                 min_sup=self._min_supp,
                 eq=self._eq,
@@ -389,7 +383,7 @@ class GRAANK:
             from .base.graank_rand import RandomGRAANK
 
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = RandomGRAANK(
+            self._miner = RandomGRAANK(
                 self._data_src,
                 min_sup=self._min_supp,
                 eq=self._eq,
@@ -400,7 +394,7 @@ class GRAANK:
             from .cluster_gp import ClusterGP
 
             max_iteration = max_iteration if max_iteration is not None else 1
-            self._mine_obj = ClusterGP(
+            self._miner = ClusterGP(
                 self._data_src,
                 min_sup=self._min_supp,
                 eq=self._eq,
@@ -411,15 +405,15 @@ class GRAANK:
         else:
             raise ValueError("Invalid search type!")
 
-        if isinstance(self._mine_obj, OrigGRAANK):
-            res_dict = self._mine_obj.discover(
+        if isinstance(self._miner, OrigGRAANK):
+            res_dict = self._miner.discover(
                 target_col=target_col,
                 time_data=time_data,
                 exclude_target=exclude_target,
                 compute_descriptors=compute_descriptors,
             )
         else:
-            res_dict = self._mine_obj.discover(
+            res_dict = self._miner.discover(
                 target_col=target_col,
                 time_data=time_data,
                 exclude_target=exclude_target,
@@ -427,8 +421,8 @@ class GRAANK:
 
         try:
             if save_results:
-                self._mine_obj.generate_output_files(res_dict, target_col=target_col)
-            res_dict.update({"Patterns": self._mine_obj.display_patterns})
+                self._miner.generate_output_files(res_dict, target_col=target_col)
+            res_dict.update({"Patterns": self._miner.display_patterns})
         except RuntimeError as e:
             res_dict.update({"Error": str(e)})
         out: str = json.dumps(
@@ -442,10 +436,10 @@ class GRAANK:
 
     @classmethod
     def build_gradual_features(
-        cls,
-        sequences: np.ndarray,
-        max_patterns: int | None = None,
-        pattern_level: int = 2,
+            cls,
+            sequences: np.ndarray,
+            max_patterns: int | None = None,
+            pattern_level: int = 2,
     ) -> pds.DataFrame:
         """Encode numerical arrays using support and GCS descriptors.
 
@@ -515,48 +509,26 @@ class GRAANK:
             >>> gp_features.shape
             (2, 12)
         """
+
         data = np.asarray(sequences)
         if data.ndim not in (2, 3) or data.dtype.kind not in "biuf":
             raise ValueError("sequences must be a real numerical 2D or 3D array")
+
         recordings = data[None] if data.ndim == 2 else data
         num_recordings, num_observations, num_channels = recordings.shape
+
         if num_recordings == 0 or num_observations < 2 or num_channels < 1:
-            raise ValueError(
-                "Require a recording with at least two observations and one channel"
-            )
+            raise ValueError("Require a recording with at least two observations and one channel")
+
         if not np.isfinite(data).all():
             raise ValueError("sequences must contain only finite values")
-        if (
-            isinstance(pattern_level, bool)
-            or not isinstance(pattern_level, Integral)
-            or not 1 <= pattern_level <= num_channels
-        ):
-            raise ValueError(
-                "pattern_level must be an integer from 1 to the channel count"
-            )
-        if max_patterns is not None and (
-            isinstance(max_patterns, bool)
-            or not isinstance(max_patterns, Integral)
-            or max_patterns < 1
-        ):
+
+        if not 1 <= pattern_level <= num_channels:
+            raise ValueError("pattern_level must be an integer from 1 to the channel count")
+
+        if max_patterns is not None and max_patterns < 1:
             raise ValueError("max_patterns must be a positive integer or None")
-        level = int(pattern_level)
-        limit = None if max_patterns is None else int(max_patterns)
 
-        def pattern_items():
-            """Yield exact-size patterns with deterministic numeric identifiers."""
-            if level == 1:
-                for column in range(num_channels):
-                    for symbol in ("+", "-"):
-                        yield ((column, symbol),)
-            else:
-                for columns in combinations(range(num_channels), level):
-                    for suffix in product(("+", "-"), repeat=level - 1):
-                        yield tuple(zip(columns, ("+", *suffix), strict=True))
-
-        patterns = list(islice(pattern_items(), limit))
-        names = [" ".join(f"{column}{sign}" for column, sign in p) for p in patterns]
-        needed_columns = sorted({column for p in patterns for column, _ in p})
         descriptors = (
             "support",
             "density",
@@ -566,77 +538,76 @@ class GRAANK:
             "singularity",
         )
 
-        def encode_recording(rec_data: np.ndarray) -> np.ndarray:
+        def encode_recording(rec_data: np.ndarray) -> tuple[list, np.ndarray]:
             """Fit used GI bitmaps once and intersect each requested pattern."""
-            vals = rec_data[:, needed_columns]
-            source = pds.DataFrame(
-                vals, columns=[f"channel_{i}" for i in needed_columns]
-            )
-            engine = cls(source, min_sup=0.0).mining_engine
-            if len(needed_columns) == 1:
-                # fit_bitmap requires two attributes for mining. GI feature
-                # extraction also supports a single attribute.
-                bitmap = engine._compute_pairwise_bitmap(
-                    np.asarray(vals[:, 0], dtype=np.float64)
-                )
-                forward = sum(
-                    np.count_nonzero(row[i + 1 :]) for i, row in enumerate(bitmap)
-                )
-                reverse = sum(np.count_nonzero(row[:i]) for i, row in enumerate(bitmap))
-                support = float(max(forward, reverse) / GP.pair_count(num_observations))
-                bins = {
-                    "0+": PairwiseMatrix(np.packbits(bitmap.ravel()), support, {"0+"}),
-                    "0-": PairwiseMatrix(
-                        np.packbits(bitmap.T.ravel()), support, {"0-"}
-                    ),
-                }
+            rec_df = pds.DataFrame(rec_data)
+            mine_alg = cls(rec_df, min_sup=0.0)
+            # 1-item GIs
+            if pattern_level == 1:
+                mine_eng = mine_alg.mine_engine
+                mine_eng.fit_bitmap()
+                num_objects, num_cols = rec_data.shape
+                pat_names = list((mine_eng.valid_bins or {}).keys())
+                gi_features = np.zeros((2 * num_cols, len(descriptors)))
+                for gi_key, gi_data in (mine_eng.valid_bins or {}).items():
+                    item = GI.from_string(gi_key)
+                    slot = 2 * item.attribute_col + int(item.symbol == "-")
+
+                    pairs = GP.gen_gradual_concordance_set(gi_data.packed_bin_mat, num_objects)
+                    new_gp = GP()
+                    new_gp.compute_descriptors(pairs, num_objects)
+
+                    gi_features[slot] = (
+                        gi_data.support,
+                        new_gp.density,
+                        new_gp.graph_connectivity,
+                        new_gp.average_separation,
+                        new_gp.rank_dispersion,
+                        new_gp.singularity_score,
+                    )
+                return pat_names, gi_features
             else:
-                engine.fit_bitmap()
-                bins = engine.valid_bins or {}
-            lookup = {
-                (original, sign): bins[f"{position}{sign}"]
-                for position, original in enumerate(needed_columns)
-                for sign in ("+", "-")
-            }
-            result = np.empty((len(patterns), len(descriptors)), dtype=float)
-            for idx, pattern in enumerate(patterns):
-                bitmap = lookup[pattern[0]]
-                for item in pattern[1:]:
-                    bitmap = GP.perform_and(bitmap, lookup[item], num_observations)
-                    if bitmap.support == 0:
-                        break
-                pairs = GP.gen_gradual_concordance_set(
-                    bitmap.packed_bin_mat, num_observations
-                )
-                gp = GP()
-                if not gp.compute_descriptors(pairs, num_observations):
-                    raise ValueError(f"Invalid concordance set for {names[idx]}")
-                result[idx] = (
-                    bitmap.support,
-                    gp.density,
-                    gp.graph_connectivity,
-                    gp.average_separation,
-                    gp.rank_dispersion,
-                    gp.singularity_score,
-                )
-            return result
+                lst_gp = []
+                pat_names = []
+                mine_alg.discover(max_iteration=pattern_level, compute_descriptors=True)
+                mine_eng = mine_alg.mine_engine
+                for gp in (mine_eng.gradual_patterns or [])[:max_patterns]:
+                    pat_names.append(gp.to_string())
+                    lst_gp.append(
+                        (
+                            gp.support,
+                            gp.density,
+                            gp.graph_connectivity,
+                            gp.average_separation,
+                            gp.rank_dispersion,
+                            gp.singularity_score,
+                        )
+                    )
+                gp_features = np.asarray(lst_gp, dtype=float)
+                return pat_names, gp_features
 
         if data.ndim == 2:
+            desc_idx, desc_arr = encode_recording(data)
             return pds.DataFrame(
-                encode_recording(data),
-                index=pds.Index(names, name="pattern"),
+                desc_arr,
+                index=pds.Index(tuple(desc_idx), name="pattern"),
                 columns=pds.Index(descriptors, name="descriptor"),
             )
-        features = np.empty(
-            (num_recordings, len(patterns) * len(descriptors)), dtype=float
-        )
+
+        dfs = []
         for index, recording in enumerate(recordings):
-            values = encode_recording(recording)
-            features[index] = np.nan_to_num(values, nan=0.0, copy=False).ravel()
-        return pds.DataFrame(
-            features,
-            index=pds.RangeIndex(num_recordings, name="recording"),
-            columns=pds.MultiIndex.from_product(
-                (names, descriptors), names=("pattern", "descriptor")
-            ),
-        )
+            temp_idx, temp_arr = encode_recording(recording)
+            # Create a DataFrame for just this recording
+            """df_rec = pds.DataFrame(
+                temp_arr,  # Keep 2D shape: (len(temp_idx), len(descriptors))
+                index=pds.Index(tuple(temp_idx), name="pattern"),
+                columns=pds.Index(descriptors, name="descriptor")
+            )"""
+            df_rec = pds.DataFrame(temp_arr, columns=descriptors)
+            df_rec.insert(0, "pattern", temp_idx)
+            df_rec.insert(0, "recording", index)
+            dfs.append(df_rec)
+
+        # Combine all recordings, adding 'recording' as the outer index level
+        # return pds.concat(dfs, keys=range(len(recordings)), names=["recording", "pattern"]).reset_index()
+        return pds.concat(dfs, ignore_index=True)

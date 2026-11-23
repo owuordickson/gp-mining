@@ -1,7 +1,7 @@
 import pandas
 import torch
 
-from so4gp.algorithms import TGRAANK
+from so4gp.algorithms import TGRAANK, GRAANK
 
 # make get_selected_rows -- less intensive and fast
 
@@ -9,13 +9,13 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"🚀 Running execution pipeline on device: {device.upper()}")
 
-    # dummy_data = [
-    #     [30, 3, 1, 10],
-    #     [35, 2, 2, 8],
-    #     [40, 4, 3, 7],
-    #     [50, 1, 4, 6],
-    #     [52, 7, 5, 2],
-    # ]
+    dummy_data_only = [
+         [30, 3, 1, 10],
+         [35, 2, 2, 8],
+         [40, 4, 3, 7],
+         [50, 1, 4, 6],
+         [52, 7, 5, 2],
+    ]
     dummy_data = [
         ["2021-03", 30, 3, 1, 10],
         ["2021-04", 35, 2, 2, 8],
@@ -40,8 +40,13 @@ if __name__ == "__main__":
     #     dummy_data, columns=["Age", "Salary", "Cars", "Expenses"]
     # )
 
+    import numpy as np
+    feat_df = GRAANK.build_gradual_features(np.array(dummy_data_only), pattern_level=2)
+    print(feat_df)
+    exit()
+
     ## Test Algorithms
-    # mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False, device=device)
+    mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False, device=device)
     # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0, device=device)
     mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1, device=device)
     # result_json = mine_obj.discover(target_col=1, compute_descriptors=True)  # GRAANK
