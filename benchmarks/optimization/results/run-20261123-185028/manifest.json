@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "datasets": [
+      "BCR",
+      "C2K",
+      "AQY",
+      "DIR",
+      "PWC",
+      "APS"
+    ],
+    "experiment": "all",
+    "profile": "study",
+    "data_dir": "C:\\owuor_lab\\GP-Mining\\benchmarks\\optimization\\data",
+    "download": false,
+    "rows": null,
+    "features": null,
+    "target": null,
+    "site": null,
+    "support": 0.7,
+    "supports": null,
+    "lag": null,
+    "iterations": 10,
+    "apriori_level": null,
+    "seeds": null,
+    "timeout": 300,
+    "warmups": 1,
+    "memory_mib": null
+  },
+  "revision": "8013a764ad89b5fe143603221b28dea53a13d20b",
+  "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "benchmark_sha256": {
+    "benchmark.py": "b98583ae90706fb7c5567b5585d9d8e6df319676f2c5189922c2dc7cd4e1fe7c",
+    "tools\\datasets.py": "4493720ae6df4cb221e81a3bdd89b9db358b2aa1ff92477d7ccd39f8f8892609",
+    "tools\\experiments.py": "d3e8a5126b90661ffa25752738ab6f023edfc2de5f32d49ba2a43ff459d37f50",
+    "tools\\process_control.py": "703d5bfde80c168cc8592e9d8f1cf77332b7d16f940314c21d457c2299c73fdd",
+    "tools\\report.py": "469fafd5384802ee3e45abe58b46b1b9428add812699f43136125b04c244c6aa",
+    "tools\\__init__.py": "5cb6cfaf4e995d410c82cbec57f81544010e3b11e48dfc6e9315b2eb89a37afc"
+  },
+  "legacy_revision": "affc7860397002fba26af96dcb2f0461f2cdda9d",
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+  "cpu_count": 8,
+  "ram_bytes": 34359738368,
+  "dependencies": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "torch": "2.13.0",
+    "scikit-learn": "1.9.1",
+    "scikit-fuzzy": "0.5.0"
+  },
+  "timing": "worker algorithm elapsed; process startup and preparation separate",
+  "memory": "sampled worker process-tree resident memory every 0.05s; includes imports and post-mining validation"
+}
