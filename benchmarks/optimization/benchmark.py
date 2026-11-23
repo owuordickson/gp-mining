@@ -165,11 +165,11 @@ def _parser():
     )
     parser.add_argument(
         "--experiment",
-        choices=("all", "graank", "temporal", "kernel", "version"),
-        default="graank",
+        choices=("all", "graank", "kernel", "version"),
+        default="all",
     )
     parser.add_argument(
-        "--profile", choices=("quick", "study", "full"), default="study"
+        "--profile", choices=("quick", "study", "full"), default="full"
     )
     parser.add_argument("--data-dir", type=Path, default=HERE / "data")
     parser.add_argument(
@@ -185,7 +185,6 @@ def _parser():
         "--site", help="Select a Directio site when a file contains several"
     )
     parser.add_argument("--support", type=float, default=0.2)
-    parser.add_argument("--lag", type=int)
     parser.add_argument("--iterations", type=int, default=10)
     parser.add_argument(
         "--apriori-level",
@@ -198,7 +197,7 @@ def _parser():
         "--warmups", type=int, default=1, help="Discarded warm-up trials per workload"
     )
     parser.add_argument(
-        "--memory-mib", type=float, help="Best-effort sampled working-set limit"
+        "--memory-mib", type=float, default=6144, help="Best-effort sampled working-set limit"
     )
     parser.add_argument("--resume", action="store_true")
     return parser
@@ -220,9 +219,9 @@ def main(argv=None):
         raise ValueError("Invalid support, timeout, or iteration count")
     if args.profile == "full" and args.memory_mib is None:
         raise ValueError("The full profile requires a positive --memory-mib limit")
-    defaults = {"quick": (64, 6, 2), "study": (1000, 12, 10), "full": (None, None, 10)}
-    rows, features, lag = defaults[args.profile]
-    rows, features, lag = args.rows or rows, args.features or features, args.lag or lag
+    defaults = {"quick": (64, 6), "study": (1000, 12), "full": (None, None)}
+    rows, features = defaults[args.profile]
+    rows, features = args.rows or rows, args.features or features
     args.output.mkdir(parents=True, exist_ok=True)
     manifest_path = args.output / "manifest.json"
     settings = {
@@ -295,9 +294,8 @@ def main(argv=None):
     completed = {r.get("trial_id") for r in records}
     experiments = {
         "graank": ["apriori", "aco", "ga", "pso", "hc", "random"],
-        "temporal": ["all", "ami", "random"],
         "kernel": ["dense", "packed"],
-        "version": ["legacy", "current"],
+        #"version": ["legacy", "current"],
     }
     if args.experiment != "all":
         experiments = {args.experiment: experiments[args.experiment]}
@@ -366,7 +364,6 @@ def main(argv=None):
                     "seed": seed,
                     "target": metadata["target_index"],
                     "iterations": args.iterations,
-                    "lag": lag,
                     "apriori_level": None, #args.apriori_level,
                 }
                 record = {

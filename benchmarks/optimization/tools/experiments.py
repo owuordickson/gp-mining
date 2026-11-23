@@ -28,13 +28,6 @@ def canonical_pattern(items):
     return min(normal, swapped)
 
 
-def representativity_for_lag(n, lag):
-    """Choose a representativity-yielding range(1, max_step) == 1..lag."""
-    if n < 3 or lag < 1 or lag >= n - 1:
-        raise ValueError("lag must be between 1 and n - 2")
-    return (n - lag - 0.5) / n
-
-
 def search_iteration_limit(config, method):
     """APRIORI depth and stochastic iteration counts have different meanings."""
     return (
@@ -129,30 +122,24 @@ def _patterns(engine, data, min_support):
     result = []
     n = len(data)
     for pattern in engine.gradual_patterns or []:
-        temporal = hasattr(pattern, "temporal_gradual_items")
         raw = [str(item.to_string()) for item in pattern.gradual_items]
         items = canonical_pattern(raw)
         entry = {"items": list(items), "reported_support": float(pattern.support)}
-        if temporal:
-            entry["temporal_description"] = pattern.to_string()
-        # Temporal patterns describe shifted datasets; original-input support
-        # must not be substituted for their transformed support.
-        if not temporal:
-            try:
-                comparisons = np.ones((n, n), dtype=bool)
-                for item in raw:
-                    column, sign = int(item[:-1]), item[-1]
-                    values = pd.to_numeric(data.iloc[:, column]).to_numpy(dtype=float)
-                    comparisons &= (
-                        (values[:, None] < values[None, :])
-                        if sign == "+"
-                        else (values[:, None] > values[None, :])
-                    )
-                entry["recomputed_support"] = int(comparisons.sum()) / (n * (n - 1) / 2)
-                entry["valid"] = entry["recomputed_support"] + 1e-12 >= min_support
-            except ValueError, IndexError, TypeError:
-                entry["recomputed_support"] = None
-                entry["valid"] = None
+        try:
+            comparisons = np.ones((n, n), dtype=bool)
+            for item in raw:
+                column, sign = int(item[:-1]), item[-1]
+                values = pd.to_numeric(data.iloc[:, column]).to_numpy(dtype=float)
+                comparisons &= (
+                    (values[:, None] < values[None, :])
+                    if sign == "+"
+                    else (values[:, None] > values[None, :])
+                )
+            entry["recomputed_support"] = int(comparisons.sum()) / (n * (n - 1) / 2)
+            entry["valid"] = entry["recomputed_support"] + 1e-12 >= min_support
+        except ValueError, IndexError, TypeError:
+            entry["recomputed_support"] = None
+            entry["valid"] = None
         result.append(entry)
     return result
 
@@ -198,41 +185,6 @@ def run_experiment(config: dict) -> dict:
         elapsed = time.perf_counter() - start
         engine = _mining_engine(miner)
         extra = {}
-    elif experiment == "temporal":
-        from so4gp.algorithms.tgraank import TGRAANK
-
-        lag = int(config.get("lag", 2))
-        min_rep = representativity_for_lag(len(data), lag)
-        start = time.perf_counter()
-        miner = TGRAANK(data.copy(), min_sup=support, min_rep=min_rep, eq=False)
-        steps = None
-        if method == "random":
-            steps = {
-                int(i): random.randint(1, lag) for i in _mining_engine(miner).attr_cols
-            }
-        elif method not in ("all", "ami"):
-            raise ValueError(f"unknown temporal method: {method}")
-        result_json = miner.discover(
-            target_col=int(config["target"]),
-            transformations="ami" if method == "random" else method,
-            transformation_steps=steps,
-            search_algorithm=config.get("search_algorithm", "apriori"),
-            max_iteration=search_iteration_limit(
-                config, config.get("search_algorithm", "apriori")
-            ),
-            eval_mode=False,
-            error_margin=float(config.get("error_margin", 0.00001)),
-        )
-        elapsed = time.perf_counter() - start
-        engine = _mining_engine(miner)
-        extra = {
-            "requested_max_lag": lag,
-            "eligible_lags": list(range(1, lag + 1)),
-            "searched_lags": list(range(1, lag + 1)) if method == "all" else None,
-            "min_representativity": min_rep,
-            "transformation_steps": steps,
-            "evaluation_mode": False,
-        }
     else:
         raise ValueError(f"unknown experiment: {experiment}")
     result = json.loads(result_json)
