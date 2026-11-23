@@ -40,27 +40,28 @@ if __name__ == "__main__":
     #     dummy_data, columns=["Age", "Salary", "Cars", "Expenses"]
     # )
 
-    import numpy as np
-    feat_df = GRAANK.build_gradual_features(np.array(dummy_data_only), pattern_level=2)
-    print(feat_df)
-    exit()
+    # import numpy as np
+    # feat_df = GRAANK.build_gradual_features(np.array(dummy_data_only), pattern_level=2)
+    # print(feat_df)
+    # exit()
 
     ## Test Algorithms
-    mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False, device=device)
+    # mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False, device=device)
+    mine_obj = GRAANK("../benchmarks/optimization/data/breast_cancer.csv", min_sup=0.2)
     # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0, device=device)
-    mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1, device=device)
+    #mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1, device=device)
     # result_json = mine_obj.discover(target_col=1, compute_descriptors=True)  # GRAANK
     # result_json = mine_obj.discover()  # GRAANK/ClusterGP
     # result_json = mine_obj.discover(
     #     search_type="aco", target_col=1, exclude_target=False, max_iteration=10
     # )  # ACO
-    # result_json = mine_obj.discover(
-    #     search_type="ga",
-    #     target_col=1,
-    #     exclude_target=False,
-    #     n_pop=10,
-    #     max_iteration=10,
-    # )  # GA
+    result_json = mine_obj.discover(
+         search_type="ga",
+         target_col=1,
+         #exclude_target=False,
+         #n_pop=20,
+         max_iteration=10,
+     )  # GA
     # result_json = mine_obj.discover(
     #     search_type="pso", target_col=1, exclude_target=False, max_iteration=10
     # )  # PSO
@@ -77,11 +78,13 @@ if __name__ == "__main__":
     #     max_iteration=10,
     #     e_prob=0.0,
     # )  # ClusterGP
+    print(f"{result_json}\n")
+    exit()
 
-    # result_json = mine_obj1.discover(
+    # result_json1 = mine_obj1.discover(
     #     target_col=1, transformations="all", search_algorithm="ga", max_iteration=10
     # )  # TGRAANK
-    result_json = mine_obj1.discover(
+    result_json1 = mine_obj1.discover(
         target_col=1,
         transformations="all",
         search_algorithm="apriori",
@@ -89,7 +92,7 @@ if __name__ == "__main__":
         eval_mode=True,
         compute_causality=False,
     )  # TGRAANK-AMI
-    print(f"{result_json}\n")
+    print(f"{result_json1}\n")
     # start = time.time()
     # corr_df = mine_obj1.discover_causal_relationships(max_lag=3)
     # print(corr_df)

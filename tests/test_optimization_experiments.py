@@ -1,8 +1,10 @@
 import importlib.util
+import io
 import json
 import os
 import subprocess
 import sys
+import tarfile
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -127,44 +129,62 @@ def test_apriori_depth_is_not_the_heuristic_iteration_budget():
     assert module.search_iteration_limit({"iterations": 5}, "aco") == 5
 
 
-def test_current_graank_worker_returns_parseable_result(tmp_path):
-    path = tmp_path / "data.csv"
-    pd.DataFrame({"a": range(12), "b": range(12, 0, -1), "c": range(12)}).to_csv(
-        path, index=False
-    )
+@pytest.mark.parametrize("legacy", [False, True], ids=["current", "legacy"])
+def test_graank_worker_returns_patterns_from_selected_source(tmp_path, legacy):
+    repo = PATH.parents[3]
+    source = repo / "src"
+    if legacy:
+        revision = "affc7860397002fba26af96dcb2f0461f2cdda9d"
+        exists = subprocess.run(
+            ["git", "cat-file", "-e", f"{revision}^{{commit}}"],
+            cwd=repo,
+            capture_output=True,
+        )
+        if exists.returncode:
+            pytest.skip("Pinned legacy revision is missing from local Git history")
+        archive = subprocess.check_output(
+            ["git", "archive", revision, "src/so4gp"], cwd=repo
+        )
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tree:
+            tree.extractall(tmp_path, filter="data")
+        source = tmp_path / "src"
+    data = pd.DataFrame({"a": range(12), "b": range(12, 0, -1), "c": range(12)})
     config = {
         "experiment": "graank",
-        "data_path": str(path),
+        "data_csv": data.to_csv(index=False),
         "support": 0.7,
         "method": "apriori",
         "target": 0,
     }
+    if legacy:
+        config["source_path"] = str(source)
     process = subprocess.run(
         [sys.executable, str(PATH)],
         input=json.dumps(config),
         text=True,
         capture_output=True,
-        check=True,
+        timeout=90,
         env=THREAD_ENV,
     )
+    assert process.returncode == 0, process.stderr
     result = json.loads(process.stdout)
     assert result["pattern_count"] > 0
     assert result["patterns"][0]["recomputed_support"] == pytest.approx(1.0)
-    assert result["source_path"].endswith("so4gp\\__init__.py") or result[
-        "source_path"
-    ].endswith("so4gp/__init__.py")
+    assert Path(result["source_path"]) == source.resolve() / "so4gp" / "__init__.py"
 
 
 @pytest.mark.parametrize("method", ["ga", "pso"])
-def test_graank_serializes_missing_bitmap_diagnostic(method):
-    from io import StringIO
-
-    from so4gp.algorithms.graank import GRAANK
-
-    miner = GRAANK(pd.read_csv(StringIO(EMPTY_SEARCH_CSV)), min_sup=0.7)
-    result = json.loads(miner.discover(search_type=method, compute_descriptors=False))
-    assert result["Error"] == "Pairwise matrices not available!"
-    assert result["Patterns"] == []
+def test_graank_worker_propagates_invalid_target(method):
+    with pytest.raises(ValueError, match="Target column does not exist"):
+        module.run_experiment(
+            {
+                "experiment": "graank",
+                "method": method,
+                "data_csv": EMPTY_SEARCH_CSV,
+                "support": 0.7,
+                "target": 2,
+            }
+        )
 
 
 @pytest.mark.parametrize("method", ["apriori", "aco", "ga", "pso", "hc", "random"])

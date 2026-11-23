@@ -16,7 +16,7 @@ class ParticleGRAANK(BaseGrad):
         self,
         *args,
         max_iter: int = 1,
-        n_particle: int = 5,
+        n_pop: int = 10,
         vel: float = 0.9,
         coeff_p: float = 0.01,
         coeff_g: float = 0.9,
@@ -46,7 +46,7 @@ class ParticleGRAANK(BaseGrad):
         :param args: [required] data source path of Pandas DataFrame, [optional]
             minimum-support, [optional] eq
         :param max_iter: [optional] maximum_iteration, default is 1
-        :param n_particle: [optional] initial particle population, default is 5
+        :param n_pop: [optional] initial particle population, default is 5
         :param vel: [optional] velocity, default is 0.9
         :param coeff_p: [optional] personal coefficient, default is 0.01
         :param coeff_g: [optional] global coefficient, default is 0.9
@@ -54,7 +54,7 @@ class ParticleGRAANK(BaseGrad):
         """
         super().__init__(*args, **kwargs)
         self._max_iteration: int = max_iter
-        self._n_particles: int = n_particle
+        self._n_particles: int = n_pop
         self._velocity: float = vel
         self._coeff_p: float = coeff_p
         self._coeff_g: float = coeff_g

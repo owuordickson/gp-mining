@@ -118,6 +118,12 @@ def _select_source(source_path):
     return str(actual)
 
 
+def _mining_engine(miner):
+    """Read the public engine property in either SO4GP revision."""
+    engine = getattr(miner, "mine_engine", None)
+    return engine if engine is not None else miner.mining_engine
+
+
 def _patterns(engine, data, min_support):
     """Collect canonical patterns and recompute strict full support on input."""
     result = []
@@ -190,7 +196,7 @@ def run_experiment(config: dict) -> dict:
             compute_descriptors=False,
         )
         elapsed = time.perf_counter() - start
-        engine = miner.mine_engine
+        engine = _mining_engine(miner)
         extra = {}
     elif experiment == "temporal":
         from so4gp.algorithms.tgraank import TGRAANK
@@ -202,7 +208,7 @@ def run_experiment(config: dict) -> dict:
         steps = None
         if method == "random":
             steps = {
-                int(i): random.randint(1, lag) for i in miner.mine_engine.attr_cols
+                int(i): random.randint(1, lag) for i in _mining_engine(miner).attr_cols
             }
         elif method not in ("all", "ami"):
             raise ValueError(f"unknown temporal method: {method}")
@@ -218,7 +224,7 @@ def run_experiment(config: dict) -> dict:
             error_margin=float(config.get("error_margin", 0.00001)),
         )
         elapsed = time.perf_counter() - start
-        engine = miner.mine_engine
+        engine = _mining_engine(miner)
         extra = {
             "requested_max_lag": lag,
             "eligible_lags": list(range(1, lag + 1)),

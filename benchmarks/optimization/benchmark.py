@@ -166,7 +166,7 @@ def _parser():
     parser.add_argument(
         "--experiment",
         choices=("all", "graank", "temporal", "kernel", "version"),
-        default="all",
+        default="graank",
     )
     parser.add_argument(
         "--profile", choices=("quick", "study", "full"), default="study"
@@ -184,13 +184,7 @@ def _parser():
     parser.add_argument(
         "--site", help="Select a Directio site when a file contains several"
     )
-    parser.add_argument("--support", type=float, default=0.7)
-    parser.add_argument(
-        "--supports",
-        type=float,
-        nargs="+",
-        help="Support sweep; study defaults to 0.5 0.7 0.9",
-    )
+    parser.add_argument("--support", type=float, default=0.2)
     parser.add_argument("--lag", type=int)
     parser.add_argument("--iterations", type=int, default=10)
     parser.add_argument(
@@ -212,17 +206,13 @@ def _parser():
 
 def main(argv=None):
     args = _parser().parse_args(argv)
-    supports = args.supports or (
-        [0.5, 0.7, 0.9] if args.profile == "study" else [args.support]
-    )
     seeds = (
         args.seeds
         if args.seeds is not None
         else (list(range(3)) if args.profile == "study" else [0])
     )
     if (
-        any(not 0 <= value <= 1 for value in supports)
-        or args.timeout <= 0
+        args.timeout <= 0
         or args.iterations < 1
         or args.warmups < 0
         or (args.memory_mib is not None and args.memory_mib <= 0)
@@ -358,27 +348,26 @@ def main(argv=None):
             continue
         for seed in seeds:
             work = [
-                (exp, method, support)
+                (exp, method)
                 for exp, methods in experiments.items()
                 for method in methods
-                for support in supports
             ]
             random.Random(seed).shuffle(work)
-            for exp, method, support in work:
+            for exp, method in work:
                 digest = metadata.get("prepared_sha256")
-                trial_id = f"{dataset}:{exp}:{method}:{seed}:{support}:{digest}"
+                trial_id = f"{dataset}:{exp}:{method}:{seed}:{digest}"
                 if trial_id in completed:
                     continue
                 config = {
                     "experiment": "graank" if exp == "version" else exp,
                     "method": "apriori" if exp == "version" else method,
                     "data_csv": data_csv,
-                    "support": support,
+                    "support": args.support,
                     "seed": seed,
                     "target": metadata["target_index"],
                     "iterations": args.iterations,
                     "lag": lag,
-                    "apriori_level": args.apriori_level,
+                    "apriori_level": None, #args.apriori_level,
                 }
                 record = {
                     "trial_id": trial_id,
@@ -386,7 +375,7 @@ def main(argv=None):
                     "experiment": exp,
                     "method": method,
                     "seed": seed,
-                    "support": support,
+                    "support": args.support,
                     "target": metadata["target_name"],
                     **metadata,
                     "rows": metadata["retained_rows"],
