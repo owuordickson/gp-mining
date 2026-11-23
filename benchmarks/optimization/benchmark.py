@@ -300,6 +300,8 @@ def main(argv=None):
         if trials_path.exists()
         else []
     )
+    if args.resume and records:
+        write_reports(args.output, records)
     completed = {r.get("trial_id") for r in records}
     experiments = {
         "graank": ["apriori", "aco", "ga", "pso", "hc", "random"],
@@ -310,6 +312,7 @@ def main(argv=None):
     if args.experiment != "all":
         experiments = {args.experiment: experiments[args.experiment]}
     for dataset in args.datasets:
+        records_before_dataset = len(records)
         try:
             frame, metadata = prepare(
                 dataset,
@@ -351,6 +354,7 @@ def main(argv=None):
             records.append(record)
             with trials_path.open("a", encoding="utf-8") as stream:
                 stream.write(json.dumps(record) + "\n")
+            write_reports(args.output, records)
             continue
         for seed in seeds:
             work = [
@@ -411,7 +415,8 @@ def main(argv=None):
                     f"{dataset} {exp}/{method} seed={seed}: {record['status']}",
                     flush=True,
                 )
-    write_reports(args.output, records)
+        if len(records) > records_before_dataset:
+            write_reports(args.output, records)
     return 0 if all(r["status"] == "ok" for r in records) else 1
 
 
