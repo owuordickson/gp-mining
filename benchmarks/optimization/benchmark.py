@@ -1,4 +1,4 @@
-"""Benchmark GRAANK search types and the two APRIORI bitmap representations."""
+"""Benchmark GRAANK optimization and temporal pattern agreement."""
 
 import argparse
 import hashlib
@@ -21,15 +21,31 @@ ROOT = HERE.parents[1]
 DENSE_REVISION = "affc7860397002fba26af96dcb2f0461f2cdda9d"
 
 if __package__:
-    from .tools.datasets import DATASETS, prepare
-    from .tools.experiments import DEFAULT_ITERATIONS, DEFAULT_SUPPORT, SEARCH_TYPES
+    from .tools.datasets import DATASET_SPECS, DATASETS, TEMPORAL_DATASETS, prepare
+    from .tools.experiments import (
+        DEFAULT_ITERATIONS,
+        DEFAULT_SUPPORT,
+        SEARCH_TYPES,
+        TEMPORAL_ERROR_MARGIN,
+        TEMPORAL_METHODS,
+        TEMPORAL_MIN_REP,
+        TEMPORAL_SUPPORT,
+    )
     from .tools.process_control import kill_tree, sample_tree
     from .tools.report import write_reports
 else:
     # PyCharm invokes the script without a parent package.
     sys.path.insert(0, str(HERE))
-    from tools.datasets import DATASETS, prepare
-    from tools.experiments import DEFAULT_ITERATIONS, DEFAULT_SUPPORT, SEARCH_TYPES
+    from tools.datasets import DATASET_SPECS, DATASETS, TEMPORAL_DATASETS, prepare
+    from tools.experiments import (
+        DEFAULT_ITERATIONS,
+        DEFAULT_SUPPORT,
+        SEARCH_TYPES,
+        TEMPORAL_ERROR_MARGIN,
+        TEMPORAL_METHODS,
+        TEMPORAL_MIN_REP,
+        TEMPORAL_SUPPORT,
+    )
     from tools.process_control import kill_tree, sample_tree
     from tools.report import write_reports
 
@@ -158,12 +174,10 @@ def _total_ram_bytes():
 
 def _parser():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--datasets", nargs="+", choices=tuple(DATASETS), default=list(DATASETS)
-    )
+    parser.add_argument("--datasets", nargs="+", choices=tuple(DATASET_SPECS))
     parser.add_argument(
         "--experiment",
-        choices=("graank",),
+        choices=("graank", "temporal"),
         default="graank",
     )
     parser.add_argument(
@@ -175,19 +189,19 @@ def _parser():
     )
     parser.add_argument("--profile", choices=("quick", "study", "full"), default="full")
     parser.add_argument("--data-dir", type=Path, default=HERE / "data")
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=HERE / "results" / f"run-{time.strftime('%Y%m%d-%H%M%S')}",
-    )
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--download", action="store_true")
     parser.add_argument("--rows", type=int)
     parser.add_argument("--features", type=int)
-    parser.add_argument("--target", help="Override target column name")
+    parser.add_argument("--target", help="Override target column name for GRAANK")
     parser.add_argument(
         "--site", help="Select a Directio site when a file contains several"
     )
-    parser.add_argument("--support", type=float, default=DEFAULT_SUPPORT)
+    parser.add_argument(
+        "--support",
+        type=float,
+        help=f"Minimum support (GRAANK {DEFAULT_SUPPORT}, temporal {TEMPORAL_SUPPORT})",
+    )
     parser.add_argument(
         "--iterations",
         type=int,
@@ -215,7 +229,22 @@ def _parser():
 
 
 def main(argv=None):
-    args = _parser().parse_args(argv)
+    parser = _parser()
+    args = parser.parse_args(argv)
+    temporal = args.experiment == "temporal"
+    if temporal:
+        if args.datasets is not None and set(args.datasets) != set(TEMPORAL_DATASETS):
+            parser.error("The temporal experiment uses both KE_RAIN and KE_EVI")
+        if args.target is not None:
+            parser.error("The temporal experiment sweeps the location columns")
+        args.datasets = list(TEMPORAL_DATASETS)
+    else:
+        args.datasets = args.datasets or list(DATASETS)
+    if args.output is None:
+        name = "tgraank-mi" if temporal else f"run-{time.strftime('%Y%m%d-%H%M%S')}"
+        args.output = HERE / "results" / name
+    if args.support is None:
+        args.support = TEMPORAL_SUPPORT if temporal else DEFAULT_SUPPORT
     seeds = (
         args.seeds
         if args.seeds is not None
@@ -233,13 +262,16 @@ def main(argv=None):
         raise ValueError("The full profile requires a positive --memory-mib limit")
     if args.iterations < 1:
         raise ValueError("Heuristic iterations must be positive")
-    run_apriori = "apriori" in args.search_types
-    workloads = [("apriori", "dense")] if run_apriori else []
-    workloads.extend(
-        (search_type, "packed")
-        for search_type in SEARCH_TYPES
-        if search_type in args.search_types
-    )
+    run_dense = not temporal and "apriori" in args.search_types
+    if temporal:
+        workloads = [("apriori", method) for method in TEMPORAL_METHODS]
+    else:
+        workloads = [("apriori", "dense")] if run_dense else []
+        workloads.extend(
+            (search_type, "packed")
+            for search_type in SEARCH_TYPES
+            if search_type in args.search_types
+        )
     defaults = {"quick": (64, 6), "study": (1000, 12), "full": (None, None)}
     rows, features = defaults[args.profile]
     rows, features = args.rows or rows, args.features or features
@@ -280,7 +312,7 @@ def main(argv=None):
         "revision": head,
         "source_diff_sha256": hashlib.sha256(diff).hexdigest(),
         "benchmark_sha256": benchmark_hashes,
-        "dense_revision": DENSE_REVISION if run_apriori else None,
+        "dense_revision": DENSE_REVISION if run_dense else None,
         "packed_source_path": packed_spec.origin if packed_spec else None,
         "python": sys.version,
         "platform": platform.platform(),
@@ -294,6 +326,14 @@ def main(argv=None):
             "includes imports and result collection"
         ),
     }
+    if temporal:
+        manifest["temporal_protocol"] = {
+            "min_rep": TEMPORAL_MIN_REP,
+            "error_margin": TEMPORAL_ERROR_MARGIN,
+            "compute_descriptors": True,
+            "ami_reference_eval_mode": True,
+            "notebook_revision": "709594630c5423309ee7c9a4f47cfeb1de0274d4",
+        }
     if manifest_path.exists():
         if (
             not args.resume
@@ -316,6 +356,14 @@ def main(argv=None):
     if args.resume and records:
         write_reports(args.output, records)
     completed = {r.get("trial_id") for r in records}
+    rainfall_steps = {
+        (r["seed"], r["target_site"]): r["transformation_steps"]
+        for r in records
+        if r.get("dataset") == "KE_RAIN"
+        and r.get("method") == "ami"
+        and r.get("status") == "ok"
+    }
+    rainfall_panel = None
     dense_source = None
     for dataset in args.datasets:
         records_before_dataset = len(records)
@@ -328,6 +376,17 @@ def main(argv=None):
                 target=args.target,
                 site=args.site,
             )
+            if temporal:
+                panel = (
+                    tuple(name.split(" (")[0] for name in metadata["columns"][1:]),
+                    tuple(frame["__benchmark_time"]),
+                )
+                if dataset == "KE_RAIN":
+                    rainfall_panel = panel
+                elif rainfall_panel != panel:
+                    raise ValueError(
+                        "Rainfall and EVI must have matching dates and sites"
+                    )
             previous_hashes = {
                 r.get("prepared_sha256")
                 for r in records
@@ -362,43 +421,74 @@ def main(argv=None):
                 stream.write(json.dumps(record) + "\n")
             write_reports(args.output, records)
             continue
+        targets = (
+            range(1, len(metadata["columns"]))
+            if temporal
+            else [metadata["target_index"]]
+        )
         for seed in seeds:
-            trials = workloads.copy()
+            trials = [
+                (target_index, search_type, method)
+                for target_index in targets
+                for search_type, method in workloads
+            ]
             random.Random(seed).shuffle(trials)
-            for search_type, method in trials:
+            for target_index, search_type, method in trials:
                 digest = metadata["prepared_sha256"]
-                trial_id = f"{dataset}:graank:{search_type}:{method}:{seed}:{digest}"
+                trial_id = (
+                    f"{dataset}:{args.experiment}:{search_type}:{method}"
+                    f":{seed}:{digest}"
+                )
+                if temporal:
+                    trial_id += f":{target_index}"
                 if trial_id in completed:
                     continue
+                target_name = metadata["columns"][target_index]
                 config = {
-                    "experiment": "graank",
+                    "experiment": args.experiment,
                     "method": method,
                     "search_type": search_type,
                     "data_csv": data_csv,
                     "support": args.support,
                     "seed": seed,
-                    "target": metadata["target_index"],
+                    "target": target_index,
                     "apriori_level": args.apriori_level,
                     "iterations": args.iterations,
                 }
                 record = {
                     "trial_id": trial_id,
                     "dataset": dataset,
-                    "experiment": "graank",
+                    "experiment": args.experiment,
                     "method": method,
-                    "search_type": search_type,
                     "seed": seed,
                     "support": args.support,
-                    "target": metadata["target_name"],
                     **metadata,
+                    "target": target_name,
+                    "target_name": target_name,
+                    "target_index": target_index,
                     "rows": metadata["retained_rows"],
                     "features": len(metadata["columns"]) - 1,
                 }
+                if temporal:
+                    target_site = target_name.split(" (")[0]
+                    record["target_site"] = target_site
+                    config.update(
+                        min_rep=TEMPORAL_MIN_REP, error_margin=TEMPORAL_ERROR_MARGIN
+                    )
+                else:
+                    record["search_type"] = search_type
                 try:
                     if method == "dense":
                         if dense_source is None:
                             dense_source = _dense_source()
                         config["source_path"] = dense_source
+                    if temporal and dataset == "KE_EVI" and method == "ami":
+                        steps = rainfall_steps.get((seed, target_site))
+                        if not steps:
+                            raise RuntimeError(
+                                f"No rainfall AMI steps for {target_site}, seed {seed}"
+                            )
+                        config["transformation_steps"] = steps
                     limit = int(args.memory_mib * 1048576) if args.memory_mib else None
                     warmup_statuses = []
                     for _ in range(args.warmups):
@@ -412,12 +502,21 @@ def main(argv=None):
                 except Exception as exc:
                     result = {"status": "error", "error": str(exc)}
                 record.update(result)
+                if (
+                    temporal
+                    and dataset == "KE_RAIN"
+                    and method == "ami"
+                    and result["status"] == "ok"
+                ):
+                    rainfall_steps[seed, target_site] = result["transformation_steps"]
                 records.append(record)
                 with trials_path.open("a", encoding="utf-8") as stream:
                     stream.write(json.dumps(record, default=str) + "\n")
+                workload = (
+                    f"temporal/{target_site}" if temporal else f"graank/{search_type}"
+                )
                 print(
-                    f"{dataset} graank/{search_type}/{method} seed={seed}: "
-                    f"{record['status']}",
+                    f"{dataset} {workload}/{method} seed={seed}: {record['status']}",
                     flush=True,
                 )
         if len(records) > records_before_dataset:

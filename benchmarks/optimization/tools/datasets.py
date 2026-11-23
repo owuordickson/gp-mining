@@ -1,12 +1,12 @@
-"""Deterministic preparation of the six optimization benchmark datasets."""
+"""Deterministic preparation of the optimization benchmark datasets."""
 
 from __future__ import annotations
 
 import hashlib
 import io
 from pathlib import Path
-import pandas as pd
 
+import pandas as pd
 
 # Files can be explicitly overridden via the variants, never silently substituted.
 DATASETS = {
@@ -17,6 +17,11 @@ DATASETS = {
     "PWC": ("power_consumption50k.csv", "Global_active_power", "power"),
     "APS": ("aps_16k.csv", "aa_000", "vehicle"),
 }
+TEMPORAL_DATASETS = {
+    "KE_RAIN": ("ke_rain_data_2k.csv", "NRB (mm)", "rainfall"),
+    "KE_EVI": ("ke_evi_data_2k.csv", "NRB (EVI)", "vegetation"),
+}
+DATASET_SPECS = {**DATASETS, **TEMPORAL_DATASETS}
 
 
 def _hash(data: bytes) -> str:
@@ -25,11 +30,8 @@ def _hash(data: bytes) -> str:
 
 def _load(path: Path) -> bytes:
     if not path.is_file():
-        raise FileNotFoundError(
-            f"Dataset {path} not found; enable download explicitly"
-        )
+        raise FileNotFoundError(f"Dataset {path} not found; enable download explicitly")
     return path.read_bytes()
-
 
 
 def prepare(
@@ -48,20 +50,25 @@ def prepare(
     The returned frame is ordered with time first and has a fresh RangeIndex.
     """
     d_set = dataset_code.upper()
-    if d_set not in DATASETS:
+    if d_set not in DATASET_SPECS:
         raise ValueError(
-            f"Unknown dataset {dataset_code!r}; choose from {sorted(DATASETS)}"
+            f"Unknown dataset {dataset_code!r}; choose from {sorted(DATASET_SPECS)}"
         )
     if rows is not None and rows < 2:
         raise ValueError("rows must be at least 2")
     if features is not None and features < 2:
         raise ValueError("features must be at least 2")
 
-    name, default_target, kind = DATASETS[d_set]
+    name, default_target, kind = DATASET_SPECS[d_set]
     chosen_target = target or default_target
     raw = _load(Path(data_dir) / name)
     separator = ";" if d_set == "PWC" else ","
-    frame = pd.read_csv(io.BytesIO(raw), sep=separator, na_values=["?", "na", "NA"])
+    frame = pd.read_csv(
+        io.BytesIO(raw),
+        sep=separator,
+        na_values=["?", "na", "NA"],
+        float_precision="round_trip" if d_set in TEMPORAL_DATASETS else None,
+    )
     raw_rows = len(frame)
     frame.columns = frame.columns.astype(str).str.strip()
     available_sites = []
@@ -104,6 +111,8 @@ def prepare(
             time = pd.to_datetime(
                 frame["date_time"], format="%Y-%m-%d %H:%M:%S", errors="raise"
             )
+        elif d_set in TEMPORAL_DATASETS:
+            time = pd.to_datetime(frame["Date (Jul-Sep)"], format="%m-%Y")
         else:
             time = pd.Timestamp("2000-01-01") + pd.to_timedelta(source_row, unit="s")
     except (KeyError, ValueError, TypeError) as exc:
@@ -124,6 +133,7 @@ def prepare(
         "Date",
         "Time",
         "date_time",
+        "Date (Jul-Sep)",
         "timestamp",
         "id_site",
     }

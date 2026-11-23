@@ -3,6 +3,7 @@
 import csv
 import importlib.util
 import json
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -186,3 +187,60 @@ def test_reports_refresh_at_dataset_boundaries_and_on_resume(tmp_path, monkeypat
         for line in (output / "trials.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     assert len({record["trial_id"] for record in records}) == len(records) == 12
+
+
+def test_temporal_benchmark_reuses_saved_rainfall_steps_for_each_evi_target(
+    tmp_path, monkeypatch
+):
+    runner = load_runner()
+    output = tmp_path / "replication"
+    args = [
+        "--experiment",
+        "temporal",
+        "--warmups",
+        "0",
+        "--seeds",
+        "7",
+        "--output",
+        str(output),
+    ]
+    rainfall_steps = {}
+
+    def run_rainfall(config, *args, **kwargs):
+        assert config["support"] == 0.01
+        assert config["min_rep"] == 0.75
+        assert config["error_margin"] == 1e-5
+        if "(EVI)" in config["data_csv"].splitlines()[0]:
+            raise KeyboardInterrupt
+        method, target = config["method"], config["target"]
+        if method in ("ami", "random"):
+            steps = {"1": target, "2": 1, "3": 2, "4": 3}
+            if method == "random":
+                rng = random.Random(42 * target + 7)
+                steps = {str(column): rng.randint(1, 6) for column in range(1, 5)}
+                assert config["transformation_steps"] == steps
+            rainfall_steps[method, target] = steps
+            return {"status": "ok", "transformation_steps": steps}
+        return {"status": "ok"}
+
+    def run_evi(config, *args, **kwargs):
+        assert "(EVI)" in config["data_csv"].splitlines()[0]
+        method, target = config["method"], config["target"]
+        if method in ("ami", "random"):
+            assert config["transformation_steps"] == rainfall_steps[method, target]
+        return {"status": "ok"}
+
+    monkeypatch.setattr(runner, "run_child", run_rainfall)
+    with pytest.raises(KeyboardInterrupt):
+        runner.main(args)
+    assert set(rainfall_steps) == {
+        (method, target) for method in ("ami", "random") for target in range(1, 5)
+    }
+    monkeypatch.setattr(runner, "run_child", run_evi)
+    assert runner.main([*args, "--resume"]) == 0
+    records = [
+        json.loads(line)
+        for line in (output / "trials.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert len({record["trial_id"] for record in records}) == len(records) == 24
+    assert {record["method"] for record in records} == {"all", "ami", "random"}

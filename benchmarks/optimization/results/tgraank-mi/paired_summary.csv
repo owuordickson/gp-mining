@@ -1,0 +1,9 @@
+dataset,experiment,support,target,rows,features,baseline_search_type,baseline,search_type,method,completed_pairs,unmatched_or_censored_pairs,speedup_median,speedup_ci_low,speedup_ci_high,memory_ratio_median,itemset_jaccard_median,apriori_output_recall
+KE_EVI,temporal,0.01,KAK (EVI),23,4,,all,,ami,1,0,3.8908901080280387,,,0.9986409776597636,0.2,
+KE_EVI,temporal,0.01,MAK (EVI),23,4,,all,,ami,1,0,3.0235722218135055,,,0.9986501899151399,0.2,
+KE_EVI,temporal,0.01,NRB (EVI),23,4,,all,,ami,1,0,3.8781954850380664,,,1.0022017886911938,0.2,
+KE_EVI,temporal,0.01,WAJ (EVI),23,4,,all,,ami,1,0,2.164976663245882,,,0.9995291212355859,0.2,
+KE_RAIN,temporal,0.01,KAK (mm),23,4,,all,,ami,1,0,0.8085969795852402,,,0.9999057640961206,0.2,
+KE_RAIN,temporal,0.01,MAK (mm),23,4,,all,,ami,1,0,1.254978606056572,,,1.0012360680465935,0.2,
+KE_RAIN,temporal,0.01,NRB (mm),23,4,,all,,ami,1,0,1.4766224927236207,,,1.0007010788242803,0.2,
+KE_RAIN,temporal,0.01,WAJ (mm),23,4,,all,,ami,1,0,0.5197431343383561,,,1.000502939050074,0.2,

@@ -1,4 +1,4 @@
-# GRAANK optimization benchmark
+# GRAANK and TGRAANK optimization benchmark
 
 For each dataset and seed, the selected searches use the same rows, features,
 target, and support threshold.
@@ -15,8 +15,8 @@ includes any other behavior that differs between the two sources.
 
 ## Data
 
-The benchmark reads the six CSVs in [`data/`](data/). Every trial records the
-source and prepared-data hashes, selected columns, and retained rows.
+The GRAANK experiment reads six CSVs in [`data/`](data/). Every trial records
+the source and prepared-data hashes, selected columns, and retained rows.
 
 | Dataset | File | Default target |
 | --- | --- | --- |
@@ -49,10 +49,11 @@ python -m benchmarks.optimization.benchmark --datasets BCR AQY --profile study -
 python benchmarks/optimization/benchmark.py --datasets BCR --search-types pso ga hc random --iterations 20
 ```
 
-The default `full` profile uses all six datasets at their full prepared sizes
-and runs all five search types. The defaults are support 0.2, one measured trial
-per search and bitmap method with seed 0, one discarded warm-up per trial, a
-300-second worker timeout, and a best-effort memory limit of 6,144 MiB per worker.
+For GRAANK, the default `full` profile uses all six datasets at their full
+prepared sizes and runs all five search types. The defaults are support 0.2,
+one measured trial per search and bitmap method with seed 0, one discarded
+warm-up per trial, a 300-second worker timeout, and a best-effort memory limit
+of 6,144 MiB per worker.
 The `study` profile uses up to 1,000 rows, 12 features, and three seeds. The
 `quick` profile uses up to 64 rows, six features, and one seed.
 
@@ -66,10 +67,10 @@ and `--seeds` to define a workload.
 
 Each run creates a folder under [`results/`](results/) with `manifest.json`,
 `trials.jsonl`, `summary.csv`, and `paired_summary.csv`. The manifest records
-the dense revision and the packed import path. The runner saves each trial as
+the run settings and algorithm sources. The runner saves each trial as
 it finishes and refreshes both CSVs at the end of each dataset.
 
-The summary lists each `search_type` and bitmap `method` separately. Packed
+The GRAANK summary lists each `search_type` and bitmap `method` separately. Packed
 APRIORI is paired with dense APRIORI. Each heuristic is paired with packed
 APRIORI, so include `apriori` in the run to get those comparisons.
 
@@ -90,6 +91,62 @@ with zero patterns and records `empty_search_space: true`.
 Resume a run with `--resume --output <same-run-folder>` and the original
 options, source, and data. The runner rebuilds the CSVs from `trials.jsonl`,
 skips saved trials, and retries any interrupted trial without a record.
+
+## TGRAANK and TGRAANK-AMI on rainfall and EVI
+
+The temporal experiment uses the notebook's rainfall and Enhanced Vegetation
+Index (EVI) CSVs. Each file has 23 annual observations from 2000 through 2022,
+with NRB, KAK, MAK, and WAJ as the four targets. [Original notebook](https://github.com/owuordickson/t-graank/blob/709594630c5423309ee7c9a4f47cfeb1de0274d4/analysis/tgraank_performance.ipynb)
+
+```powershell
+python benchmarks/optimization/benchmark.py --experiment temporal --warmups 0
+python benchmarks/optimization/tools/analyze_tgraank.py
+```
+
+Both commands use [`results/tgraank-mi/`](results/tgraank-mi/) by default. To
+repeat the experiment in a separate folder, set `--output` on the benchmark
+and pass that directory to the analysis helper.
+
+Both methods mine fuzzy temporal gradual patterns with minimum support 0.01,
+minimum representativity 0.75, and descriptors enabled. TGRAANK tests shifts of
+one through five observations on each dataset (`all` in the benchmark).
+TGRAANK-AMI estimates shifts on rainfall with an MI error margin of 0.00001
+and reuses those shifts for the corresponding EVI target (`ami`).
+
+The analysis uses rainfall as the prediction and EVI as the reference proxy.
+It matches patterns once using SO4GP's temporal similarity rule, which compares
+gradual items and signed, formatted time delays. After matching, support of
+at least 0.5 counts as positive, and an unmatched pattern gets zero support on
+the other side. Accuracy is the fraction of matched or unmatched entries
+that are true positives or true negatives. The summary averages the per-site
+scores and reports their sample standard deviations.
+
+- [Per-site confusion counts and scores](results/tgraank-mi/confusion_matrix.csv)
+- [Mean and standard deviation by algorithm](results/tgraank-mi/metrics_summary.csv)
+- [Mean confusion matrices](results/tgraank-mi/confusion_matrix.png)
+- [Runtime and memory by target](results/tgraank-mi/summary.csv)
+
+### Replication results
+
+The saved run completed 16 trials with SO4GP 1.1.2 and seed 0. Scores are
+percentages shown as mean ± sample standard deviation across the four sites.
+[Run manifest](results/tgraank-mi/manifest.json)
+
+| Method | Accuracy | Precision | Recall | Specificity | F1 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| TGRAANK | 81.23 ± 9.26 | 56.46 ± 19.72 | 56.67 ± 20.73 | 87.65 ± 6.46 | 56.53 ± 20.17 |
+| TGRAANK-AMI | 84.18 ± 12.94 | 66.67 ± 27.22 | 66.67 ± 27.22 | 89.51 ± 8.62 | 66.67 ± 27.22 |
+
+AMI improved mean accuracy by **2.95 percentage points** and reduced false
+positives and false negatives from 6.5 to 1.0 each per site on average.
+Accuracy rose at KAK, NRB, and WAJ. At MAK it fell from 76.92% to 69.23%.
+[Per-site scores](results/tgraank-mi/confusion_matrix.csv)
+
+The notebook reported mean accuracies of 83.8% for TGRAANK and 89.3% for
+TGRAANK-AMI. This rerun reproduced the higher mean accuracy for AMI, with
+different confusion counts. Each method is scored on its own rainfall and EVI
+pattern lists, so these figures quantify agreement with the EVI proxy across
+the four sites. [Notebook results](https://github.com/owuordickson/t-graank/blob/709594630c5423309ee7c9a4f47cfeb1de0274d4/analysis/tgraank_performance.ipynb)
 
 ## Full BCR run at support 0.2
 

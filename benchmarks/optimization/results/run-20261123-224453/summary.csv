@@ -1,4 +1,10 @@
 dataset,experiment,support,target,rows,features,search_type,method,attempts,completed,timeout,memory_limit,error,input_error,other_failures,elapsed_median_seconds,elapsed_mad_seconds,peak_rss_median_bytes,peak_rss_median_mib,valid_pattern_count_total,invalid_pattern_count_total,unknown_pattern_count_total
+AQY,graank,0.2,CO(GT),9357,13,apriori,dense,1,0,0,1,0,0,0,,,,,,,
+AQY,graank,0.2,CO(GT),9357,13,apriori,packed,1,0,0,1,0,0,0,,,,,,,
+AQY,graank,0.2,CO(GT),9357,13,ga,packed,1,1,0,0,0,0,0,53.162639500107616,0.0,832372736,793.8125,12,3,0
+AQY,graank,0.2,CO(GT),9357,13,hc,packed,1,1,0,0,0,0,0,20.60271649993956,0.0,826404864,788.12109375,1,0,0
+AQY,graank,0.2,CO(GT),9357,13,pso,packed,1,1,0,0,0,0,0,55.120439499849454,0.0,837836800,799.0234375,3,19,0
+AQY,graank,0.2,CO(GT),9357,13,random,packed,1,1,0,0,0,0,0,20.6119236999657,0.0,828682240,790.29296875,5,0,0
 BCR,graank,0.2,Glucose,116,9,apriori,dense,1,1,0,0,0,0,0,10.371728299884126,0.0,393281536,375.0625,55,921,0
 BCR,graank,0.2,Glucose,116,9,apriori,packed,1,1,0,0,0,0,0,0.21903449995443225,0.0,391094272,372.9765625,55,921,0
 BCR,graank,0.2,Glucose,116,9,ga,packed,1,1,0,0,0,0,0,0.045164299895986915,0.0,390574080,372.48046875,8,7,0

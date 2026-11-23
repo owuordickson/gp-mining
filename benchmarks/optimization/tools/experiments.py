@@ -1,4 +1,4 @@
-"""Isolated GRAANK worker for the optimization benchmark.
+"""Isolated GRAANK and TGRAANK worker for the optimization benchmark.
 
 The runner sends one JSON object on standard input and receives one JSON result.
 The dense worker selects the pinned SO4GP source before importing it.
@@ -20,6 +20,10 @@ import pandas as pd
 SEARCH_TYPES = ("apriori", "pso", "ga", "hc", "random")
 DEFAULT_ITERATIONS = 10
 DEFAULT_SUPPORT = 0.2
+TEMPORAL_METHODS = ("all", "ami")
+TEMPORAL_SUPPORT = 0.01
+TEMPORAL_MIN_REP = 0.75
+TEMPORAL_ERROR_MARGIN = 1e-5
 EMPTY_SEARCH_ERRORS = ("Search space is empty!", "Pairwise matrices not available!")
 
 
@@ -59,25 +63,7 @@ def _mining_engine(miner):
     return engine if engine is not None else miner.mining_engine
 
 
-def run_experiment(config: dict) -> dict:
-    """Execute one requested experiment and return a JSON-serializable record."""
-    if config["experiment"] != "graank":
-        raise ValueError(f"Unknown experiment: {config['experiment']}")
-    method = config["method"]
-    if method not in ("dense", "packed"):
-        raise ValueError(f"Unknown GRAANK bitmap method: {method}")
-    search_type = config.get("search_type", "apriori")
-    if search_type not in SEARCH_TYPES:
-        raise ValueError(f"Unknown GRAANK search type: {search_type}")
-    if method == "dense" and search_type != "apriori":
-        raise ValueError("Dense GRAANK supports only APRIORI")
-    if "data_csv" in config:
-        data = pd.read_csv(io.StringIO(config["data_csv"]))
-    else:
-        data = pd.read_csv(config["data_path"])
-
-    graank, source = _load_graank(method, config.get("source_path"))
-    seed = int(config.get("seed", 0))
+def _seed(seed):
     random.seed(seed)
     np.random.seed(seed)
 
@@ -87,6 +73,96 @@ def run_experiment(config: dict) -> dict:
         torch.manual_seed(seed)
     except ImportError:
         pass
+
+
+def _run_temporal(config, data):
+    import so4gp
+    from so4gp.algorithms.base.tgrad import TGrad
+    from so4gp.algorithms.base.tgrad_ami import TGradAMI
+
+    method = config["method"]
+    if method not in TEMPORAL_METHODS:
+        raise ValueError(f"Unknown TGRAANK method: {method}")
+    ami = method == "ami"
+    steps = config.get("transformation_steps")
+    if steps is not None:
+        steps = {int(column): int(step) for column, step in steps.items()}
+    _seed(int(config.get("seed", 0)))
+    start = time.perf_counter()
+    engine = (TGradAMI if ami else TGrad)(
+        data,
+        min_sup=config.get("support", TEMPORAL_SUPPORT),
+        min_rep=config.get("min_rep", TEMPORAL_MIN_REP),
+        eq=False,
+    )
+    # Use the engines directly to enable descriptors for both notebook methods.
+    if ami:
+        result = engine.discover_tgp_ami(
+            target_col=config["target"],
+            compute_descriptors=True,
+            eval_mode=True,
+            error_margin=config.get("error_margin", TEMPORAL_ERROR_MARGIN),
+            transformation_steps=steps,
+        )
+        steps = engine.transformation_data["Transformation Steps"]
+    else:
+        result = engine.discover_tgp(
+            target_col=config["target"], compute_descriptors=True
+        )
+    elapsed = time.perf_counter() - start
+    if "Error" in result:
+        raise RuntimeError(str(result["Error"]))
+    patterns = [
+        {
+            "items": pattern.to_string(),
+            "reported_support": float(pattern.support),
+            "temporal_items": [
+                {
+                    "item": item.gradual_item.to_string(),
+                    "lag_seconds": float(item.time_delay.timestamp),
+                    "lag_support": float(item.time_delay.support),
+                }
+                for item in pattern.temporal_gradual_items
+            ],
+        }
+        for pattern in engine.gradual_patterns or []
+    ]
+    result["Patterns"] = engine.display_patterns
+    return {
+        "elapsed_seconds": elapsed,
+        "source_path": str(Path(so4gp.__file__).resolve()),
+        "transformation_steps": steps,
+        "patterns": patterns,
+        "pattern_count": len(patterns),
+        "valid_pattern_count": len(patterns),
+        "algorithm_result": result,
+    }
+
+
+def run_experiment(config: dict) -> dict:
+    """Execute one requested experiment and return a JSON-serializable record."""
+    experiment = config["experiment"]
+    if experiment not in ("graank", "temporal"):
+        raise ValueError(f"Unknown experiment: {experiment}")
+    source_data = (
+        io.StringIO(config["data_csv"]) if "data_csv" in config else config["data_path"]
+    )
+    if experiment == "temporal":
+        return _run_temporal(
+            config, pd.read_csv(source_data, float_precision="round_trip")
+        )
+
+    method = config["method"]
+    if method not in ("dense", "packed"):
+        raise ValueError(f"Unknown GRAANK bitmap method: {method}")
+    search_type = config.get("search_type", "apriori")
+    if search_type not in SEARCH_TYPES:
+        raise ValueError(f"Unknown GRAANK search type: {search_type}")
+    if method == "dense" and search_type != "apriori":
+        raise ValueError("Dense GRAANK supports only APRIORI")
+    data = pd.read_csv(source_data)
+    graank, source = _load_graank(method, config.get("source_path"))
+    _seed(int(config.get("seed", 0)))
     support = float(config.get("support", DEFAULT_SUPPORT))
     iteration_limit = (
         config.get("apriori_level")
