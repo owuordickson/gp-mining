@@ -12,11 +12,10 @@
 A collection of miscellaneous classes and methods.
 """
 
-from typing import Any
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.figure import Figure
 
 
 def write_file(data, path, wr=True) -> None:
@@ -42,170 +41,101 @@ def gp_spider_plot(
     labels: list[str],
     parameters: list[str],
     grid_levels: int = 6,
-) -> plt.Figure:
+) -> Figure:
+    """Compare mean GP descriptors and one sample standard deviation per group.
+
+    Each descriptor has its own scale shared by all groups. Missing values are
+    skipped, and a single observation is drawn without an error bar.
+
+    :param df_list: Tables with numeric descriptor columns, such as those
+        returned by ``GRAANK.build_gradual_features`` for 2D or 3D inputs.
+    :param labels: One legend label per table.
+    :param parameters: Descriptor column names in the desired spoke order.
+    :param grid_levels: Number of grid rings.
+    :return: The Matplotlib figure.
     """
-    Modified to accept a list of DataFrames (e.g., [stats_rain, stats_evi])
-    and plot their mean/std comparisons.
+    if not df_list or len(df_list) != len(labels):
+        raise ValueError("Provide at least one table and one label per table")
+    if not parameters:
+        raise ValueError("Provide at least one descriptor column")
+    if grid_levels < 1:
+        raise ValueError("grid_levels must be positive")
 
-    :param df_list: A list of DataFrames containing GP descriptors as floats.
-    :param labels: A list of labels corresponding to each DataFrame.
-    :param parameters: A list of parameter names (or columns of the DataFrames) to plot.
-    :param grid_levels: The number of levels in the hexagon grid.
+    grid_radii = np.linspace(0, 1, grid_levels + 1)[1:]
+    mean_rows, std_rows = [], []
+    for frame in df_list:
+        values = frame.loc[:, parameters].replace([np.inf, -np.inf], np.nan)
+        mean_rows.append(values.mean())
+        std_rows.append(values.std().fillna(0.0))
 
-    :return: A matplotlib figure object containing the spider plot.
-    """
+    means = pd.DataFrame(mean_rows)
+    deviations = pd.DataFrame(std_rows)
+    lower = (means - deviations).min().to_numpy(dtype=float, na_value=np.nan)
+    upper = (means + deviations).max().to_numpy(dtype=float, na_value=np.nan)
+    span = upper - lower
+    variable = span > 0
 
-    # --- Data Processing ---
-    df_avgs = []
-    df_stds = []
-    # Extract means and stds for each dataframe provided
-    for df in df_list:
-        # Filter only for the requested parameters to ensure order
-        df_avgs.append(df[parameters].mean())
-        df_stds.append(df[parameters].std())
+    # A constant descriptor is placed at the midpoint of its spoke.
+    mean_values = means.to_numpy(dtype=float, na_value=np.nan)
+    radii = np.divide(
+        mean_values - lower, span, out=np.full(means.shape, 0.5), where=variable
+    )
+    radii[np.isnan(mean_values)] = np.nan
+    error_radii = np.divide(
+        deviations.to_numpy(dtype=float),
+        span,
+        out=np.zeros(means.shape),
+        where=variable,
+    )
 
-    # --- Helper Functions (Local) ---
-    def format_scale_value(value: float | int | Any) -> str:
-        try:
-            # Explicitly cast to float to support formatting specifiers
-            num_value = float(value)
-        except TypeError, ValueError:
-            # Fallback if a non-numeric object is passed
-            return str(value)
+    angles = np.linspace(np.pi / 2, -3 * np.pi / 2, len(parameters), endpoint=False)
+    spokes = np.column_stack((np.cos(angles), np.sin(angles)))
+    grid = np.vstack((spokes, spokes[0]))
+    figure, axes = plt.subplots(figsize=(9, 8), layout="constrained")
 
-        if abs(num_value) >= 1_000:
-            return f"{num_value / 1_000:.1f}K"
-        elif abs(num_value) >= 10:
-            return f"{num_value:.1f}"
+    for radius in grid_radii:
+        axes.plot(*(radius * grid).T, color="0.85", linewidth=0.8, zorder=0)
+
+    for index, (parameter, spoke) in enumerate(zip(parameters, spokes, strict=True)):
+        axes.plot([0, spoke[0]], [0, spoke[1]], color="0.8", linewidth=0.8, zorder=0)
+        axes.text(*(1.13 * spoke), parameter, ha="center", va="center", weight="bold")
+
+        if variable[index]:
+            ticks = zip(grid_radii, lower[index] + grid_radii * span[index])
+        elif np.isfinite(lower[index]):
+            ticks = [(0.5, lower[index])]
         else:
-            return f"{num_value:.2f}"
-
-    def shift_value(val):
-        return val - min_val
-
-    def compute_grid_scale(min_v, max_v):
-        # Create dynamic levels from min to max
-        return np.linspace(min_v, max_v, grid_levels)
-
-    # --- Plot Setup ---
-    num_vars = len(parameters)
-    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
-
-    fig = plt.figure(figsize=(11, 8.5), dpi=150)
-    ax = fig.add_subplot(1, 1, 1)
-
-    # Determine global max/min for scaling
-    all_highs = [avg + std for avg, std in zip(df_avgs, df_stds)]
-    all_lows = [avg - std for avg, std in zip(df_avgs, df_stds)]
-    max_val = max([v.max() for v in all_highs])
-    min_val = min([v.min() for v in all_lows])
-
-    levels = compute_grid_scale(min_val, max_val)
-    max_shifted = shift_value(max(levels))
-
-    # --- Draw Hexagon Grid ---
-    for level in levels:
-        shifted_level = shift_value(level)
-        x_grid = shifted_level * np.cos(np.append(angles, angles[0]))
-        y_grid = shifted_level * np.sin(np.append(angles, angles[0]))
-        ax.plot(x_grid, y_grid, "k-", linewidth=0.5, alpha=0.2)
-        ax.text(
-            shifted_level,
-            0.05,
-            format_scale_value(level),
-            ha="left",
-            va="bottom",
-            fontsize=7,
-            alpha=0.4,
-        )
-
-    # Draw spokes
-    for angle in angles:
-        ax.plot(
-            [0, max_shifted * np.cos(angle)],
-            [0, max_shifted * np.sin(angle)],
-            "k-",
-            linewidth=0.5,
-            alpha=0.3,
-        )
-
-    # --- Plot Data Groups ---
-    for i, (avg, std) in enumerate(zip(df_avgs, df_stds)):
-        values = shift_value(avg.values)
-        errors = std.values
-
-        # Cartesian conversion
-        x = values * np.cos(angles)
-        y = values * np.sin(angles)
-
-        # Plot Polygon
-        (poly_line,) = ax.plot(
-            np.append(x, x[0]), np.append(y, y[0]), linewidth=2, label=labels[i]
-        )
-        color = poly_line.get_color()
-        ax.fill(x, y, alpha=0.1, color=color)
-
-        # Perpendicular Error Bars
-        dx_perp = -np.sin(angles)
-        dy_perp = np.cos(angles)
-        err_scale = 1.5  # Adjusted for standard deviation visibility
-
-        for j in range(len(angles)):
-            xi, yi = x[j], y[j]
-            err = errors[j] * err_scale
-            ax.plot(
-                [xi + err * dx_perp[j], xi - err * dx_perp[j]],
-                [yi + err * dy_perp[j], yi - err * dy_perp[j]],
-                color=color,
-                linewidth=1,
+            ticks = []
+        for radius, value in ticks:
+            axes.annotate(
+                f"{value:.3g}",
+                radius * spoke,
+                xytext=(4, 3),
+                textcoords="offset points",
+                fontsize=8,
+                color="0.35",
+                bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.5},
             )
 
-    # --- Final Touches ---
-    label_dist = max_shifted * 1.1
-    for i, (angle, param) in enumerate(zip(angles, parameters)):
-        # Convert angle to degrees for matplotlib rotation
-        angle_deg = np.rad2deg(angle)
-        check_angle = np.round(angle_deg, 0) % 360
+    for label, profile, errors in zip(labels, radii, error_radii, strict=True):
+        points = profile[:, None] * spokes
+        closed_points = np.vstack((points, points[0]))
+        (line,) = axes.plot(*closed_points.T, marker="o", linewidth=2, label=label)
+        color = line.get_color()
+        if len(parameters) >= 3 and np.isfinite(points).all():
+            axes.fill(*points.T, color=color, alpha=0.1)
 
-        # Rename long parameters for clarity
-        param = param.replace("Avg. Deviation from Diagonal", "Avg. Deviation")
+        for radius, error, spoke in zip(profile, errors, spokes, strict=True):
+            if error > 0:
+                endpoints = (radius + np.array([-error, error]))[:, None] * spoke
+                axes.plot(*endpoints.T, color=color, linewidth=1.4, alpha=0.7)
 
-        # Tilt Logic:
-        # Flip text if it's on the left side (between 90 and 270 degrees)
-        # to keep it right-side up.
-        if check_angle == 0 or check_angle == 180:
-            display_angle = 90
-        elif check_angle == 120 or check_angle == 300:
-            display_angle = 30
-        elif check_angle == 240 or check_angle == 60:
-            display_angle = -30
-        else:
-            display_angle = 0
-
-        # Calculate position
-        x_pos = label_dist * np.cos(angle)
-        y_pos = label_dist * np.sin(angle)
-
-        ax.text(
-            x_pos,
-            y_pos,
-            param,
-            ha="center",
-            va="center",
-            fontsize=10,
-            fontweight="bold",
-            rotation=display_angle,  # Apply the tilt
-            rotation_mode="anchor",  # Ensures rotation is around the text center
-        )
-
-    ax.set_aspect("equal")
-    ax.axis("off")
-    ax.set_title(
-        "GP Descriptors Spider Plot with Std. Dev. Error Bars", fontsize=14, pad=40
-    )
-    ax.legend(loc="upper right", bbox_to_anchor=(1.0, 1.0))
-
-    return fig
+    axes.set_aspect("equal")
+    axes.set(xlim=(-1.2, 1.2), ylim=(-1.2, 1.2))
+    axes.set_axis_off()
+    axes.set_title("GP descriptor means ± 1 SD", pad=18)
+    axes.legend(loc="upper center", bbox_to_anchor=(0.5, 0), ncols=2, frameon=False)
+    return figure
 
 
 def classify_ftgps(lst_test_data, lst_ground_truth, threshold=0.5) -> dict:
