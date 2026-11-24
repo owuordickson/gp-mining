@@ -161,8 +161,6 @@ def run_experiment(config: dict) -> dict:
     search_type = config.get("search_type", "apriori")
     if search_type not in SEARCH_TYPES:
         raise ValueError(f"Unknown GRAANK search type: {search_type}")
-    if method == "dense" and search_type != "apriori":
-        raise ValueError("Dense GRAANK supports only APRIORI")
     data = pd.read_csv(source_data)
     graank, source = _load_graank(method, config.get("source_path"))
     _seed(int(config.get("seed", 0)))

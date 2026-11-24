@@ -215,6 +215,68 @@ def test_graank_groups_search_types_and_uses_matching_bitmap_baselines():
     assert paired["pso"]["speedup_median"] == 4
 
 
+@pytest.mark.parametrize("search_type", ["pso", "ga", "hc", "random"])
+def test_graank_reports_bitmap_and_search_comparisons_separately(search_type):
+    apriori_patterns = [{"items": ["0+", "1-"]}, {"items": ["0+", "2+"]}]
+    data = [
+        trial(
+            method,
+            0,
+            elapsed,
+            experiment="graank",
+            search_type=search,
+            peak_rss_bytes=memory,
+            patterns=patterns,
+        )
+        for search, method, elapsed, memory, patterns in [
+            ("apriori", "dense", 80, 640, apriori_patterns),
+            ("apriori", "packed", 16, 256, apriori_patterns),
+            (search_type, "dense", 20, 320, [{"items": ["0+", "1-"]}]),
+            (search_type, "packed", 2, 64, [{"items": ["1+", "0-"]}]),
+        ]
+    ]
+
+    comparisons = {
+        (
+            row["baseline_search_type"],
+            row["baseline"],
+            row["search_type"],
+            row["method"],
+        ): (
+            row["speedup_median"],
+            row["memory_ratio_median"],
+            row["itemset_jaccard_median"],
+            row["apriori_output_recall"],
+        )
+        for row in load_report().paired_summaries(data)
+    }
+
+    assert comparisons == {
+        ("apriori", "dense", "apriori", "packed"): (5, 2.5, 1, 1),
+        ("apriori", "dense", search_type, "dense"): (4, 2, 0.5, 0.5),
+        ("apriori", "packed", search_type, "packed"): (8, 4, 0.5, 0.5),
+        (search_type, "dense", search_type, "packed"): (10, 5, 1, None),
+    }
+
+
+def test_graank_bitmap_pair_retains_censoring_without_apriori():
+    data = [
+        trial("dense", 0, None, "timeout", experiment="graank", search_type="ga"),
+        trial("packed", 0, 2, experiment="graank", search_type="ga"),
+        trial("dense", 1, 8, experiment="graank", search_type="ga"),
+        trial("packed", 1, 4, experiment="graank", search_type="ga"),
+        trial("dense", 2, 9, experiment="graank", search_type="ga"),
+    ]
+    (result,) = [
+        row
+        for row in load_report().paired_summaries(data)
+        if row["baseline_search_type"] == "ga"
+    ]
+    assert result["completed_pairs"] == 1
+    assert result["unmatched_or_censored_pairs"] == 2
+    assert result["speedup_median"] == 2
+
+
 def test_empty_and_nonempty_reports_are_valid_files(tmp_path):
     report = load_report()
     result = report.write_reports(tmp_path, [])

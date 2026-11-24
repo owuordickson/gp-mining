@@ -111,7 +111,12 @@ def test_run_uses_data_directory_without_writing_prepared_files(tmp_path, launch
     assert len({record["prepared_sha256"] for record in records}) == 1
 
 
-def test_reports_refresh_at_dataset_boundaries_and_on_resume(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    "search_types", [None, ["hc"]], ids=["all-searches", "hc-only"]
+)
+def test_reports_refresh_at_dataset_boundaries_and_on_resume(
+    tmp_path, monkeypatch, search_types
+):
     runner = load_runner()
     data_dir = tmp_path / "data"
     data_dir.mkdir()
@@ -137,6 +142,8 @@ def test_reports_refresh_at_dataset_boundaries_and_on_resume(tmp_path, monkeypat
         "--warmups",
         "0",
     ]
+    if search_types:
+        args.extend(["--search-types", *search_types])
 
     def summarized_trials():
         with summary.open(encoding="utf-8", newline="") as stream:
@@ -147,12 +154,9 @@ def test_reports_refresh_at_dataset_boundaries_and_on_resume(tmp_path, monkeypat
 
     attempts = []
     variants = {
-        ("apriori", "dense"),
-        ("apriori", "packed"),
-        ("pso", "packed"),
-        ("ga", "packed"),
-        ("hc", "packed"),
-        ("random", "packed"),
+        (search_type, layout)
+        for search_type in search_types or ("apriori", "pso", "ga", "hc", "random")
+        for layout in ("dense", "packed")
     }
     bcr_trials = {("BCR", *variant) for variant in variants}
     first_aqy = len(variants)
@@ -160,7 +164,9 @@ def test_reports_refresh_at_dataset_boundaries_and_on_resume(tmp_path, monkeypat
     def pause_during_second_dataset(config, *args, **kwargs):
         variant = (config.get("search_type", "apriori"), config["method"])
         attempts.append(variant)
-        assert ("source_path" in config) == (variant == ("apriori", "dense"))
+        assert config.get("source_path") == (
+            str(tmp_path) if config["method"] == "dense" else None
+        )
         if len(attempts) == first_aqy + 2:
             raise KeyboardInterrupt
         if len(attempts) == first_aqy + 3:
@@ -173,6 +179,8 @@ def test_reports_refresh_at_dataset_boundaries_and_on_resume(tmp_path, monkeypat
         runner.main(args)
 
     assert summarized_trials() == bcr_trials
+    manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["dense_revision"] == runner.DENSE_REVISION
     assert (output / "paired_summary.csv").is_file()
     summary.unlink()  # Simulate a summary lost during an interruption.
 
@@ -186,7 +194,8 @@ def test_reports_refresh_at_dataset_boundaries_and_on_resume(tmp_path, monkeypat
         json.loads(line)
         for line in (output / "trials.jsonl").read_text(encoding="utf-8").splitlines()
     ]
-    assert len({record["trial_id"] for record in records}) == len(records) == 12
+    assert len({record["trial_id"] for record in records}) == len(records)
+    assert len(records) == 2 * len(variants)
 
 
 def test_temporal_benchmark_reuses_saved_rainfall_steps_for_each_evi_target(

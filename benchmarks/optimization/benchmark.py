@@ -180,7 +180,7 @@ def _parser():
     parser.add_argument(
         "--experiment",
         choices=("graank", "temporal"),
-        default="temporal",
+        default="graank",
     )
     parser.add_argument(
         "--search-types",
@@ -265,16 +265,16 @@ def main(argv=None):
         raise ValueError("The full profile requires a positive --memory-mib limit")
     if args.iterations < 1:
         raise ValueError("Heuristic iterations must be positive")
-    run_dense = not temporal and "apriori" in args.search_types
     if temporal:
         workloads = [("apriori", method) for method in TEMPORAL_METHODS]
     else:
-        workloads = [("apriori", "dense")] if run_dense else []
-        workloads.extend(
-            (search_type, "packed")
+        workloads = [
+            (search_type, layout)
             for search_type in SEARCH_TYPES
             if search_type in args.search_types
-        )
+            for layout in ("packed", "dense")
+        ]
+    run_dense = any(layout == "dense" for _, layout in workloads)
     defaults = {"quick": (64, 6), "study": (1000, 12), "full": (None, None)}
     rows, features = defaults[args.profile]
     rows, features = args.rows or rows, args.features or features

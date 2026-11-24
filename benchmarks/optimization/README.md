@@ -5,13 +5,16 @@ target, and support threshold.
 
 | Method | Search types | GRAANK source | Bitmap representation |
 | --- | --- | --- | --- |
-| `dense` | `apriori` | Git revision `affc7860397002fba26af96dcb2f0461f2cdda9d` | Dense `n × n` bitmaps |
+| `dense` | `apriori`, `pso`, `ga`, `hc`, `random` | Git revision `affc7860397002fba26af96dcb2f0461f2cdda9d` | Dense `n × n` bitmaps |
 | `packed` | `apriori`, `pso`, `ga`, `hc`, `random` | `from so4gp.algorithms import GRAANK` in the selected Python interpreter | Packed bits |
 
 Each trial runs in its own subprocess. The dense worker imports from a verified
 archive of the pinned revision in local Git history. The packed worker uses the
-interpreter's normal import path. The dense-to-packed APRIORI comparison
-includes any other behavior that differs between the two sources.
+interpreter's normal import path. The dense-to-packed comparisons also
+reflect other differences between the two source revisions.
+On wide heuristic inputs, both workers retry NumPy's scalar bound comparisons
+with Python integers if a candidate position overflows NumPy's native integer
+type.
 
 ## Data
 
@@ -37,7 +40,7 @@ Directio file contains multiple sites. The datasets originate from the
 
 Use an interpreter with a packed-bit SO4GP install. To use this checkout's
 package, run `python -m pip install -e .` from the repository root. The dense
-revision must be present in local Git history when running APRIORI.
+revision must be present in local Git history when running GRAANK.
 
 In PyCharm, run `benchmarks/optimization/benchmark.py` as a script with that
 interpreter or use `benchmarks.optimization.benchmark` as the module name from
@@ -50,10 +53,10 @@ python benchmarks/optimization/benchmark.py --datasets BCR --search-types pso ga
 ```
 
 For GRAANK, the default `full` profile uses all six datasets at their full
-prepared sizes and runs all five search types. The defaults are support 0.2,
-one measured trial per search and bitmap method with seed 0, one discarded
-warm-up per trial, a 300-second worker timeout, and a best-effort memory limit
-of 6,144 MiB per worker.
+prepared sizes and runs all five search types in both layouts. The defaults
+are support 0.2, one measured trial per search and bitmap method with seed 0,
+one discarded warm-up per trial, a 300-second worker timeout, and a best-effort
+memory limit of 6,144 MiB per worker.
 The `study` profile uses up to 1,000 rows, 12 features, and three seeds. The
 `quick` profile uses up to 64 rows, six features, and one seed.
 
@@ -70,9 +73,10 @@ Each run creates a folder under [`results/`](results/) with `manifest.json`,
 the run settings and algorithm sources. The runner saves each trial as
 it finishes and refreshes both CSVs at the end of each dataset.
 
-The GRAANK summary lists each `search_type` and bitmap `method` separately. Packed
-APRIORI is paired with dense APRIORI. Each heuristic is paired with packed
-APRIORI, so include `apriori` in the run to get those comparisons.
+The GRAANK summary lists each `search_type` and bitmap `method` separately.
+The paired summary compares packed against dense for the same search.
+When APRIORI is included, it also compares each heuristic with APRIORI
+in the same layout.
 
 | Metric | Definition |
 | --- | --- |
@@ -82,7 +86,7 @@ APRIORI, so include `apriori` in the run to get those comparisons.
 | Invalid patterns | Candidates rejected according to GRAANK's `Invalid Count` |
 | Time and memory ratios | Baseline divided by comparison, using completed trials with matching inputs and seeds |
 | Itemset overlap | Jaccard index of returned patterns, treating a pattern and its global sign reversal as equivalent |
-| APRIORI output recall | Fraction of baseline itemsets recovered by the comparison |
+| APRIORI output recall | Fraction of baseline APRIORI itemsets recovered by the comparison |
 
 The CSVs report medians from completed trials. Timeouts and memory limits appear
 as trial statuses. When GRAANK has an empty search space, the trial completes

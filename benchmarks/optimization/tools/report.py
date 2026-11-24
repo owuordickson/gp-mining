@@ -167,6 +167,23 @@ def _patterns(record):
     return set(identities)
 
 
+def _comparisons(experiment, variants):
+    for variant in variants:
+        search_type, method = variant
+        if method is None:
+            continue
+        if experiment == "graank" and search_type is not None:
+            if search_type != "apriori":
+                yield variant, ("apriori", method)
+            dense = (search_type, "dense")
+            if method == "packed" and (search_type == "apriori" or dense in variants):
+                yield variant, dense
+        else:
+            baseline = ARCHIVED_BASELINES.get(experiment)
+            if baseline is not None and baseline != variant:
+                yield variant, baseline
+
+
 def paired_summaries(records):
     """Compare methods using completed, uniquely identified matching trials only."""
     groups = defaultdict(list)
@@ -175,30 +192,21 @@ def paired_summaries(records):
     result = []
     for key, trials in groups.items():
         experiment = dict(zip(GROUP_FIELDS, key)).get("experiment")
-        variants = defaultdict(list)
+        variants = defaultdict(lambda: defaultdict(list))
         for row in trials:
-            variants[_search_variant(row)].append(row)
-        for variant, candidate_trials in variants.items():
+            pair = tuple(row.get(field) for field in PAIR_FIELDS)
+            variants[_search_variant(row)][pair].append(row)
+        for variant, baseline in _comparisons(experiment, variants):
             search_type, method = variant
-            if experiment == "graank" and search_type is not None:
-                baseline = (
-                    "apriori",
-                    "dense" if search_type == "apriori" else "packed",
-                )
-            else:
-                baseline = ARCHIVED_BASELINES.get(experiment)
-            if baseline is None or baseline == variant or method is None:
-                continue
-            candidates = defaultdict(list)
-            references = defaultdict(list)
-            for row in candidate_trials:
-                candidates[tuple(row.get(field) for field in PAIR_FIELDS)].append(row)
-            for row in variants.get(baseline, []):
-                references[tuple(row.get(field) for field in PAIR_FIELDS)].append(row)
+            apriori_baseline = experiment == "graank" and (
+                baseline[0] == "apriori" or baseline == ARCHIVED_BASELINES["graank"]
+            )
+            candidates = variants[variant]
+            references = variants.get(baseline, {})
             ratios, memory_ratios, overlaps, recalls = [], [], [], []
             pair_ids = set(candidates) | set(references)
             for pair in pair_ids:
-                left, right = references[pair], candidates[pair]
+                left, right = references.get(pair, ()), candidates.get(pair, ())
                 if len(left) != 1 or len(right) != 1:
                     continue
                 ref, current = left[0], right[0]
@@ -231,7 +239,7 @@ def paired_summaries(records):
                     overlaps.append(
                         len(ref_patterns & new_patterns) / len(union) if union else 1.0
                     )
-                    if ref_patterns:
+                    if apriori_baseline and ref_patterns:
                         recalls.append(
                             len(ref_patterns & new_patterns) / len(ref_patterns)
                         )
@@ -255,15 +263,13 @@ def paired_summaries(records):
                     if overlaps
                     else None,
                     "apriori_output_recall": statistics.median(recalls)
-                    if recalls and experiment == "graank"
+                    if recalls
                     else None,
                 }
             )
             result.append(row)
-    return sorted(
-        result,
-        key=lambda item: tuple(str(item.get(field, "")) for field in SUMMARY_FIELDS),
-    )
+    fields = (*SUMMARY_FIELDS, "baseline_search_type", "baseline")
+    return sorted(result, key=lambda item: tuple(str(item[field]) for field in fields))
 
 
 def _write_csv(path, rows, default_fields):
