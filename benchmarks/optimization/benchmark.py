@@ -180,7 +180,7 @@ def _parser():
     parser.add_argument(
         "--experiment",
         choices=("graank", "temporal"),
-        default="graank",
+        default="temporal",
     )
     parser.add_argument(
         "--search-types",
@@ -243,7 +243,8 @@ def main(argv=None):
     else:
         args.datasets = args.datasets or list(DATASETS)
     if args.output is None:
-        name = "tgraank-mi" if temporal else f"run-{time.strftime('%Y%m%d-%H%M%S')}"
+        alg_name = "tgraank-mi" if temporal else "graank"
+        name = f"run-{alg_name}{time.strftime('%Y%m%d-%H%M%S')}"
         args.output = HERE / "results" / name
     if args.support is None:
         args.support = TEMPORAL_SUPPORT if temporal else DEFAULT_SUPPORT

@@ -1,7 +1,0 @@
-dataset,experiment,support,target,rows,features,baseline,method,completed_pairs,unmatched_or_censored_pairs,speedup_median,speedup_ci_low,speedup_ci_high,memory_ratio_median,itemset_jaccard_median,apriori_output_recall
-APS,kernel,0.7,aa_000,16,6,dense,packed,1,0,0.1876353715079591,,,,,
-AQY,kernel,0.7,CO(GT),57,6,dense,packed,1,0,0.33643232881268703,,,,,
-BCR,kernel,0.7,Glucose,64,6,dense,packed,1,0,0.23174309419957975,,,,,
-C2K,kernel,0.7,o_dlv_e,64,6,dense,packed,1,0,0.3367735187715749,,,,,
-DIR,kernel,0.7,Hm0,64,6,dense,packed,1,0,0.2779459788353896,,,,,
-PWC,kernel,0.7,Global_active_power,64,6,dense,packed,1,0,0.10968664453061355,,,,,
