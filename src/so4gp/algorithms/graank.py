@@ -600,11 +600,10 @@ class GRAANK:
 
         if data.ndim == 2:
             desc_idx, desc_arr = encode_recording(data)
-            return pds.DataFrame(
-                desc_arr,
-                index=pds.Index(desc_idx, name="pattern"),
-                columns=pds.Index(descriptors, name="descriptor"),
-            )
+            df_rec = pds.DataFrame(desc_arr, columns=descriptors)
+            df_rec.insert(0, "pattern", desc_idx)
+            #return pds.DataFrame(desc_arr, index=pds.Index(desc_idx, name="pattern"), columns=pds.Index(descriptors, name="descriptor"),)
+            return df_rec
 
         dfs = []
         for index, recording in enumerate(recordings):
