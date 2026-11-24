@@ -1,5 +1,5 @@
-import pandas
 import numpy as np
+import pandas
 
 from so4gp.algorithms import GRAANK
 
@@ -34,7 +34,10 @@ def test_graank():
 
     ## Test Algorithms
     mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False, device="cpu")
-    # mine_obj = GRAANK("../benchmarks/optimization/data/breast_cancer.csv", min_sup=0.2)
+    # mine_obj = GRAANK(
+    # "../benchmarks/optimization/data/breast_cancer.csv",
+    # min_sup=0.2
+    # )
 
     result_json = mine_obj.discover(
         search_type="ga",  # aco, pso, hc, random, clustergp

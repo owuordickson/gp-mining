@@ -1,6 +1,8 @@
 
-from so4gp.algorithms import TGRAANK
 from test_graank import dummy_df
+
+from so4gp.algorithms import TGRAANK
+
 
 def test_tgraank():
 
@@ -8,7 +10,10 @@ def test_tgraank():
     mine_obj = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1)
 
     result_json = mine_obj.discover(
-        target_col=1, transformations="all", search_algorithm="apriori", max_iteration=10
+        target_col=1,
+        transformations="all",
+        search_algorithm="apriori",
+        max_iteration=10
     )  # TGRAANK
 
     # result_json=mine_obj.discover(
