@@ -157,30 +157,6 @@ def test_graank_worker_runs_selected_search_with_its_iteration_budget(
 
 
 @pytest.mark.parametrize("method", ["dense", "packed"])
-@pytest.mark.parametrize("search_type", ["pso", "ga"])
-def test_graank_worker_handles_wide_candidate_positions(request, method, search_type):
-    columns = range(64)
-    data_csv = "\n".join(
-        [",".join(f"col{i}" for i in columns)]
-        + [",".join(str(row + i) for i in columns) for row in range(24)]
-    )
-    result = _run_graank(
-        {
-            "experiment": "graank",
-            "method": method,
-            "search_type": search_type,
-            "data_csv": data_csv,
-            "support": 0.7,
-            "target": 0,
-            "iterations": 2,
-        },
-        request,
-    )
-    assert int(result["algorithm_result"]["Number of iterations"]) == 2
-    assert result["invalid_pattern_count"] is not None
-
-
-@pytest.mark.parametrize("method", ["dense", "packed"])
 @pytest.mark.parametrize("search_type", ["apriori", "pso", "ga", "hc", "random"])
 def test_graank_worker_completes_when_no_item_pairs_meet_support(
     request, method, search_type

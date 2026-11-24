@@ -12,9 +12,6 @@ Each trial runs in its own subprocess. The dense worker imports from a verified
 archive of the pinned revision in local Git history. The packed worker uses the
 interpreter's normal import path. The dense-to-packed comparisons also
 reflect other differences between the two source revisions.
-On wide heuristic inputs, both workers retry NumPy's scalar bound comparisons
-with Python integers if a candidate position overflows NumPy's native integer
-type.
 
 ## Data
 

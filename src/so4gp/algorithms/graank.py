@@ -438,6 +438,7 @@ class GRAANK:
     def build_gradual_features(
             cls,
             sequences: np.ndarray,
+            column_names: list | None = None,
             max_patterns: int | None = None,
             pattern_level: int = 2,
     ) -> pds.DataFrame:
@@ -476,6 +477,7 @@ class GRAANK:
                 ``(observations, channels)`` or
                 ``(recordings, observations, channels)``. Require at least
                 two observations, one channel, and one recording.
+            column_names: Column titles for each observation.
             max_patterns: Positive maximum number of patterns encoded per
                 recording, or None to encode all canonical combinations.
                 The cap takes a deterministic prefix. Values larger than
@@ -529,6 +531,9 @@ class GRAANK:
         if max_patterns is not None and max_patterns < 1:
             raise ValueError("max_patterns must be a positive integer or None")
 
+        if column_names is not None and len(column_names) != num_channels:
+            raise ValueError("column_names must have the same number of columns as the number of channels")
+
         descriptors = (
             "support",
             "density",
@@ -540,18 +545,22 @@ class GRAANK:
 
         def encode_recording(rec_data: np.ndarray) -> tuple[list, np.ndarray]:
             """Fit used GI bitmaps once and intersect each requested pattern."""
-            rec_df = pds.DataFrame(rec_data)
+            rec_df = pds.DataFrame(rec_data, columns=column_names) if column_names is not None else pds.DataFrame(rec_data)
             mine_alg = cls(rec_df, min_sup=0.0)
+            pat_names = []
+
             # 1-item GIs
             if pattern_level == 1:
                 mine_eng = mine_alg.mine_engine
                 mine_eng.fit_bitmap()
                 num_objects, num_cols = rec_data.shape
-                pat_names = list((mine_eng.valid_bins or {}).keys())
                 gi_features = np.zeros((2 * num_cols, len(descriptors)))
                 for gi_key, gi_data in (mine_eng.valid_bins or {}).items():
                     item = GI.from_string(gi_key)
                     slot = 2 * item.attribute_col + int(item.symbol == "-")
+
+                    col_title = mine_eng.titles[item.attribute_col] if column_names is not None else str(item.attribute_col)
+                    pat_names.append(str(col_title + item.symbol))
 
                     pairs = GP.gen_gradual_concordance_set(gi_data.packed_bin_mat, num_objects)
                     new_gp = GP()
@@ -568,11 +577,14 @@ class GRAANK:
                 return pat_names, gi_features
             else:
                 lst_gp = []
-                pat_names = []
                 mine_alg.discover(max_iteration=pattern_level, compute_descriptors=True)
                 mine_eng = mine_alg.mine_engine
                 for gp in (mine_eng.gradual_patterns or [])[:max_patterns]:
-                    pat_names.append(gp.to_string())
+                    if column_names is not None:
+                        gp_name, _ = gp.print(mine_eng.titles)
+                    else:
+                        gp_name = ", ".join(str(gi_str) for gi_str in gp.to_string())
+                    pat_names.append(gp_name)
                     lst_gp.append(
                         (
                             gp.support,
@@ -590,7 +602,7 @@ class GRAANK:
             desc_idx, desc_arr = encode_recording(data)
             return pds.DataFrame(
                 desc_arr,
-                index=pds.Index(tuple(desc_idx), name="pattern"),
+                index=pds.Index(desc_idx, name="pattern"),
                 columns=pds.Index(descriptors, name="descriptor"),
             )
 

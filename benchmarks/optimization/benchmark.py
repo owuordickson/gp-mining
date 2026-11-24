@@ -189,7 +189,7 @@ def _parser():
         default=list(SEARCH_TYPES),
         help="GRAANK search types to run (default: all listed)",
     )
-    parser.add_argument("--profile", choices=("quick", "study", "full"), default="full")
+    parser.add_argument("--profile", choices=("quick", "study", "full"), default="study")
     parser.add_argument("--data-dir", type=Path, default=HERE / "data")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--download", action="store_true")
@@ -275,7 +275,7 @@ def main(argv=None):
             for layout in ("packed", "dense")
         ]
     run_dense = any(layout == "dense" for _, layout in workloads)
-    defaults = {"quick": (64, 6), "study": (1000, 12), "full": (None, None)}
+    defaults = {"quick": (64, 6), "study": (5000, None), "full": (None, None)}
     rows, features = defaults[args.profile]
     rows, features = args.rows or rows, args.features or features
     args.output.mkdir(parents=True, exist_ok=True)
