@@ -149,22 +149,3 @@ AMI improved mean accuracy by **2.95 percentage points** and reduced false
 positives and false negatives from 6.5 to 1.0 each per site on average.
 Accuracy rose at KAK, NRB, and WAJ. At MAK it fell from 76.92% to 69.23%.
 [Per-site scores](results/tgraank/confusion_matrix.csv)
-
-## Full BCR run at support 0.2
-
-This run used all 116 rows and nine features, with Glucose as the target and
-seed 0. It measured each search once without a warm-up and used 10 iterations
-for each heuristic.
-
-| Search | Bitmap | Time (s) | Peak RSS (MiB) | Valid patterns | Invalid patterns |
-| --- | --- | ---: | ---: | ---: | ---: |
-| APRIORI | Dense | 20.740 | 374.4 | 55 | 921 |
-| APRIORI | Packed | 19.978 | 372.3 | 55 | 921 |
-| GA | Packed | 0.058 | 372.0 | 5 | 11 |
-| HC | Packed | 0.051 | 371.7 | 1 | 0 |
-| PSO | Packed | 0.130 | 438.5 | 1 | 0 |
-| Random | Packed | 0.057 | 371.4 | 4 | 1 |
-
-The APRIORI itemsets agreed after sign normalization. GA and HC each recovered
-one of the 53 distinct packed APRIORI itemsets. PSO and random had zero overlap
-with that set.
