@@ -154,7 +154,7 @@ def main(argv=None):
         "results",
         nargs="?",
         type=Path,
-        default=Path(__file__).resolve().parents[1] / "results" / "tgraank-mi",
+        default=Path(__file__).resolve().parents[1] / "results" / "tgraank",
     )
     output = parser.parse_args(argv).results
     with (output / "trials.jsonl").open(encoding="utf-8") as stream:

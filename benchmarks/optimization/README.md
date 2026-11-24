@@ -103,7 +103,7 @@ python benchmarks/optimization/benchmark.py --experiment temporal --warmups 0
 python benchmarks/optimization/tools/analyze_tgraank.py
 ```
 
-Both commands use [`results/tgraank-mi/`](results/tgraank-mi/) by default. To
+Both commands use [`results/tgraank`](results/tgraank/) by default. To
 repeat the experiment in a separate folder, set `--output` on the benchmark
 and pass that directory to the analysis helper.
 
@@ -128,16 +128,16 @@ the other side. Accuracy is the fraction of matched or unmatched entries
 that are true positives or true negatives. The summary averages the per-site
 scores and reports their sample standard deviations.
 
-- [Per-site confusion counts and scores](results/tgraank-mi/confusion_matrix.csv)
-- [Mean and standard deviation by algorithm](results/tgraank-mi/metrics_summary.csv)
-- [Mean confusion matrices](results/tgraank-mi/confusion_matrix.png)
-- [Runtime and memory by target](results/tgraank-mi/summary.csv)
+- [Per-site confusion counts and scores](results/tgraank/confusion_matrix.csv)
+- [Mean and standard deviation by algorithm](results/tgraank/metrics_summary.csv)
+- [Mean confusion matrices](results/tgraank/confusion_matrix.png)
+- [Runtime and memory by target](results/tgraank/summary.csv)
 
 ### Replication results
 
 The saved run completed 16 trials with SO4GP 1.1.2 and seed 0. Scores are
 percentages shown as mean ± sample standard deviation across the four sites.
-[Run manifest](results/tgraank-mi/manifest.json)
+[Run manifest](results/tgraank/manifest.json)
 
 | Method | Accuracy | Precision | Recall | Specificity | F1 |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -147,7 +147,7 @@ percentages shown as mean ± sample standard deviation across the four sites.
 AMI improved mean accuracy by **2.95 percentage points** and reduced false
 positives and false negatives from 6.5 to 1.0 each per site on average.
 Accuracy rose at KAK, NRB, and WAJ. At MAK it fell from 76.92% to 69.23%.
-[Per-site scores](results/tgraank-mi/confusion_matrix.csv)
+[Per-site scores](results/tgraank/confusion_matrix.csv)
 
 ## Full BCR run at support 0.2
 

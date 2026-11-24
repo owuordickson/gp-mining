@@ -243,7 +243,7 @@ def main(argv=None):
     else:
         args.datasets = args.datasets or list(DATASETS)
     if args.output is None:
-        alg_name = "tgraank-mi" if temporal else "graank"
+        alg_name = "tgraank" if temporal else "graank"
         name = f"run-{alg_name}{time.strftime('%Y%m%d-%H%M%S')}"
         args.output = HERE / "results" / name
     if args.support is None:
