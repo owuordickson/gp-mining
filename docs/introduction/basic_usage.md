@@ -189,6 +189,21 @@ res_df = miner_tgp.discover_causal_relationships(max_lag=3)
 
 These scores require causal assumptions and validation. See the [causal discovery tutorial](../tutorials/causal_discovery.md) for a controlled example and guidance on interpretation.
 
+## Optimization results
+
+- **GRAANK.** Packed APRIORI achieved a 66.13× median paired speedup over dense
+  APRIORI on BCR and used about 55% less peak memory on PWC. On BCR, heuristics
+  ran 4.15–17.56× faster than packed APRIORI and recovered at most 5.66% of its
+  itemsets at the median. Packed APRIORI hit the 300 s timeout on all three
+  DIR seeds.
+- **TGRAANK.** With Enhanced Vegetation Index (EVI) patterns as the proxy
+  reference for rainfall patterns, AMI averaged 84.18% accuracy across four
+  sites, compared with 81.23% for classical TGRAANK and 79.54% for random
+  shifts. AMI also had the highest mean F1 at 66.67%.
+
+See the run settings, confusion matrices, and charts in the
+[optimization benchmark](https://github.com/owuordickson/gp-mining/blob/main/benchmarks/optimization/README.md).
+
 ## Learn More
 
 Continue with a practical tutorial:

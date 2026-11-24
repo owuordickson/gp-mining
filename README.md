@@ -117,8 +117,9 @@ The default output is the format of JSON:
 
 ## Benchmarks
 
-- [Causal discovery benchmark](benchmarks/causal_discovery/README.md) and [archived CausalRivers results](benchmarks/causal_discovery/README.md)
-- [Joint-effect benchmark and results](benchmarks/joint_effect/README.md)
+- [Causal discovery benchmark](benchmarks/causal_discovery/README.md) and [archived CausalRivers results](benchmarks/causal_discovery/causalrivers/README.md)
+- [Joint-effect benchmark](benchmarks/joint_effect/README.md)
+- [GRAANK and TGRAANK optimization benchmark](benchmarks/optimization/README.md)
 
 ## Contributors ✨
 

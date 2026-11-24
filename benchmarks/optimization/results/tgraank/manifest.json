@@ -1,0 +1,66 @@
+{
+  "settings": {
+    "datasets": [
+      "KE_RAIN",
+      "KE_EVI"
+    ],
+    "experiment": "temporal",
+    "search_types": [
+      "apriori",
+      "pso",
+      "ga",
+      "hc",
+      "random"
+    ],
+    "profile": "full",
+    "data_dir": "C:\\owuor_lab\\GP-Mining\\benchmarks\\optimization\\data",
+    "download": false,
+    "rows": null,
+    "features": null,
+    "target": null,
+    "site": null,
+    "support": 0.01,
+    "iterations": 10,
+    "apriori_level": null,
+    "seeds": null,
+    "timeout": 300,
+    "warmups": 0,
+    "memory_mib": 6144
+  },
+  "revision": "8182a9813d60e80e8028ea0eac0799d779b9527e",
+  "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "benchmark_sha256": {
+    "benchmark.py": "e8dce3a54f126646550378ca948ac6d7a493f3a14b0e01b8a45b7d14f301741d",
+    "tools\\analyze_tgraank.py": "af642bd0f5a99230b4dc4b2445dfee88dbbf5b70bd7265a283f078d2a2d5300b",
+    "tools\\datasets.py": "53dc65591f16d037ce5471441aea16a92444a4d786da8eebc614ca58c9ac9b97",
+    "tools\\experiments.py": "cc9f0a3dd551f829ce2347227103f1240c6a7dc209fed8193aae5a20e1431f12",
+    "tools\\process_control.py": "703d5bfde80c168cc8592e9d8f1cf77332b7d16f940314c21d457c2299c73fdd",
+    "tools\\report.py": "93108e4c9d5fd3d8679e4afd6509de287e4d5be349705733a3889eb5f9b32222",
+    "tools\\__init__.py": "5cb6cfaf4e995d410c82cbec57f81544010e3b11e48dfc6e9315b2eb89a37afc"
+  },
+  "dense_revision": null,
+  "packed_source_path": "C:\\owuor_lab\\GP-Mining\\.venv_gp\\Lib\\site-packages\\so4gp\\__init__.py",
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+  "cpu_count": 8,
+  "ram_bytes": 34359738368,
+  "dependencies": {
+    "so4gp": "1.1.2",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "torch": "2.13.0",
+    "scikit-learn": "1.9.1",
+    "scikit-fuzzy": "0.5.0"
+  },
+  "timing": "worker algorithm elapsed; process startup and preparation separate",
+  "memory": "sampled worker process-tree resident memory every 0.05s; includes imports and result collection",
+  "temporal_protocol": {
+    "min_rep": 0.75,
+    "error_margin": 1e-05,
+    "compute_descriptors": true,
+    "ami_reference_eval_mode": true,
+    "random_seed": "42 * target_index + seed",
+    "notebook_revision": "709594630c5423309ee7c9a4f47cfeb1de0274d4"
+  }
+}

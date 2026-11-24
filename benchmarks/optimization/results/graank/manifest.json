@@ -1,0 +1,62 @@
+{
+  "settings": {
+    "datasets": [
+      "BCR",
+      "C2K",
+      "AQY",
+      "DIR",
+      "PWC",
+      "APS"
+    ],
+    "experiment": "graank",
+    "search_types": [
+      "apriori",
+      "pso",
+      "ga",
+      "hc",
+      "random"
+    ],
+    "profile": "study",
+    "data_dir": "C:\\owuor_lab\\GP-Mining\\benchmarks\\optimization\\data",
+    "download": false,
+    "rows": null,
+    "features": null,
+    "target": null,
+    "site": null,
+    "support": 0.2,
+    "iterations": 10,
+    "apriori_level": null,
+    "seeds": null,
+    "timeout": 300,
+    "warmups": 1,
+    "memory_mib": 6144
+  },
+  "revision": "37b6c959945adb507a3667541dffb4adee90ed5b",
+  "source_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "benchmark_sha256": {
+    "benchmark.py": "1da08d6ff4505de9a71243e8e3ad123cc9ed8b0742e8ff466b0f4a4221701fff",
+    "tools\\analyze_tgraank.py": "9f3032dfc061c083f812596312aee0567bcc8628cde70451fcd35f5e5846c506",
+    "tools\\datasets.py": "53dc65591f16d037ce5471441aea16a92444a4d786da8eebc614ca58c9ac9b97",
+    "tools\\experiments.py": "7318af1e9a845cfae49a17687045b416a9a24e6a95ec8495cf9cc61d5a29368e",
+    "tools\\process_control.py": "703d5bfde80c168cc8592e9d8f1cf77332b7d16f940314c21d457c2299c73fdd",
+    "tools\\report.py": "78fd4d26c6317c2b4af5d6b3fb1d33824b2b456c8662d904f90f4416ba7e4b49",
+    "tools\\__init__.py": "5cb6cfaf4e995d410c82cbec57f81544010e3b11e48dfc6e9315b2eb89a37afc"
+  },
+  "dense_revision": "affc7860397002fba26af96dcb2f0461f2cdda9d",
+  "packed_source_path": "C:\\owuor_lab\\GP-Mining\\src\\so4gp\\__init__.py",
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+  "cpu_count": 8,
+  "ram_bytes": 34359738368,
+  "dependencies": {
+    "so4gp": "1.1.2",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "torch": "2.13.0",
+    "scikit-learn": "1.9.1",
+    "scikit-fuzzy": "0.5.0"
+  },
+  "timing": "worker algorithm elapsed; process startup and preparation separate",
+  "memory": "sampled worker process-tree resident memory every 0.05s; includes imports and result collection"
+}

@@ -152,7 +152,7 @@ def _gradual_features(
     lst_gp_extra = []
     mine_obj = GRAANK(_recording_df(recording), min_sup=min_sup)
     mine_obj.discover(max_iteration=2, compute_descriptors=True)
-    miner = mine_obj.mining_engine
+    miner = mine_obj.mine_engine
 
     for gi_key, gi_data in (miner.valid_bins or {}).items():
         item = GI.from_string(gi_key)

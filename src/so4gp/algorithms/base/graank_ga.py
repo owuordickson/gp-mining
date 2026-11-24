@@ -13,7 +13,15 @@ from .graank_base import BaseGrad
 
 class GeneticGRAANK(BaseGrad):
     def __init__(
-        self, *args, max_iter=1, n_pop=5, pc=0.5, gamma=1.0, mu=0.9, sigma=0.9, **kwargs
+        self,
+        *args,
+        max_iter=1,
+        n_pop=10,
+        pc=0.5,
+        gamma=1.0,
+        mu=0.9,
+        sigma=0.9,
+        **kwargs,
     ):
         """
         Extract gradual patterns (GPs) from a numeric data source using the Genetic
@@ -128,13 +136,10 @@ class GeneticGRAANK(BaseGrad):
 
         start = time.time()
         self.target_col = target_col
-        try:
-            self.init_search_space(self._parent_pop)
-            s_space = self.search_space
-            if s_space is None:
-                return {"Error": "Search space is empty!"}
-        except ValueError as e:
-            return {"Error": e}
+        self.init_search_space(self._parent_pop)
+        s_space = self.search_space
+        if s_space is None:
+            return {"Error": "Search space is empty!"}
 
         num_children = int(
             np.round(self._children_pop * self._parent_pop / 2) * 2
