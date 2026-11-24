@@ -13,7 +13,15 @@ from .graank_base import BaseGrad
 
 class GeneticGRAANK(BaseGrad):
     def __init__(
-        self, *args, max_iter=1, n_pop=10, pc=0.5, gamma=1.0, mu=0.9, sigma=0.9, **kwargs
+        self,
+        *args,
+        max_iter=1,
+        n_pop=10,
+        pc=0.5,
+        gamma=1.0,
+        mu=0.9,
+        sigma=0.9,
+        **kwargs,
     ):
         """
         Extract gradual patterns (GPs) from a numeric data source using the Genetic

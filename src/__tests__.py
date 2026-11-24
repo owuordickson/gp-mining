@@ -1,7 +1,7 @@
 import pandas
 import torch
 
-from so4gp.algorithms import TGRAANK, GRAANK
+from so4gp.algorithms import GRAANK, TGRAANK
 
 # make get_selected_rows -- less intensive and fast
 
@@ -41,7 +41,9 @@ if __name__ == "__main__":
     # )
 
     # import numpy as np
-    # feat_df = GRAANK.build_gradual_features(np.array(dummy_data_only), pattern_level=2)
+    # feat_df = GRAANK.build_gradual_features(
+    #     np.array(dummy_data_only), pattern_level=2
+    # )
     # print(feat_df)
     # exit()
 
@@ -49,7 +51,6 @@ if __name__ == "__main__":
     # mine_obj = GRAANK(dummy_df, min_sup=0.4, eq=False, device=device)
     mine_obj = GRAANK("../benchmarks/optimization/data/breast_cancer.csv", min_sup=0.2)
     # mine_obj = ClusterGP(dummy_df, 0.5, max_iter=3, e_prob=0.0, device=device)
-    #mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1, device=device)
     # result_json = mine_obj.discover(target_col=1, compute_descriptors=True)  # GRAANK
     # result_json = mine_obj.discover()  # GRAANK/ClusterGP
     # result_json = mine_obj.discover(
@@ -81,6 +82,7 @@ if __name__ == "__main__":
     print(f"{result_json}\n")
     exit()
 
+    mine_obj1 = TGRAANK(dummy_df, min_sup=0.05, min_rep=0.1, device=device)
     # result_json1 = mine_obj1.discover(
     #     target_col=1, transformations="all", search_algorithm="ga", max_iteration=10
     # )  # TGRAANK

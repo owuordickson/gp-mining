@@ -189,7 +189,9 @@ def _parser():
         default=list(SEARCH_TYPES),
         help="GRAANK search types to run (default: all listed)",
     )
-    parser.add_argument("--profile", choices=("quick", "study", "full"), default="study")
+    parser.add_argument(
+        "--profile", choices=("quick", "study", "full"), default="study"
+    )
     parser.add_argument("--data-dir", type=Path, default=HERE / "data")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--download", action="store_true")

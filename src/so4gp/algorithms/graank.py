@@ -4,11 +4,12 @@
 
 
 import json
+
 # import torch
 import numpy as np
 import pandas as pds
 
-from ..gradual_patterns import GP, GI
+from ..gradual_patterns import GI, GP
 from .base.graank_alg import OrigGRAANK
 
 
@@ -57,7 +58,7 @@ class GRAANK:
     """
 
     def __init__(
-            self, data_source, min_sup: float = 0.5, eq: bool = False, device: str = "cpu"
+        self, data_source, min_sup: float = 0.5, eq: bool = False, device: str = "cpu"
     ) -> None:
         """
         Initialize a gradual pattern mining session.
@@ -520,19 +521,26 @@ class GRAANK:
         num_recordings, num_observations, num_channels = recordings.shape
 
         if num_recordings == 0 or num_observations < 2 or num_channels < 1:
-            raise ValueError("Require a recording with at least two observations and one channel")
+            raise ValueError(
+                "Require a recording with at least two observations and one channel"
+            )
 
         if not np.isfinite(data).all():
             raise ValueError("sequences must contain only finite values")
 
         if not 1 <= pattern_level <= num_channels:
-            raise ValueError("pattern_level must be an integer from 1 to the channel count")
+            raise ValueError(
+                "pattern_level must be an integer from 1 to the channel count"
+            )
 
         if max_patterns is not None and max_patterns < 1:
             raise ValueError("max_patterns must be a positive integer or None")
 
         if column_names is not None and len(column_names) != num_channels:
-            raise ValueError("column_names must have the same number of columns as the number of channels")
+            raise ValueError(
+                "column_names must have the same number of columns as "
+                "the number of channels"
+            )
 
         descriptors = (
             "support",
@@ -545,7 +553,11 @@ class GRAANK:
 
         def encode_recording(rec_data: np.ndarray) -> tuple[list, np.ndarray]:
             """Fit used GI bitmaps once and intersect each requested pattern."""
-            rec_df = pds.DataFrame(rec_data, columns=column_names) if column_names is not None else pds.DataFrame(rec_data)
+            rec_df = (
+                pds.DataFrame(rec_data, columns=column_names)
+                if column_names is not None
+                else pds.DataFrame(rec_data)
+            )
             mine_alg = cls(rec_df, min_sup=0.0)
             pat_names = []
 
@@ -559,10 +571,16 @@ class GRAANK:
                     item = GI.from_string(gi_key)
                     slot = 2 * item.attribute_col + int(item.symbol == "-")
 
-                    col_title = mine_eng.titles[item.attribute_col] if column_names is not None else str(item.attribute_col)
+                    col_title = (
+                        mine_eng.titles[item.attribute_col]
+                        if column_names is not None
+                        else str(item.attribute_col)
+                    )
                     pat_names.append(str(col_title + item.symbol))
 
-                    pairs = GP.gen_gradual_concordance_set(gi_data.packed_bin_mat, num_objects)
+                    pairs = GP.gen_gradual_concordance_set(
+                        gi_data.packed_bin_mat, num_objects
+                    )
                     new_gp = GP()
                     new_gp.compute_descriptors(pairs, num_objects)
 
@@ -602,7 +620,11 @@ class GRAANK:
             desc_idx, desc_arr = encode_recording(data)
             df_rec = pds.DataFrame(desc_arr, columns=descriptors)
             df_rec.insert(0, "pattern", desc_idx)
-            #return pds.DataFrame(desc_arr, index=pds.Index(desc_idx, name="pattern"), columns=pds.Index(descriptors, name="descriptor"),)
+            # return pds.DataFrame(
+            #     desc_arr,
+            #     index=pds.Index(desc_idx, name="pattern"),
+            #     columns=pds.Index(descriptors, name="descriptor"),
+            # )
             return df_rec
 
         dfs = []
@@ -615,5 +637,7 @@ class GRAANK:
             dfs.append(df_rec)
 
         # Combine all recordings, adding 'recording' as the outer index level
-        # return pds.concat(dfs, keys=range(len(recordings)), names=["recording", "pattern"]).reset_index()
+        # return pds.concat(
+        #     dfs, keys=range(len(recordings)), names=["recording", "pattern"]
+        # ).reset_index()
         return pds.concat(dfs, ignore_index=True)
