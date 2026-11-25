@@ -277,7 +277,7 @@ def main(argv=None):
             for layout in ("packed", "dense")
         ]
     run_dense = any(layout == "dense" for _, layout in workloads)
-    defaults = {"quick": (64, 6), "study": (5000, None), "full": (None, None)}
+    defaults = {"quick": (64, 6), "study": (5000, 10), "full": (None, None)}
     rows, features = defaults[args.profile]
     rows, features = args.rows or rows, args.features or features
     args.output.mkdir(parents=True, exist_ok=True)
