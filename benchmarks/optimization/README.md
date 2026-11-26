@@ -49,8 +49,8 @@ python -m benchmarks.optimization.benchmark --datasets BCR AQY --profile study -
 python benchmarks/optimization/benchmark.py --datasets BCR --search-types pso ga hc random --iterations 20
 ```
 
-For GRAANK, the default `study` profile uses up to 5,000 rows per dataset,
-all usable numeric features, and seeds 0 through 2. It runs all five search
+For GRAANK, the default `study` profile uses up to 5,000 rows and 10 features
+per dataset, with seeds 0 through 2. It runs all five search
 types in both layouts at minimum support 0.2, with one discarded warm-up
 per trial, a 300-second timeout, and a best-effort memory limit of 6,144 MiB
 per worker. The `full` profile uses the full prepared datasets and one seed.
@@ -94,31 +94,36 @@ skips saved trials, and retries any interrupted trial without a record.
 
 ### Dense and packed APRIORI
 
-The saved study ran six datasets, three seeds, and a 10-iteration budget for
-each heuristic. The time and peak RSS columns show the median for each
-completed method. Paired speedup is the median of the dense-to-packed time
-ratios for matched seeds. [Run manifest](results/graank/manifest.json) · [Run summaries](results/graank/summary.csv) · [Paired summaries](results/graank/paired_summary.csv)
+The saved study ran six datasets with caps of 5,000 rows and 10 features,
+three seeds, and a 10-iteration budget for each heuristic. The time and peak
+RSS columns show the median for each completed method. Paired speedup is the
+median of the dense-to-packed time ratios for matched seeds. [Run manifest](results/graank/manifest.json) · [Run summaries](results/graank/summary.csv) · [Paired summaries](results/graank/paired_summary.csv)
 
 | Dataset | Rows × features | Dense time (s) or outcome | Packed time (s) or outcome | Paired speedup | Median peak RSS, dense → packed (MiB) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| BCR | 116 × 9 | 21.506 | 0.332 | 66.13× | 374.7 → 373.5 |
-| PWC | 5,000 × 7 | 4.826 | 4.256 | 1.30× | 1,069.4 → 480.5 |
-| DIR | 5,000 × 16 | 6,144 MiB limit (3/3) | 300 s timeout (3/3) | — | — |
+| BCR | 116 × 9 | 21.999 | 0.371 | 58.15× | 375.1 → 374.2 |
+| PWC | 5,000 × 7 | 7.306 | 5.023 | 1.45× | 1,069.1 → 476.7 |
+| AQY | 5,000 × 10 | 6,144 MiB limit (3/3) | 24.067 | — | — → 1,293.8 |
+| C2K | 3,942 × 10 | 12.451 | 6.297 | 1.98× | 1,088.5 → 481.7 |
+| DIR | 5,000 × 10 | 280.627 (1/3 completed) | 62.883 | 4.46× (1 pair) | 5,295.1 → 1,029.8 |
+| APS | 5,000 × 10 | 5.541 | 1.439 | 2.82× | 900.3 → 441.9 |
 
-![Dense and packed APRIORI run time and peak memory on BCR and PWC, with DIR marked as a memory-limit failure for dense and a timeout for packed.](results/graank/apriori_dense_vs_packed.png)
+![APRIORI run time and peak memory across all six datasets, including the AQY dense memory limits and DIR's single dense completion.](results/graank/apriori_dense_vs_packed.png)
 
-BCR and PWC each had three completed pairs. Dense and packed APRIORI returned
-the same itemsets in all six pairs after accounting for full sign reversals.
-Packed APRIORI used about **55% less peak RSS** on PWC. Across the 15 completed
-comparisons that used the same search on AQY, C2K, DIR, and PWC, packed peak RSS
-was 47–67% lower by paired medians. Packed was faster in 14 of the 20 completed
-comparisons with the search held fixed. On C2K, hill climbing took 3.011 s dense
-and 14.698 s packed. [Paired summaries](results/graank/paired_summary.csv)
+Dense and packed APRIORI returned the same itemsets on BCR, C2K, and PWC
+at all three seeds after accounting for full sign reversals. On APS, packed
+returned four of the five dense itemsets at each seed. The single completed
+DIR pair had identical itemsets, a **4.46× speedup**, and roughly 81% lower
+peak RSS for packed. Packed had a paired speedup above 1× in 27 of the 29
+same-search comparisons with a completed pair. APS hill climbing (0.50×)
+and BCR GA (0.84×) had the two lower ratios. Across non-BCR heuristic
+comparisons, packed peak RSS was 43–58% lower by paired medians.
+[Paired summaries](results/graank/paired_summary.csv)
 
-Dense APRIORI hit the memory limit on AQY, APS, C2K, and DIR. Packed APRIORI hit
-the memory limit on AQY and APS and **timed out on all three seeds on both C2K
-and DIR**. Exhaustive search can still exceed the worker budget with packed
-bitmaps. [Trial records](results/graank/trials.jsonl)
+Of the 180 measured trials, 175 completed, including all 144 heuristic trials
+and all 18 packed APRIORI trials. The five incomplete runs were dense APRIORI.
+Three AQY runs hit the memory limit, and two DIR runs timed out.
+[Trial records](results/graank/trials.jsonl)
 
 ### Heuristic speed and pattern recovery
 
@@ -129,43 +134,67 @@ itemsets each search recovered at the same seed. [Run summaries](results/graank/
 
 | Dataset | Search | Median time (s) | Paired speedup vs. APRIORI | Returned patterns | Invalid candidates | APRIORI recall |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| BCR | APRIORI | 0.332 | 1.00× | 174 | 2,791 | 100.00% |
-| BCR | Genetic algorithm (GA) | 0.080 | 4.15× | 23 | 41 | 5.66% |
-| BCR | Hill climbing (HC) | 0.015 | 17.56× | 7 | 1 | 1.75% |
-| BCR | Particle swarm optimization (PSO) | 0.045 | 6.53× | 2 | 100 | 0.00% |
-| BCR | Random search | 0.026 | 13.01× | 9 | 9 | 0.00% |
-| PWC | APRIORI | 4.256 | 1.00× | 30 | 176 | 100.00% |
-| PWC | Genetic algorithm (GA) | 6.632 | 0.56× | 20 | 27 | 30.00% |
-| PWC | Hill climbing (HC) | 2.448 | 1.74× | 4 | 0 | 0.00% |
-| PWC | Particle swarm optimization (PSO) | 5.970 | 0.61× | 11 | 67 | 10.00% |
-| PWC | Random search | 3.979 | 1.31× | 16 | 6 | 20.00% |
+| BCR | APRIORI | 0.371 | 1.00× | 174 | 2,791 | 100.00% |
+| BCR | Genetic algorithm (GA) | 0.077 | 4.91× | 23 | 41 | 5.66% |
+| BCR | Hill climbing (HC) | 0.033 | 9.79× | 7 | 1 | 1.75% |
+| BCR | Particle swarm optimization (PSO) | 0.041 | 7.99× | 2 | 100 | 0.00% |
+| BCR | Random search | 0.031 | 11.99× | 9 | 9 | 0.00% |
+| PWC | APRIORI | 5.023 | 1.00× | 30 | 176 | 100.00% |
+| PWC | Genetic algorithm (GA) | 9.529 | 0.53× | 20 | 27 | 30.00% |
+| PWC | Hill climbing (HC) | 4.182 | 1.25× | 4 | 0 | 0.00% |
+| PWC | Particle swarm optimization (PSO) | 9.499 | 0.55× | 11 | 67 | 10.00% |
+| PWC | Random search | 3.844 | 1.36× | 16 | 6 | 20.00% |
+| AQY | APRIORI | 24.067 | 1.00× | 39 | 749 | 100.00% |
+| AQY | Genetic algorithm (GA) | 17.742 | 1.41× | 27 | 32 | 15.38% |
+| AQY | Hill climbing (HC) | 7.113 | 3.50× | 8 | 0 | 0.00% |
+| AQY | Particle swarm optimization (PSO) | 20.968 | 1.19× | 3 | 0 | 0.00% |
+| AQY | Random search | 6.871 | 3.55× | 11 | 2 | 7.69% |
+| C2K | APRIORI | 6.297 | 1.00× | 66 | 438 | 100.00% |
+| C2K | Genetic algorithm (GA) | 9.397 | 0.67× | 22 | 113 | 10.00% |
+| C2K | Hill climbing (HC) | 4.615 | 1.36× | 5 | 5 | 0.00% |
+| C2K | Particle swarm optimization (PSO) | 8.669 | 0.64× | 3 | 170 | 0.00% |
+| C2K | Random search | 3.772 | 1.67× | 9 | 12 | 5.00% |
+| DIR | APRIORI | 62.883 | 1.00× | 76 | 6,550 | 100.00% |
+| DIR | Genetic algorithm (GA) | 14.183 | 4.61× | 30 | 60 | 9.09% |
+| DIR | Hill climbing (HC) | 6.725 | 9.20× | 5 | 1 | 0.00% |
+| DIR | Particle swarm optimization (PSO) | 14.717 | 4.27× | 3 | 119 | 0.00% |
+| DIR | Random search | 6.102 | 10.31× | 10 | 6 | 0.00% |
+| APS | APRIORI | 1.439 | 1.00× | 12 | 30 | 100.00% |
+| APS | Genetic algorithm (GA) | 6.572 | 0.20× | 10 | 99 | 50.00% |
+| APS | Hill climbing (HC) | 1.466 | 1.03× | 4 | 0 | 25.00% |
+| APS | Particle swarm optimization (PSO) | 3.726 | 0.39× | 12 | 134 | 75.00% |
+| APS | Random search | 1.581 | 1.11× | 12 | 8 | 50.00% |
 
-![Packed search run time and APRIORI recall on BCR and PWC. The DIR panel shows completed heuristic run times and the packed APRIORI timeout across all three seeds.](results/graank/packed_search_tradeoff.png)
+![Packed search run time and APRIORI itemset recall across all six datasets.](results/graank/packed_search_tradeoff.png)
 
-On BCR, the four heuristic searches ran **4.15–17.56× faster** by paired
-medians, with a highest median APRIORI recall of **5.66%**. PSO returned two
-patterns and recorded 100 invalid candidates. On PWC, hill climbing and random
-search improved run time, while GA and PSO took longer. GA had the highest
-APRIORI recall on PWC at 30%.
+On BCR, the heuristics ran **4.91–11.99× faster** by paired medians and
+reached at most **5.66%** median APRIORI recall. On PWC and C2K, GA had the
+highest heuristic recall at **30.00%** and **10.00%**, respectively, with
+paired speedups below 1× in both cases. On AQY, all four heuristics ran
+faster by paired medians, and GA reached the highest heuristic recall
+at **15.38%**. On APS, PSO reached **75.00%** recall at 0.39× APRIORI speed,
+while random search reached **50.00%** at 1.11×.
 
 ### DIR search results
 
 All four DIR heuristic searches completed on all three seeds in each layout.
-The paired speedup compares dense and packed versions of the same search.
-Speedup against APRIORI and APRIORI recall require a completed APRIORI baseline.
-[Run summaries](results/graank/summary.csv) · [Paired summaries](results/graank/paired_summary.csv)
+The paired speedup in this table compares dense and packed versions of the
+same search. Packed APRIORI completed on all three seeds, providing a
+baseline for the packed heuristic recall estimates. [Run summaries](results/graank/summary.csv) · [Paired summaries](results/graank/paired_summary.csv)
 
 | Search | Dense median time (s) | Packed median time (s) | Paired speedup | Median peak RSS, dense → packed (MiB) | Returned patterns, dense → packed | Invalid candidates, dense → packed |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| GA | 29.589 | 17.698 | 2.24× | 1,580.2 → 522.5 | 21 → 29 | 24 → 52 |
-| HC | 9.327 | 7.450 | 1.33× | 1,580.2 → 525.2 | 5 → 5 | 1 → 1 |
-| PSO | 52.684 | 19.923 | 2.78× | 1,579.7 → 524.9 | 3 → 2 | 0 → 100 |
-| Random search | 8.229 | 6.180 | 1.25× | 1,580.2 → 522.3 | 10 → 10 | 6 → 6 |
+| GA | 29.972 | 14.183 | 2.23× | 1,145.9 → 482.6 | 25 → 30 | 31 → 60 |
+| HC | 9.223 | 6.725 | 1.35× | 1,145.5 → 488.1 | 5 → 5 | 1 → 1 |
+| PSO | 39.634 | 14.717 | 3.83× | 1,145.2 → 485.5 | 5 → 3 | 9 → 119 |
+| Random search | 8.222 | 6.102 | 1.29× | 1,145.4 → 483.2 | 10 → 10 | 6 → 6 |
 
-On DIR, the packed heuristics achieved **1.25–2.78× paired speedups** and used
-about one-third of the dense peak RSS. Packed random search was fastest at
-**6.180 s**. Packed GA returned the most patterns, and packed PSO recorded
-the most invalid candidates.
+On DIR, the packed heuristics achieved **1.29–3.83× paired speedups** over
+their dense counterparts and used 57–58% less peak RSS by paired medians.
+Packed random search was fastest at **6.102 s** and had the highest paired
+speedup against packed APRIORI at **10.31×**. GA recovered **9.09%** of packed
+APRIORI itemsets by median recall. The other three heuristics had zero
+median recall.
 
 ## TGRAANK comparison on rainfall and EVI
 
