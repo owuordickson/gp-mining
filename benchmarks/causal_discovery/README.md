@@ -22,7 +22,7 @@ Names are normalized for publication: the notebook's `PCMI` means **PCMCI**, `Va
 
 ## CausalRivers: saved comparison
 
-The metric is **mean per graph AUROC**, named `Individual AUROC` by the harness, with autoregressive diagonal entries excluded. It differs from pooled `AUROC`. The notebook's two saved comparison displays and the JSON table now show the completed Disjoint-10 result at six decimal places. The other ten TGRAANK values and the comparator values retain their previous display precision.
+The metric is **mean per graph AUROC**, named `Individual AUROC` by the harness, with autoregressive diagonal entries excluded. It differs from pooled `AUROC`. The notebook's two saved comparison displays and the JSON table now show the completed 11 TGRAANK results at six decimal places. The configuration selects East Germany Disjoint-10 graphs, lag 3, 6-hour resolution, interpolation, normalization and diagonal exclusion.
 
 | Graph set | TGRAANK | PCMCI | PC | VARLiNGAM | DYNOTEARS |
 |---|---:|---:|---:|---:|---:|
@@ -40,7 +40,7 @@ The metric is **mean per graph AUROC**, named `Individual AUROC` by the harness,
 
 **Random+1-5 artifact identity.** The saved `0.734016` corresponds to the [preserved replacement's `scoring.csv`](https://github.com/owuordickson/causalrivers/blob/2e970afabd6952e04c3de093ede4df562c974e96/results/tgraank_1_random_5/recovered-replacement-3025328c/scoring.csv): its full value is `0.7340156985733362`. The path named in the notebook now contains the [restored original](https://github.com/owuordickson/causalrivers/blob/2e970afabd6952e04c3de093ede4df562c974e96/results/tgraank_1_random_5/20260921025013/scoring.csv), whose mean per graph AUROC is **0.7342750171305081**, or **0.734275** at the displayed precision. The original has independently reproducible rescoring against reconstructed ordered labels. This earlier saved value is retained in the notebook; reevaluating its scoring-table cell against the current scoring files would change this one displayed value.
 
-**Completed Disjoint-10.** The [new scoring artifact](https://github.com/owuordickson/causalrivers/blob/318e88ff4b5fc9b146999ac1baf480715f155961/results/tgraank_disjoint_10/20261019151559/scoring.csv) reports mean per graph AUROC `0.8150984685418272` and pooled AUROC `0.7904192479040301`. The pinned PCMCI mean per graph reference is `0.8017869429388739`; the corresponding TGRAANK gain is `0.013311525602953345`. The [recorded configuration](https://github.com/owuordickson/causalrivers/blob/318e88ff4b5fc9b146999ac1baf480715f155961/results/tgraank_disjoint_10/20261019151559/config.yaml) selects East Germany Disjoint-10 graphs, lag 3, 6-hour resolution, interpolation, normalization and diagonal exclusion. The evaluated graph count and producer source/environment are not captured by this run's artifacts. All eleven settings now have finite TGRAANK scores. The current notebook displays, JSON table and Markdown table agree on Disjoint-10; the previous NaN is retained only in the linked historical snapshot. PC still has no reported Disjoint-10 value.
+**Completed Disjoint-10.** The [new scoring artifact](https://github.com/owuordickson/causalrivers/blob/318e88ff4b5fc9b146999ac1baf480715f155961/results/tgraank_disjoint_10/20261019151559/scoring.csv) reports mean per graph AUROC `0.8150984685418272` and pooled AUROC `0.7904192479040301`. The pinned PCMCI mean per graph reference is `0.8017869429388739`; the corresponding TGRAANK gain is `0.013311525602953345`.
 
 ### Comparator provenance and comparison limits
 
