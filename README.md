@@ -155,5 +155,5 @@ Made with [contrib.rocks](https://contrib.rocks).
 [dependents-badge]: https://badgen.net/github/dependents-repo/owuordickson/gp-mining/?icon=github
 [dependents-url]: https://github.com/owuordickson/gp-mining/network/dependents
 [doi-badge]: https://zenodo.org/badge/388183952.svg
-[doi-url]: https://doi.org/10.5281/zenodo.16281808
+[doi-url]: https://doi.org/10.5281/zenodo.24582067
 
